@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MQL4 to Javascript</title>
+    <link rel="stylesheet" href="mql4js.css">
+    <script language="JavaScript" src="lib/require.js"></script>
+    <script language="JavaScript" src="lib/jquery-2.1.4.min.js"></script>
+    <script language="JavaScript" src="lib/lodash.min.js"></script>
+
+    <script language="JavaScript">
+        var antlr4 = require('antlr4/index');
+        var mql4Lexer = require('./antlr4-gen/MQL4Lexer');
+        var mql4Parser = require('./antlr4-gen/MQL4Parser');
+        var mql4ToJsListener = require('./MQL4ToJsListener');
+        var mql4ToJsVisitor = require('./MQL4ToJsVisitor.js');
+
+        var readMql4 = function () {
+            jQuery.ajax({
+                url: "examples/" + $("#sourceFile").val(),
+                success: function (data) {
+                    $("#source").val(data);
+                }
+            })
+        };
+
+
+        // show results
+        function formatAst(ast) {
+            var nbTab = -1;
+            var toReturn = "";
+
+            function newLine(nbTab) {
+                var toReturn = "\n";
+                for (var i = 0; i < nbTab; i++) {
+                    toReturn += "\t"
+                }
+                return toReturn;
+
+            }
+
+            for (var i = 0; i < ast.length; i++) {
+
+                if (ast.charAt(i) == "(") {
+                    nbTab++;
+                    toReturn += newLine(nbTab);
+                    toReturn += ast.charAt(i);
+
+                } else if (ast.charAt(i) == ")") {
+                    nbTab--;
+                    toReturn += ast.charAt(i);
+                    toReturn += newLine(nbTab);
+                } else {
+                    toReturn += ast.charAt(i);
+                }
+
+            }
+            return toReturn;
+
+
+        }
+
+
+        var parseAndShow = function () {
+            var result = mqlParser.parse($("#source").val(), $("#keep-types").prop("checked"));
+
+            $("#AST").val(formatAst(result.tree.toStringTree(null, result.parser)));
+            $("#external_parameters").empty();
+            $.each(result.mql4ToJs.externalParameters, function (index, value) {
+                $("#external_parameters").append("<tr><td>" + value.name + "</td><td>" + value.type + "</td><td> " + value.defaultValue + " </td></tr>")
+            });
+            $("#js").val(result.mql4ToJs.js);
+
+        };
+
+
+        // parse
+        var mqlParser = function () {
+            var parse = function (input, keepType) {
+                var chars = new antlr4.InputStream(input);
+                var lexer = new mql4Lexer.MQL4Lexer(chars);
+                var tokens = new antlr4.CommonTokenStream(lexer);
+                var parser = new mql4Parser.MQL4Parser(tokens);
+                parser.buildParseTrees = true;
+
+                var mql4ToJs = new mql4ToJsListener.MQL4ToJsListener();
+                var tree = parser.root();
+
+                var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType).visit(tree);
+
+                //antlr4.tree.ParseTreeWalker.DEFAULT.walk(mql4ToJs, tree);
+                //mql4ToJs: mql4ToJs.getResults()
+
+                // invocation de l'analyse
+                return {parser: parser, tree: tree, mql4ToJs: result};
+            };
+
+            return {parse: parse}
+        }();
+
+
+        $(function () {
+            readMql4();
+        });
+
+
+    </script>
+
+
+</head>
+<body>
+<div class="row">
+    <h1>Source file</h1>
+    <select id="sourceFile" onchange="readMql4()">
+        <option value="test1.mql4">test1.mql4</option>
+        <option value="test2.mql4">test2.mql4</option>
+        <option value="test3.mql4">test3.mql4</option>
+    </select>
+
+    <textarea id="source"></textarea>
+    <button onclick="parseAndShow()">Convert</button>
+    <input type="checkbox" id="keep-types"/> Keep types in javascript
+
+    <h3>AST</h3>
+
+    <textarea id="AST"></textarea>
+</div>
+
+<div class="row">
+    <h1>results</h1>
+
+
+    <h3>External parameters/Input</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>name</th>
+            <th>type</th>
+            <th>default value</th>
+        </tr>
+
+        </thead>
+        <tbody id="external_parameters">
+
+        </tbody>
+    </table>
+
+    <h3>Javascript File</h3>
+    <textarea id="js"></textarea>
+
+</div>
+
+
+</body>
+</html>

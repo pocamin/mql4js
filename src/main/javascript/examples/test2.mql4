@@ -1,0 +1,11 @@
+extern double StopLoss;
+double test;
+input Test toto;
+
+int firstFunction(){
+	// Do nothing
+}
+
+int secondFunction(Int a, Int b){
+	println("i like mql4");
+}
