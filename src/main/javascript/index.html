@@ -12,7 +12,6 @@
         var antlr4 = require('antlr4/index');
         var mql4Lexer = require('./antlr4-gen/MQL4Lexer');
         var mql4Parser = require('./antlr4-gen/MQL4Parser');
-        var mql4ToJsListener = require('./MQL4ToJsListener');
         var mql4ToJsVisitor = require('./MQL4ToJsVisitor.js');
 
         var readMql4 = function () {
@@ -83,13 +82,9 @@
                 var parser = new mql4Parser.MQL4Parser(tokens);
                 parser.buildParseTrees = true;
 
-                var mql4ToJs = new mql4ToJsListener.MQL4ToJsListener();
                 var tree = parser.root();
 
                 var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType).visit(tree);
-
-                //antlr4.tree.ParseTreeWalker.DEFAULT.walk(mql4ToJs, tree);
-                //mql4ToJs: mql4ToJs.getResults()
 
                 // invocation de l'analyse
                 return {parser: parser, tree: tree, mql4ToJs: result};
