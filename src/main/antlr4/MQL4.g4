@@ -141,14 +141,17 @@ expression
  | Identifier                                #identifierExpression
  | Null                                      #nullExpression
 
- // function call
- | Identifier '(' (expression ','?)* ')'              #functionCallExpression
+
 
  // indexing
  | expression '[' expression ']'             #indexingExpression
 
  // Others
  | '(' expression ')'                        #expressionExpression
+
+ // function call
+  | Identifier '(' (expression ',')* expression? ')'              #functionCallExpression
+
  //| expression ',' expression                 #multipleExpressions
 
  // Operator expression

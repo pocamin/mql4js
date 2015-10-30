@@ -1,0 +1,5 @@
+void test(){
+    ArrayBsearch(daytimes,Time[shift],WHOLE_ARRAY,0,MODE_DESCEND);
+    ArrayCopy(dst_data,src_data,0,0,WHOLE_ARRAY);
+
+}
