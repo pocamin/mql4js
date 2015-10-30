@@ -9,3 +9,11 @@ int firstFunction(){
 int secondFunction(Int a, Int b){
 	println("i like mql4");
 }
+
+int functionWithAllDefaultArgument(Int a=6, Int b=5){
+
+}
+
+int functionWithNotAllDefaultArgument(Int a, Int b=5){
+
+}

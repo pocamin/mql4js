@@ -29,21 +29,129 @@ MQL4Listener.prototype.exitProperty = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#block.
-MQL4Listener.prototype.enterBlock = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#block.
-MQL4Listener.prototype.exitBlock = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#statement.
 MQL4Listener.prototype.enterStatement = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#statement.
 MQL4Listener.prototype.exitStatement = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#expressionOperation.
+MQL4Listener.prototype.enterExpressionOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#expressionOperation.
+MQL4Listener.prototype.exitExpressionOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#ifElseOperation.
+MQL4Listener.prototype.enterIfElseOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#ifElseOperation.
+MQL4Listener.prototype.exitIfElseOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#blockOperation.
+MQL4Listener.prototype.enterBlockOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#blockOperation.
+MQL4Listener.prototype.exitBlockOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#switchOperation.
+MQL4Listener.prototype.enterSwitchOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#switchOperation.
+MQL4Listener.prototype.exitSwitchOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#whileOperation.
+MQL4Listener.prototype.enterWhileOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#whileOperation.
+MQL4Listener.prototype.exitWhileOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#forOperation.
+MQL4Listener.prototype.enterForOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#forOperation.
+MQL4Listener.prototype.exitForOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#doWhileOperation.
+MQL4Listener.prototype.enterDoWhileOperation = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#doWhileOperation.
+MQL4Listener.prototype.exitDoWhileOperation = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#switchCase.
+MQL4Listener.prototype.enterSwitchCase = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#switchCase.
+MQL4Listener.prototype.exitSwitchCase = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#struct.
+MQL4Listener.prototype.enterStruct = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#struct.
+MQL4Listener.prototype.exitStruct = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#structElement.
+MQL4Listener.prototype.enterStructElement = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#structElement.
+MQL4Listener.prototype.exitStructElement = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#structInit.
+MQL4Listener.prototype.enterStructInit = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#structInit.
+MQL4Listener.prototype.exitStructInit = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#enumDef.
+MQL4Listener.prototype.enterEnumDef = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#enumDef.
+MQL4Listener.prototype.exitEnumDef = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#enumInstance.
+MQL4Listener.prototype.enterEnumInstance = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#enumInstance.
+MQL4Listener.prototype.exitEnumInstance = function(ctx) {
 };
 
 
@@ -65,21 +173,30 @@ MQL4Listener.prototype.exitFunctionArgument = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#rootDeclaration.
-MQL4Listener.prototype.enterRootDeclaration = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#rootDeclaration.
-MQL4Listener.prototype.exitRootDeclaration = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#declaration.
 MQL4Listener.prototype.enterDeclaration = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#declaration.
 MQL4Listener.prototype.exitDeclaration = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#declarationElement.
+MQL4Listener.prototype.enterDeclarationElement = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#declarationElement.
+MQL4Listener.prototype.exitDeclarationElement = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#declarationInitialValue.
+MQL4Listener.prototype.enterDeclarationInitialValue = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#declarationInitialValue.
+MQL4Listener.prototype.exitDeclarationInitialValue = function(ctx) {
 };
 
 
@@ -143,6 +260,15 @@ MQL4Listener.prototype.enterEqExpression = function(ctx) {
 
 // Exit a parse tree produced by MQL4Parser#eqExpression.
 MQL4Listener.prototype.exitEqExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#dateExpression.
+MQL4Listener.prototype.enterDateExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#dateExpression.
+MQL4Listener.prototype.exitDateExpression = function(ctx) {
 };
 
 
@@ -326,6 +452,15 @@ MQL4Listener.prototype.exitShiftBitLeftExpression = function(ctx) {
 };
 
 
+// Enter a parse tree produced by MQL4Parser#specializationExpression.
+MQL4Listener.prototype.enterSpecializationExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#specializationExpression.
+MQL4Listener.prototype.exitSpecializationExpression = function(ctx) {
+};
+
+
 // Enter a parse tree produced by MQL4Parser#stringExpression.
 MQL4Listener.prototype.enterStringExpression = function(ctx) {
 };
@@ -368,15 +503,6 @@ MQL4Listener.prototype.enterPreDecExpression = function(ctx) {
 
 // Exit a parse tree produced by MQL4Parser#preDecExpression.
 MQL4Listener.prototype.exitPreDecExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#multipleExpressions.
-MQL4Listener.prototype.enterMultipleExpressions = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#multipleExpressions.
-MQL4Listener.prototype.exitMultipleExpressions = function(ctx) {
 };
 
 
@@ -449,6 +575,15 @@ MQL4Listener.prototype.enterGtExpression = function(ctx) {
 
 // Exit a parse tree produced by MQL4Parser#gtExpression.
 MQL4Listener.prototype.exitGtExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#returnExpression.
+MQL4Listener.prototype.enterReturnExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#returnExpression.
+MQL4Listener.prototype.exitReturnExpression = function(ctx) {
 };
 
 

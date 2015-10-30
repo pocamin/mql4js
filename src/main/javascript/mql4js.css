@@ -32,3 +32,12 @@ div.row {
     width: 700px;
     margin-left: 50px;
 }
+
+.warning {
+    border: 1px solid #d8bfd8;;
+    background-color: #f8dff8;
+    border-radius: 5px;
+    padding: 3px 15px;
+    margin: 15px 0;
+    color: darkred;
+}

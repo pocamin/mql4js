@@ -16,6 +16,7 @@
 
         var readMql4 = function () {
             jQuery.ajax({
+                cache: false,
                 url: "examples/" + $("#sourceFile").val(),
                 success: function (data) {
                     $("#source").val(data);
@@ -85,8 +86,6 @@
                 var tree = parser.root();
 
                 var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType).visit(tree);
-
-                // invocation de l'analyse
                 return {parser: parser, tree: tree, mql4ToJs: result};
             };
 
@@ -106,7 +105,28 @@
 <body>
 <div class="row">
     <h1>Source file</h1>
+
+    <div class="warning">
+        <p>
+            Your source file must be a valid MQL4 script.
+            Providing invalid mql4 script may results to generate invalid JS file without any warning
+        </p>
+
+        Limitations :
+        <ul>
+            <li>Classes are not supported</li>
+            <li>Direct memory operations are not supported (sizeof)</li>
+            <li>Pointers are not supported</li>
+            <li>Preprocessor are not supported</li>
+        </ul>
+
+    </div>
     <select id="sourceFile" onchange="readMql4()">
+        <option value="enum.mql4">enum.mql4</option>
+        <option value="comments.mql4">comments.mql4</option>
+        <option value="declaration.mql4">declaration.mql4</option>
+        <option value="date.mql4">date.mql4</option>
+        <option value="structure.mql4" selected>structure.mql4</option>
         <option value="test1.mql4">test1.mql4</option>
         <option value="test2.mql4">test2.mql4</option>
         <option value="test3.mql4">test3.mql4</option>

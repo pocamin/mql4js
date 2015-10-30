@@ -22,13 +22,73 @@ MQL4Visitor.prototype.visitProperty = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#block.
-MQL4Visitor.prototype.visitBlock = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#statement.
+MQL4Visitor.prototype.visitStatement = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#statement.
-MQL4Visitor.prototype.visitStatement = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#expressionOperation.
+MQL4Visitor.prototype.visitExpressionOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#ifElseOperation.
+MQL4Visitor.prototype.visitIfElseOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#blockOperation.
+MQL4Visitor.prototype.visitBlockOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#switchOperation.
+MQL4Visitor.prototype.visitSwitchOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#whileOperation.
+MQL4Visitor.prototype.visitWhileOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#forOperation.
+MQL4Visitor.prototype.visitForOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#doWhileOperation.
+MQL4Visitor.prototype.visitDoWhileOperation = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#switchCase.
+MQL4Visitor.prototype.visitSwitchCase = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#struct.
+MQL4Visitor.prototype.visitStruct = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#structElement.
+MQL4Visitor.prototype.visitStructElement = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#structInit.
+MQL4Visitor.prototype.visitStructInit = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#enumDef.
+MQL4Visitor.prototype.visitEnumDef = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#enumInstance.
+MQL4Visitor.prototype.visitEnumInstance = function(ctx) {
 };
 
 
@@ -42,13 +102,18 @@ MQL4Visitor.prototype.visitFunctionArgument = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#rootDeclaration.
-MQL4Visitor.prototype.visitRootDeclaration = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#declaration.
+MQL4Visitor.prototype.visitDeclaration = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#declaration.
-MQL4Visitor.prototype.visitDeclaration = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#declarationElement.
+MQL4Visitor.prototype.visitDeclarationElement = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#declarationInitialValue.
+MQL4Visitor.prototype.visitDeclarationInitialValue = function(ctx) {
 };
 
 
@@ -84,6 +149,11 @@ MQL4Visitor.prototype.visitModulusExpression = function(ctx) {
 
 // Visit a parse tree produced by MQL4Parser#eqExpression.
 MQL4Visitor.prototype.visitEqExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#dateExpression.
+MQL4Visitor.prototype.visitDateExpression = function(ctx) {
 };
 
 
@@ -187,6 +257,11 @@ MQL4Visitor.prototype.visitShiftBitLeftExpression = function(ctx) {
 };
 
 
+// Visit a parse tree produced by MQL4Parser#specializationExpression.
+MQL4Visitor.prototype.visitSpecializationExpression = function(ctx) {
+};
+
+
 // Visit a parse tree produced by MQL4Parser#stringExpression.
 MQL4Visitor.prototype.visitStringExpression = function(ctx) {
 };
@@ -209,11 +284,6 @@ MQL4Visitor.prototype.visitNotExpression = function(ctx) {
 
 // Visit a parse tree produced by MQL4Parser#preDecExpression.
 MQL4Visitor.prototype.visitPreDecExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#multipleExpressions.
-MQL4Visitor.prototype.visitMultipleExpressions = function(ctx) {
 };
 
 
@@ -254,6 +324,11 @@ MQL4Visitor.prototype.visitMultiplyExpression = function(ctx) {
 
 // Visit a parse tree produced by MQL4Parser#gtExpression.
 MQL4Visitor.prototype.visitGtExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#returnExpression.
+MQL4Visitor.prototype.visitReturnExpression = function(ctx) {
 };
 
 

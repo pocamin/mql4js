@@ -1,0 +1,57 @@
+int functionWithAllDefaultArgument(){
+	if(test=3) return 3;
+
+	   string res="";
+       int i=0;
+       switch(i)
+         {
+          case 1:
+             res=i;break;
+          default:
+             res="default";break;
+          case 2:
+             res=i;break;
+          case 3:
+             res=i;break;
+         }
+
+         while(k<n && !IsStopped())
+           {
+            y=y*x;
+            k++;
+           }
+
+       Print(res);
+
+
+for(x=1;x<=7000; x++)
+  {
+   if(IsStopped())
+      break;
+   Print(MathPower(x,2));
+  }
+
+for(;!IsStopped();)
+  {
+   Print(MathPower(x,2));
+   x++;
+   if(x>10) break;
+  }
+
+for(i=0,j=n-l;i<n && !IsStopped();i++,j--) a[i]=a[j];
+
+   int counterFibonacci=15;
+   int i=0,first=0,second=1;
+   int currentFibonacciNumber;
+   do
+     {
+      currentFibonacciNumber=first+second;
+      Print("i = ",i,"  currentFibonacciNumber = ",currentFibonacciNumber);
+      first=second;
+      second=currentFibonacciNumber;
+      i++; // without this operator an infinite loop will appear!
+     }
+   while(i<counterFibonacci && !IsStopped());
+
+
+}
