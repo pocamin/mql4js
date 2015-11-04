@@ -30,19 +30,8 @@
         };
 
         function runScript(functionName, mql4ToJs) {
-
-
             var logBlock = $("#log");
-
-
-            var externalParametersAsJs = "var $parameters = {" +
-                    mql4ToJs.externalParameters.map(function (param) {
-                        return param.name + ":" + param.defaultValue
-                    }).join(", ") + "};\n";
-
-
-            var safeJs = "(function(){ " + externalParametersAsJs + mql4ToJs.js + "\n" + functionName + "})()";
-
+            var safeJs = "(function(){ " + mql4ToJs.js + "\n" + functionName + "})()";
 
             console.log(safeJs);
 
