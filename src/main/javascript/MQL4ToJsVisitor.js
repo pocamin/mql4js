@@ -479,7 +479,7 @@ MQL4ToJsVisitor.prototype.externalParametersAsJs = function () {
   js += "var $externalParameters = [";
 
   js += externalParameters.map(function (param) {
-    return "\n\t" + param.name + ": {type: '" + param.type + "', defaultValue:" + param.defaultValue + "}"
+    return "\n\t{" + param.name + ": {'type': '" + param.type + "', defaultValue:" + param.defaultValue + "}}"
   }).join(", ");
   js += "];\n";
 

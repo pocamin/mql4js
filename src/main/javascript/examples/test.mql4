@@ -1,5 +1,7 @@
+extern string name = "world";
+
 int test(){
-   Print("test");
+   Print("hello " + name);
 }
 
 int test2(){

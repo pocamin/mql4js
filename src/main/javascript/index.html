@@ -31,7 +31,16 @@
 
         function runScript(functionName, mql4ToJs) {
             var logBlock = $("#log");
-            var safeJs = "(function(){ " + mql4ToJs.js + "\n" + functionName + "})()";
+            var parametersJs = $("#external_parameters")
+                    .find("input")
+                    .toArray()
+                    .map(function (input) {
+                        return $(input).attr("name") + "=" + $(input).val() + ";\n";
+                    })
+                    .join("");
+
+            var safeJs = "(function(){ " + mql4ToJs.js + "\n" + parametersJs + functionName + "})()";
+
 
             console.log(safeJs);
 
@@ -59,6 +68,7 @@
         var parseAndShow = function () {
             var result = mqlParser.parse($("#source").val(), $("#keep-types").prop("checked"), $("#keep-original").prop("checked"), $("#keep-comments").prop("checked"));
 
+
             $("#functionToExecute").html(
                     result.mql4ToJs.callableFunctions.map(function (functionName) {
                         return "<option value='" + functionName + "()'>" + functionName + "</option>";
@@ -75,7 +85,10 @@
             $("#AST").val(result.tree.toStringTree(null, result.parser));
             $("#external_parameters").empty();
             $.each(result.mql4ToJs.externalParameters, function (index, value) {
-                $("#external_parameters").append("<tr><td>" + value.name + "</td><td>" + value.type + "</td><td> " + value.defaultValue + " </td></tr>")
+                $("#external_parameters").append(
+                        "<tr><td>" + value.name + "</td>" +
+                        "<td>" + value.type + "</td>" +
+                        "<td><input type='text' name='" + value.name + "' value='" + value.defaultValue + "' /> </td></tr>")
             });
             $("#js").text(result.mql4ToJs.js).each(function (i, block) {
                 hljs.highlightBlock(block);
@@ -904,6 +917,15 @@
 <div class="row">
     <h1>results</h1>
 
+    <h3>Javascript File</h3>
+    <pre>
+        <code id="js">
+
+
+        </code>
+    </pre>
+
+    <h3>Execution</h3>
 
     <h3>External parameters/Input</h3>
     <table>
@@ -919,19 +941,7 @@
 
         </tbody>
     </table>
-
-    <h3>Javascript File</h3>
-    <pre>
-        <code id="js">
-
-
-        </code>
-    </pre>
-
-    <h3>Execution</h3>
-    <select id="functionToExecute">
-
-    </select>
+    <select id="functionToExecute"></select>
     <button id="executeBtn">Execute generated javascript</button>
     <h3>log</h3>
     <pre><code id="log"></code></pre>
