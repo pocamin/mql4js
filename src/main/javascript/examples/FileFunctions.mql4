@@ -1,0 +1,42 @@
+void test(){
+	FileFindFirst();
+	FileFindNext();
+	FileFindClose();
+	FileIsExist();
+	FileOpen();
+	FileClose();
+	FileCopy();
+	FileDelete();
+	FileMove();
+	FileFlush();
+	FileGetInteger();
+	FileIsEnding();
+	FileIsLineEnding();
+	FileReadArray();
+	FileReadBool();
+	FileReadDatetime();
+	FileReadDouble();
+	FileReadFloat();
+	FileReadInteger();
+	FileReadLong();
+	FileReadNumber();
+	FileReadString();
+	FileReadStruct();
+	FileSeek();
+	FileSize();
+	FileTell();
+	FileWrite();
+	FileWriteArray();
+	FileWriteDouble();
+	FileWriteFloat();
+	FileWriteInteger();
+	FileWriteLong();
+	FileWriteString();
+	FileWriteStruct();
+	FolderCreate();
+	FolderDelete();
+	FolderClean();
+	FileOpenHistory();
+}
+
+

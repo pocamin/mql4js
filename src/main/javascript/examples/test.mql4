@@ -1,0 +1,8 @@
+int test(){
+   Print("test");
+}
+
+int test2(){
+   test();
+   Print(("test" == "toto") + " " + (M_PI) );
+}

@@ -1,0 +1,46 @@
+int test(){
+    // If with statement
+	if(test==3) return 3;
+
+    // If with Block
+	if(test==3) {
+	return 3;
+	}
+
+	// If else
+	if(test==3) {
+        return 3;
+	} else if (test == 4){
+	    return(4);
+	} else
+	    return 5;
+
+
+   // Switch
+   switch(i){
+        case 1: res=i; break;
+        default: res="default";
+   }
+
+    // While
+    while(k<n) {
+      k++;
+    }
+
+    // Do while
+    do {
+       k++;
+    } while(false);
+
+    // For
+    for(x=1;x<=7000; x++)
+        x--;
+
+    for(;!IsStopped();){
+        Kill();
+    }
+
+    for(i=0,j=n-l;i<n && !IsStopped();i++,j--) a[i]=a[j];
+
+}
+

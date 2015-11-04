@@ -1,0 +1,26 @@
+extern double StopLoss;
+double test;
+input Test toto;
+
+// Do nothing
+int firstFunction(){
+	Print("1>" +"firstFunction called");
+	Print("2>" + secondFunction(5, 4+3));
+	Print("3>" +functionWithAllDefaultArgument(2, 3));
+	Print("4>" +functionWithAllDefaultArgument(2));
+	Print("5>" +functionWithAllDefaultArgument());
+	Print("6>" +functionWithNotAllDefaultArgument(2,3));
+	Print("7>" +functionWithNotAllDefaultArgument(3));
+}
+
+int secondFunction(Int a, Int b){
+	return (a - b);
+}
+
+int functionWithAllDefaultArgument(Int a=6, Int b=5){
+	return (a - b);
+}
+
+int functionWithNotAllDefaultArgument(Int a, Int b=5){
+	return (a - b);
+}

@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <title>MQL4 to Javascript</title>
     <link rel="stylesheet" href="mql4js.css">
+    <link rel="stylesheet" href="styles/agate.css">
     <script language="JavaScript" src="lib/require.js"></script>
+    <script language="JavaScript" src="mql4js.convert.constants.js"></script>
+    <script language="JavaScript" src="mql4js.convert.functions.js"></script>
     <script language="JavaScript" src="lib/jquery-2.1.4.min.js"></script>
     <script language="JavaScript" src="lib/lodash.min.js"></script>
+    <script language="JavaScript" src="lib/highlight.pack.js"></script>
+
 
     <script language="JavaScript">
         var antlr4 = require('antlr4/index');
@@ -24,68 +29,84 @@
             })
         };
 
+        function runScript(functionName, mql4ToJs) {
 
-        // show results
-        function formatAst(ast) {
-            var nbTab = -1;
-            var toReturn = "";
 
-            function newLine(nbTab) {
-                var toReturn = "\n";
-                for (var i = 0; i < nbTab; i++) {
-                    toReturn += "\t"
-                }
-                return toReturn;
+            var logBlock = $("#log");
 
-            }
 
-            for (var i = 0; i < ast.length; i++) {
+            var externalParametersAsJs = "var $parameters = {" +
+                    mql4ToJs.externalParameters.map(function (param) {
+                        return param.name + ":" + param.defaultValue
+                    }).join(", ") + "};\n";
 
-                if (ast.charAt(i) == "(") {
-                    nbTab++;
-                    toReturn += newLine(nbTab);
-                    toReturn += ast.charAt(i);
 
-                } else if (ast.charAt(i) == ")") {
-                    nbTab--;
-                    toReturn += ast.charAt(i);
-                    toReturn += newLine(nbTab);
-                } else {
-                    toReturn += ast.charAt(i);
-                }
+            var safeJs = "(function(){ " + externalParametersAsJs + mql4ToJs.js + "\n" + functionName + "})()";
 
-            }
-            return toReturn;
 
+            console.log(safeJs);
+
+
+            var _log = console.log;
+            var _error = console.error;
+            console.error = function (msg) {
+                logBlock.append("<span class='error'>" + msg + "</span>\n");
+            };
+            console.log = function (msg) {
+                logBlock.append("<span class='log'>" + msg + "</span>\n");
+            };
+            console.error("------");
+            console.error("running " + functionName + " on " + new Date());
+            console.error("------");
+            eval(safeJs);
+            console.log = _log;
+            console.error = _error;
 
         }
 
 
         var parseAndShow = function () {
-            var result = mqlParser.parse($("#source").val(), $("#keep-types").prop("checked"));
+            var result = mqlParser.parse($("#source").val(), $("#keep-types").prop("checked"), $("#keep-original").prop("checked"), $("#keep-comments").prop("checked"));
 
-            $("#AST").val(formatAst(result.tree.toStringTree(null, result.parser)));
+            $("#functionToExecute").html(
+                    result.mql4ToJs.callableFunctions.map(function (functionName) {
+                        return "<option value='" + functionName + "()'>" + functionName + "</option>";
+                    }).join("")
+            );
+
+            $("#executeBtn")
+                    .unbind("click")
+                    .bind("click", function () {
+                        runScript($("#functionToExecute").val(), result.mql4ToJs);
+                    });
+
+
+            $("#AST").val(result.tree.toStringTree(null, result.parser));
             $("#external_parameters").empty();
             $.each(result.mql4ToJs.externalParameters, function (index, value) {
                 $("#external_parameters").append("<tr><td>" + value.name + "</td><td>" + value.type + "</td><td> " + value.defaultValue + " </td></tr>")
             });
-            $("#js").val(result.mql4ToJs.js);
+            $("#js").text(result.mql4ToJs.js).each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
 
         };
 
 
         // parse
         var mqlParser = function () {
-            var parse = function (input, keepType) {
+            var parse = function (input, keepType, keepOriginal, keepComment) {
                 var chars = new antlr4.InputStream(input);
                 var lexer = new mql4Lexer.MQL4Lexer(chars);
                 var tokens = new antlr4.CommonTokenStream(lexer);
                 var parser = new mql4Parser.MQL4Parser(tokens);
+
+
                 parser.buildParseTrees = true;
 
                 var tree = parser.root();
 
-                var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType).visit(tree);
+                var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType, keepOriginal, tokens, keepComment).visit(tree);
                 return {parser: parser, tree: tree, mql4ToJs: result};
             };
 
@@ -122,23 +143,768 @@
 
     </div>
     <select id="sourceFile" onchange="readMql4()">
-        <option value="enum.mql4">enum.mql4</option>
-        <option value="comments.mql4">comments.mql4</option>
-        <option value="ArrayFunctions.mql4" selected>ArrayFunctions.mql4</option>
-        <option value="AccountFunctions.mql4">AccountFunctions.mql4</option>
-        <option value="CommonFunctions.mql4">CommonFunctions.mql4</option>
-        <option value="declaration.mql4">declaration.mql4</option>
-        <option value="date.mql4">date.mql4</option>
-        <option value="structure.mql4">structure.mql4</option>
-        <option value="test1.mql4">test1.mql4</option>
-        <option value="test2.mql4">test2.mql4</option>
-        <option value="test3.mql4">test3.mql4</option>
+        <optgroup label="personal tests">
+            <option value="test.mql4" selected>test.mql4</option>
+        </optgroup>
+        <optgroup label="mql4 lang">
+            <option value="declaration.mql4">Declarations</option>
+            <option value="Arrays.mql4">Arrays</option>
+            <option value="enum.mql4">Enums</option>
+            <option value="comments.mql4">Comments</option>
+            <option value="structure.mql4">Structures</option>
+            <option value="FunctionDeclarations.mql4">Function Declaration</option>
+            <option value="ControlStructures.mql4">Control structures</option>
+
+        </optGroup>
+
+        <optgroup label="mql4 standard api">
+            <option value="CommonFunctions.mql4">Common Functions</option>
+            <option value="ArrayFunctions.mql4">Array Functions</option>
+            <option value="ConversionFunctions.mql4">Conversion Functions</option>
+            <option value="MathFunction.mql4">Math Function</option>
+            <option value="StringFunction.mql4">String Function</option>
+            <option value="DateFunctions.mql4">Date and Time</option>
+            <option value="AccountFunctions.mql4">Account Information</option>
+            <option value="StateChecking.mql4">Checkup</option>
+            <option value="marketInfo.mql4">Market Info</option>
+            <option value="TimeSeriesFunctions.mql4">Timeseries and Indicators Access</option>
+            <option value="ChartFunctions.mql4">Chart Operations</option>
+            <option value="TradeFunctions.mql4">Trade Functions</option>
+            <option value="SignalFunctions.mql4">Trade Signals</option>
+            <option value="GlobalVariableFunctions.mql4">Global Variables of the Terminal</option>
+            <option value="FileFunctions.mql4">File Functions</option>
+            <option value="CustomIndicatorsFunction.mql4">Custom Indicators</option>
+            <option value="ObjectFunctions.mql4">Object Functions</option>
+            <option value="TechnicalIndicatorsFunctions.mql4">Technical Indicators</option>
+            <option value="EventFunctions.mql4">Working with Events</option>
+        </optGroup>
+
+        <optgroup label="mql4 EA">
+            <option value='mq4/0Graal-CROSSmuvingi.mq4'>0Graal-CROSSmuvingi</option>
+            <option value='mq4/0-RenkoLiveChart_v3_3-Labels.mq4'>0-RenkoLiveChart_v3_3-Labels</option>
+            <option value='mq4/10p3v003.mq4'>10p3v003</option>
+            <option value='mq4/10p3v004.mq4'>10p3v004</option>
+            <option value='mq4/10p3v005.mq4'>10p3v005</option>
+            <option value='mq4/10pips.mq4'>10pips</option>
+            <option value='mq4/10pipsOnceADayOppositeLastNHourTrend.mq4'>10pipsOnceADayOppositeLastNHourTrend</option>
+            <option value='mq4/10_points_3.mq4'>10_points_3</option>
+            <option value='mq4/120224_1420_T-foREX_Photos_v02_Orders.mq4'>120224_1420_T-foREX_Photos_v02_Orders</option>
+            <option value='mq4/120224_1420_T-foREX_Photos_v03_No_Print.mq4'>120224_1420_T-foREX_Photos_v03_No_Print</option>
+            <option value='mq4/1-2-3_forCodeBase_v01.mq4'>1-2-3_forCodeBase_v01</option>
+            <option value='mq4/16_ZigAndZag_trade_V2.mq4'>16_ZigAndZag_trade_V2</option>
+            <option value='mq4/1h-4h-1d.mq4'>1h-4h-1d</option>
+            <option value='mq4/20_200_expert_v4_2_AntS.mq4'>20_200_expert_v4_2_AntS</option>
+            <option value='mq4/204060_program_v0_02.mq4'>204060_program_v0_02</option>
+            <option value='mq4/204060_program_V0_02.mq4'>204060_program_V0_02</option>
+            <option value='mq4/20_pips.mq4'>20_pips</option>
+            <option value='mq4/20pipsOnceADayOppositeLastNHourTrend.mq4'>20pipsOnceADayOppositeLastNHourTrend</option>
+            <option value='mq4/21hour.mq4'>21hour</option>
+            <option value='mq4/2_Otkat_Sys_v1_1.mq4'>2_Otkat_Sys_v1_1</option>
+            <option value='mq4/3_lccfpgubwykd__www_forex-instruments_info.mq4'>3_lccfpgubwykd__www_forex-instruments_info</option>
+            <option value='mq4/3ma01exp_www_forex-instruments_info.mq4'>3ma01exp_www_forex-instruments_info</option>
+            <option value='mq4/3MaCross_EA.mq4'>3MaCross_EA</option>
+            <option value='mq4/_3_MA_Cross_w_Alert_v2.mq4'>_3_MA_Cross_w_Alert_v2</option>
+            <option value='mq4/3sma_www_forex-instruments_info.mq4'>3sma_www_forex-instruments_info</option>
+            <option value='mq4/4_SMA.mq4'>4_SMA</option>
+            <option value='mq4/55_MA_med_FIN.mq4'>55_MA_med_FIN</option>
+            <option value='mq4/5_8macrossv2.mq4'>5_8macrossv2</option>
+            <option value='mq4/5matf.mq4'>5matf</option>
+            <option value='mq4/5min_rsi_qual_01a_www_forex-instruments_info.mq4'>5min_rsi_qual_01a_www_forex-instruments_info</option>
+            <option value='mq4/6xIndics_M.mq4'>6xIndics_M</option>
+            <option value='mq4/9eagbolltrade_ron_mt4_v03c_www_forex-instruments_info.mq4'>9eagbolltrade_ron_mt4_v03c_www_forex-instruments_info
+            </option>
+            <option value='mq4/Abovebelowma_www_forex-instruments_info.mq4'>Abovebelowma_www_forex-instruments_info</option>
+            <option value='mq4/Adeleteme_www_forex-instruments_info.mq4'>Adeleteme_www_forex-instruments_info</option>
+            <option value='mq4/ADX_MA.mq4'>ADX_MA</option>
+            <option value='mq4/ADX_Simple.mq4'>ADX_Simple</option>
+            <option value='mq4/ADX_System.mq4'>ADX_System</option>
+            <option value='mq4/aeron_jjn_ea.mq4'>aeron_jjn_ea</option>
+            <option value='mq4/AeronRobot_EURUSD-r9_06.mq4'>AeronRobot_EURUSD-r9_06</option>
+            <option value='mq4/a_informer.mq4'>a_informer</option>
+            <option value='mq4/Alert_MACD_Slow.mq4'>Alert_MACD_Slow</option>
+            <option value='mq4/Alexav_d1_profit_gbpusd.mq4'>Alexav_d1_profit_gbpusd</option>
+            <option value='mq4/Alexav_speedup_m1.mq4'>Alexav_speedup_m1</option>
+            <option value='mq4/alliheik.mq4'>alliheik</option>
+            <option value='mq4/AltariusRSIxampnSTOH.mq4'>AltariusRSIxampnSTOH</option>
+            <option value='mq4/AMA.mq4'>AMA</option>
+            <option value='mq4/AMA_TRADER_v2_1.mq4'>AMA_TRADER_v2_1</option>
+            <option value='mq4/analyzehistory.mq4'>analyzehistory</option>
+            <option value='mq4/angrybird_xscalpingn.mq4'>angrybird_xscalpingn</option>
+            <option value='mq4/AntiFragile_EA_v1_0.mq4'>AntiFragile_EA_v1_0</option>
+            <option value='mq4/Anubis_www_forex-instruments_info.mq4'>Anubis_www_forex-instruments_info</option>
+            <option value='mq4/Aocci.mq4'>Aocci</option>
+            <option value='mq4/ARD_ORDER_MANAGEMENT_EA-BETA_1.mq4'>ARD_ORDER_MANAGEMENT_EA-BETA_1</option>
+            <option value='mq4/ARD_ORDER_MANAGEMENT_.mq4'>ARD_ORDER_MANAGEMENT_</option>
+            <option value='mq4/ARD_ORDER_MANAGEMENT__v1_5.mq4'>ARD_ORDER_MANAGEMENT__v1_5</option>
+            <option value='mq4/ArtificialIntelligence.mq4'>ArtificialIntelligence</option>
+            <option value='mq4/Arttrader_v1_5.mq4'>Arttrader_v1_5</option>
+            <option value='mq4/ASChq.mq4'>ASChq</option>
+            <option value='mq4/ATFX_Breakout_Robot___Ver_1_Build_05.mq4'>ATFX_Breakout_Robot___Ver_1_Build_05</option>
+            <option value='mq4/auto_m5.mq4'>auto_m5</option>
+            <option value='mq4/AutoMagiCal.mq4'>AutoMagiCal</option>
+            <option value='mq4/AutoMagiCal_v2a.mq4'>AutoMagiCal_v2a</option>
+            <option value='mq4/AutoNewsTraderEA.mq4'>AutoNewsTraderEA</option>
+            <option value='mq4/autopendingbyrsi.mq4'>autopendingbyrsi</option>
+            <option value='mq4/Auto_RXD_V1_67.mq4'>Auto_RXD_V1_67</option>
+            <option value='mq4/autoslautotp.mq4'>autoslautotp</option>
+            <option value='mq4/autosltp.mq4'>autosltp</option>
+            <option value='mq4/Autostop2.mq4'>Autostop2</option>
+            <option value='mq4/AutostopCyriac.mq4'>AutostopCyriac</option>
+            <option value='mq4/Autostop.mq4'>Autostop</option>
+            <option value='mq4/autotstop.mq4'>autotstop</option>
+            <option value='mq4/autotstop__update_2.mq4'>autotstop__update_2</option>
+            <option value='mq4/autotstop__update_3.mq4'>autotstop__update_3</option>
+            <option value='mq4/autotstop_update_4.mq4'>autotstop_update_4</option>
+            <option value='mq4/autotstop_update_5.mq4'>autotstop_update_5</option>
+            <option value='mq4/Aver12345.mq4'>Aver12345</option>
+            <option value='mq4/Aver4StoqPostzigzag.mq4'>Aver4StoqPostzigzag</option>
+            <option value='mq4/Avpb.mq4'>Avpb</option>
+            <option value='mq4/AwesomeFxTradera.mq4'>AwesomeFxTradera</option>
+            <option value='mq4/Backbone.mq4'>Backbone</option>
+            <option value='mq4/Badorders.mq4'>Badorders</option>
+            <option value='mq4/Bago_ea.mq4'>Bago_ea</option>
+            <option value='mq4/basic_trailing_stop.mq4'>basic_trailing_stop</option>
+            <option value='mq4/Batman-EA.mq4'>Batman-EA</option>
+            <option value='mq4/BAT.mq4'>BAT</option>
+            <option value='mq4/Bb_0_1.mq4'>Bb_0_1</option>
+            <option value='mq4/bea0twoperbar_ron_mt4_vtest01.mq4'>bea0twoperbar_ron_mt4_vtest01</option>
+            <option value='mq4/bleris.mq4'>bleris</option>
+            <option value='mq4/bLinRegrBuf.mq4'>bLinRegrBuf</option>
+            <option value='mq4/blonde_trader.mq4'>blonde_trader</option>
+            <option value='mq4/bollinger_breakout.mq4'>bollinger_breakout</option>
+            <option value='mq4/Breadandbutter2.mq4'>Breadandbutter2</option>
+            <option value='mq4/BreakdownLevelDay.mq4'>BreakdownLevelDay</option>
+            <option value='mq4/Breakout-04.mq4'>Breakout-04</option>
+            <option value='mq4/Breakout15.mq4'>Breakout15</option>
+            <option value='mq4/breakpoint.mq4'>breakpoint</option>
+            <option value='mq4/Break_the_Range_Bound.mq4'>Break_the_Range_Bound</option>
+            <option value='mq4/Bronzew_pan.mq4'>Bronzew_pan</option>
+            <option value='mq4/Bruno_v1.mq4'>Bruno_v1</option>
+            <option value='mq4/BT_v4.mq4'>BT_v4</option>
+            <option value='mq4/Bullish_Reversal.mq4'>Bullish_Reversal</option>
+            <option value='mq4/Bull_vs_Medved.mq4'>Bull_vs_Medved</option>
+            <option value='mq4/Burg_Extrapolator.mq4'>Burg_Extrapolator</option>
+            <option value='mq4/Candle_trader.mq4'>Candle_trader</option>
+            <option value='mq4/CashMachine_5min.mq4'>CashMachine_5min</option>
+            <option value='mq4/CashMachine.mq4'>CashMachine</option>
+            <option value='mq4/Casino111.mq4'>Casino111</option>
+            <option value='mq4/Catcher_Profit_1_0.mq4'>Catcher_Profit_1_0</option>
+            <option value='mq4/CCFpcadvisor1.mq4'>CCFpcadvisor1</option>
+            <option value='mq4/CCFp.mq4'>CCFp</option>
+            <option value='mq4/CCICOMA.mq4'>CCICOMA</option>
+            <option value='mq4/CCI_MA_v1_5.mq4'>CCI_MA_v1_5</option>
+            <option value='mq4/C_Factor_HLH4_buy_only.mq4'>C_Factor_HLH4_buy_only</option>
+            <option value='mq4/Channel_scalper.mq4'>Channel_scalper</option>
+            <option value='mq4/Channels.mq4'>Channels</option>
+            <option value='mq4/Charels1_3_9.mq4'>Charels1_3_9</option>
+            <option value='mq4/Charels1_4_0.mq4'>Charels1_4_0</option>
+            <option value='mq4/Charles1_3_3.mq4'>Charles1_3_3</option>
+            <option value='mq4/Charles1_3_5.mq4'>Charles1_3_5</option>
+            <option value='mq4/Charles1_3_7.mq4'>Charles1_3_7</option>
+            <option value='mq4/Charles1_3_8.mq4'>Charles1_3_8</option>
+            <option value='mq4/Charles2_0_3.mq4'>Charles2_0_3</option>
+            <option value='mq4/Charles2_1_5.mq4'>Charles2_1_5</option>
+            <option value='mq4/Charles2_1_8a.mq4'>Charles2_1_8a</option>
+            <option value='mq4/CheckMyArbitrage.mq4'>CheckMyArbitrage</option>
+            <option value='mq4/CHO.mq4'>CHO</option>
+            <option value='mq4/close5profit.mq4'>close5profit</option>
+            <option value='mq4/closeallbysymbol.mq4'>closeallbysymbol</option>
+            <option value='mq4/CloseAtProfit.mq4'>CloseAtProfit</option>
+            <option value='mq4/close_by_equity_percent.mq4'>close_by_equity_percent</option>
+            <option value='mq4/close_cross_kijun_sen.mq4'>close_cross_kijun_sen</option>
+            <option value='mq4/close_cross_ma.mq4'>close_cross_ma</option>
+            <option value='mq4/Close_Orders_V0_02.mq4'>Close_Orders_V0_02</option>
+            <option value='mq4/close_positions_v1_0.mq4'>close_positions_v1_0</option>
+            <option value='mq4/cm_EA_News.mq4'>cm_EA_News</option>
+            <option value='mq4/cm_Martini.mq4'>cm_Martini</option>
+            <option value='mq4/Colibri.mq4'>Colibri</option>
+            <option value='mq4/Combo_EA4FSFrUpdated5.mq4'>Combo_EA4FSFrUpdated5</option>
+            <option value='mq4/Combo_Right.mq4'>Combo_Right</option>
+            <option value='mq4/ComFracti_final.mq4'>ComFracti_final</option>
+            <option value='mq4/ComFracti.mq4'>ComFracti</option>
+            <option value='mq4/ComFracti_v2_1.mq4'>ComFracti_v2_1</option>
+            <option value='mq4/Contrarian_trade_ma.mq4'>Contrarian_trade_ma</option>
+            <option value='mq4/Contrarian_trade_MA.mq4'>Contrarian_trade_MA</option>
+            <option value='mq4/count_pending.mq4'>count_pending</option>
+            <option value='mq4/CrossMA.mq4'>CrossMA</option>
+            <option value='mq4/cspa-1_43.mq4'>cspa-1_43</option>
+            <option value='mq4/CSTV04.mq4'>CSTV04</option>
+            <option value='mq4/CSTV05.mq4'>CSTV05</option>
+            <option value='mq4/cstv06.mq4'>cstv06</option>
+            <option value='mq4/csv_margin_tracker.mq4'>csv_margin_tracker</option>
+            <option value='mq4/Currency_Loader.mq4'>Currency_Loader</option>
+            <option value='mq4/Currencyprofits_01_1.mq4'>Currencyprofits_01_1</option>
+            <option value='mq4/CyberiaTrader.mq4'>CyberiaTrader</option>
+            <option value='mq4/CycleIdentifier.mq4'>CycleIdentifier</option>
+            <option value='mq4/Cyclops_v_1_2.mq4'>Cyclops_v_1_2</option>
+            <option value='mq4/Daily_Opening_EA_v2.mq4'>Daily_Opening_EA_v2</option>
+            <option value='mq4/Daily_STP_Entry_Frame_V1.mq4'>Daily_STP_Entry_Frame_V1</option>
+            <option value='mq4/dailyTrendReversal_D1.mq4'>dailyTrendReversal_D1</option>
+            <option value='mq4/DANCA_NEWS.mq4'>DANCA_NEWS</option>
+            <option value='mq4/Daydream01.mq4'>Daydream01</option>
+            <option value='mq4/DayTrading.mq4'>DayTrading</option>
+            <option value='mq4/DemarkLinesEA.mq4'>DemarkLinesEA</option>
+            <option value='mq4/DeMark_lines.mq4'>DeMark_lines</option>
+            <option value='mq4/disturbed.mq4'>disturbed</option>
+            <option value='mq4/Divergence_Trader.mq4'>Divergence_Trader</option>
+            <option value='mq4/Dlmv1a10_4-mql4contest.mq4'>Dlmv1a10_4-mql4contest</option>
+            <option value='mq4/Doji_arrows_expert1.mq4'>Doji_arrows_expert1</option>
+            <option value='mq4/Dojitraderg23sep05k.mq4'>Dojitraderg23sep05k</option>
+            <option value='mq4/Donchain_counter-channel_system.mq4'>Donchain_counter-channel_system</option>
+            <option value='mq4/Doublema_breakout_ea.mq4'>Doublema_breakout_ea</option>
+            <option value='mq4/DoubleUp2.mq4'>DoubleUp2</option>
+            <option value='mq4/DoubleUp.mq4'>DoubleUp</option>
+            <option value='mq4/DragSLTP.mq4'>DragSLTP</option>
+            <option value='mq4/Dt-rsi-exp1.mq4'>Dt-rsi-exp1</option>
+            <option value='mq4/DVD_100-50_cent.mq4'>DVD_100-50_cent</option>
+            <option value='mq4/E_2_12_5min.mq4'>E_2_12_5min</option>
+            <option value='mq4/EA_E-mail.mq4'>EA_E-mail</option>
+            <option value='mq4/EA_Fibo_Avg_001a.mq4'>EA_Fibo_Avg_001a</option>
+            <option value='mq4/EA_MA_Email.mq4'>EA_MA_Email</option>
+            <option value='mq4/EA_PSar_002B_v1.mq4'>EA_PSar_002B_v1</option>
+            <option value='mq4/EA_PSar_002B_WHRoeder.mq4'>EA_PSar_002B_WHRoeder</option>
+            <option value='mq4/EA_PSar_004B.mq4'>EA_PSar_004B</option>
+            <option value='mq4/earlyBird1.mq4'>earlyBird1</option>
+            <option value='mq4/earlyBird3.mq4'>earlyBird3</option>
+            <option value='mq4/earlyOpenTrend.mq4'>earlyOpenTrend</option>
+            <option value='mq4/earlyTopProrate_V1.mq4'>earlyTopProrate_V1</option>
+            <option value='mq4/EA_RSI_MA_001a.mq4'>EA_RSI_MA_001a</option>
+            <option value='mq4/Easiest_ever.mq4'>Easiest_ever</option>
+            <option value='mq4/Easiest_RSI.mq4'>Easiest_RSI</option>
+            <option value='mq4/ea_symr_newBar.mq4'>ea_symr_newBar</option>
+            <option value='mq4/eatemplateclean_v3.mq4'>eatemplateclean_v3</option>
+            <option value='mq4/eatemplate.mq4'>eatemplate</option>
+            <option value='mq4/eatemplate_v3.mq4'>eatemplate_v3</option>
+            <option value='mq4/eatemplateworking_v3.mq4'>eatemplateworking_v3</option>
+            <option value='mq4/e-CA-5.mq4'>e-CA-5</option>
+            <option value='mq4/EES_Hedger.mq4'>EES_Hedger</option>
+            <option value='mq4/E-friday.mq4'>E-friday</option>
+            <option value='mq4/Elderv30aug05v.mq4'>Elderv30aug05v</option>
+            <option value='mq4/Elite_eFibo_Trader_v2_1.mq4'>Elite_eFibo_Trader_v2_1</option>
+            <option value='mq4/Elite_eFibo_Trader_v2_6.mq4'>Elite_eFibo_Trader_v2_6</option>
+            <option value='mq4/Elli.mq4'>Elli</option>
+            <option value='mq4/Elliott_Trader_Modify3_V1.mq4'>Elliott_Trader_Modify3_V1</option>
+            <option value='mq4/Ema_6_12.mq4'>Ema_6_12</option>
+            <option value='mq4/EMA_CROSS_2.mq4'>EMA_CROSS_2</option>
+            <option value='mq4/Ema_cross_contest_hedged.mq4'>Ema_cross_contest_hedged</option>
+            <option value='mq4/Emagic1_161.mq4'>Emagic1_161</option>
+            <option value='mq4/emapluswpr_v_2.mq4'>emapluswpr_v_2</option>
+            <option value='mq4/EMAplusWPR_V_2.mq4'>EMAplusWPR_V_2</option>
+            <option value='mq4/ema_sticker.mq4'>ema_sticker</option>
+            <option value='mq4/EMA_WMA.mq4'>EMA_WMA</option>
+            <option value='mq4/EMA_WMA_RSI.mq4'>EMA_WMA_RSI</option>
+            <option value='mq4/EM_VOL.mq4'>EM_VOL</option>
+            <option value='mq4/E-news-luckyw.mq4'>E-news-luckyw</option>
+            <option value='mq4/EnvelopeMA.mq4'>EnvelopeMA</option>
+            <option value='mq4/e_OnMA_004.mq4'>e_OnMA_004</option>
+            <option value='mq4/e-PSI0ManagerTrailing.mq4'>e-PSI0ManagerTrailing</option>
+            <option value='mq4/e-PSIhPROC.mq4'>e-PSIhPROC</option>
+            <option value='mq4/e-PSIuMultiSETfEn8.mq4'>e-PSIuMultiSETfEn8</option>
+            <option value='mq4/equalvolumebars.mq4'>equalvolumebars</option>
+            <option value='mq4/e-Regr.mq4'>e-Regr</option>
+            <option value='mq4/e_RPoint_250.mq4'>e_RPoint_250</option>
+            <option value='mq4/errorEA.mq4'>errorEA</option>
+            <option value='mq4/escape.mq4'>escape</option>
+            <option value='mq4/et4_MTC_v1.mq4'>et4_MTC_v1</option>
+            <option value='mq4/e-TurboFx.mq4'>e-TurboFx</option>
+            <option value='mq4/Eugene.mq4'>Eugene</option>
+            <option value='mq4/EURUSD.mq4'>EURUSD</option>
+            <option value='mq4/eurusdv2_0.mq4'>eurusdv2_0</option>
+            <option value='mq4/exp_Amstell.mq4'>exp_Amstell</option>
+            <option value='mq4/exp_Amstell-SL.mq4'>exp_Amstell-SL</option>
+            <option value='mq4/Expert610_eng.mq4'>Expert610_eng</option>
+            <option value='mq4/ExpertCLOR_2MAwampxStATR_v01.mq4'>ExpertCLOR_2MAwampxStATR_v01</option>
+            <option value='mq4/Expert_Master_EURUSD.mq4'>Expert_Master_EURUSD</option>
+            <option value='mq4/Expert.mq4'>Expert</option>
+            <option value='mq4/Experts10.mq4'>Experts10</option>
+            <option value='mq4/EXP_FIBO_ZZ_V1en.mq4'>EXP_FIBO_ZZ_V1en</option>
+            <option value='mq4/exp_Lego_4_Beta.mq4'>exp_Lego_4_Beta</option>
+            <option value='mq4/expmartin_v2.mq4'>expmartin_v2</option>
+            <option value='mq4/_Fibo_Pivot_multiVal.mq4'>_Fibo_Pivot_multiVal</option>
+            <option value='mq4/fibostop.mq4'>fibostop</option>
+            <option value='mq4/Firebird_v0_60_deaz1.mq4'>Firebird_v0_60_deaz1</option>
+            <option value='mq4/firepips_.mq4'>firepips_</option>
+            <option value='mq4/Fisher_Yur4ik_Alert.mq4'>Fisher_Yur4ik_Alert</option>
+            <option value='mq4/Fitful_13.mq4'>Fitful_13</option>
+            <option value='mq4/Flat_001a.mq4'>Flat_001a</option>
+            <option value='mq4/Flat_trend_v1_0.mq4'>Flat_trend_v1_0</option>
+            <option value='mq4/fmoneea.mq4'>fmoneea</option>
+            <option value='mq4/Follow_Your_Heart.mq4'>Follow_Your_Heart</option>
+            <option value='mq4/Forex_Profit_System.mq4'>Forex_Profit_System</option>
+            <option value='mq4/Forex_SKY.mq4'>Forex_SKY</option>
+            <option value='mq4/for_max_v2.mq4'>for_max_v2</option>
+            <option value='mq4/Fractal_ZigZag_Expert.mq4'>Fractal_ZigZag_Expert</option>
+            <option value='mq4/Fractured_fractals.mq4'>Fractured_fractals</option>
+            <option value='mq4/Franks_4hour_limit_orders.mq4'>Franks_4hour_limit_orders</option>
+            <option value='mq4/Frank_ud.mq4'>Frank_ud</option>
+            <option value='mq4/Frbestexp02_1_maloma_mod.mq4'>Frbestexp02_1_maloma_mod</option>
+            <option value='mq4/FT_0tk80i9uw4ep_Parabolic.mq4'>FT_0tk80i9uw4ep_Parabolic</option>
+            <option value='mq4/FT_BillWillams_AO.mq4'>FT_BillWillams_AO</option>
+            <option value='mq4/FT_BillWillams_Trader.mq4'>FT_BillWillams_Trader</option>
+            <option value='mq4/FT_TIME_BIGDOG.mq4'>FT_TIME_BIGDOG</option>
+            <option value='mq4/FT_TrendFollower.mq4'>FT_TrendFollower</option>
+            <option value='mq4/FullDamp.mq4'>FullDamp</option>
+            <option value='mq4/Fundamental_Trader_DailyFX_MQL4_v0_04.mq4'>Fundamental_Trader_DailyFX_MQL4_v0_04</option>
+            <option value='mq4/Fuzzy_logic.mq4'>Fuzzy_logic</option>
+            <option value='mq4/Fx10ea.mq4'>Fx10ea</option>
+            <option value='mq4/FX-AO.mq4'>FX-AO</option>
+            <option value='mq4/FX-Bay_MACD.mq4'>FX-Bay_MACD</option>
+            <option value='mq4/FX-CHAOS.mq4'>FX-CHAOS</option>
+            <option value='mq4/FX-CHAOS_SCALP.mq4'>FX-CHAOS_SCALP</option>
+            <option value='mq4/fxscalper.mq4'>fxscalper</option>
+            <option value='mq4/FXTticksCollector.mq4'>FXTticksCollector</option>
+            <option value='mq4/Gandalf_PRO.mq4'>Gandalf_PRO</option>
+            <option value='mq4/gaps.mq4'>gaps</option>
+            <option value='mq4/Gaps.mq4'>Gaps</option>
+            <option value='mq4/gazonkos_expert.mq4'>gazonkos_expert</option>
+            <option value='mq4/Gbp9am.mq4'>Gbp9am</option>
+            <option value='mq4/Geedo.mq4'>Geedo</option>
+            <option value='mq4/genie.mq4'>genie</option>
+            <option value='mq4/genie_pivot.mq4'>genie_pivot</option>
+            <option value='mq4/genie_rsi.mq4'>genie_rsi</option>
+            <option value='mq4/genie_stoch_rsi.mq4'>genie_stoch_rsi</option>
+            <option value='mq4/Get_rich_or_die_trying_any_gbp.mq4'>Get_rich_or_die_trying_any_gbp</option>
+            <option value='mq4/Get_trend.mq4'>Get_trend</option>
+            <option value='mq4/Glamtrader.mq4'>Glamtrader</option>
+            <option value='mq4/GLFX.mq4'>GLFX</option>
+            <option value='mq4/Godbot_v1_2_1.mq4'>Godbot_v1_2_1</option>
+            <option value='mq4/Goldwarrior02b.mq4'>Goldwarrior02b</option>
+            <option value='mq4/GoodGbbi.mq4'>GoodGbbi</option>
+            <option value='mq4/gpfTCPivotLimit.mq4'>gpfTCPivotLimit</option>
+            <option value='mq4/gpfTCPivotStop.mq4'>gpfTCPivotStop</option>
+            <option value='mq4/Graal-003u25.mq4'>Graal-003u25</option>
+            <option value='mq4/_GrailExpertMAV1_0.mq4'>_GrailExpertMAV1_0</option>
+            <option value='mq4/Gselector.mq4'>Gselector</option>
+            <option value='mq4/GTerminal_V5a.mq4'>GTerminal_V5a</option>
+            <option value='mq4/HA.mq4'>HA</option>
+            <option value='mq4/HardcoreFX.mq4'>HardcoreFX</option>
+            <option value='mq4/hardprofit.mq4'>hardprofit</option>
+            <option value='mq4/HarVesteR.mq4'>HarVesteR</option>
+            <option value='mq4/HASNEWJ.mq4'>HASNEWJ</option>
+            <option value='mq4/HBS_system.mq4'>HBS_system</option>
+            <option value='mq4/Hedger_Long_v1_2.mq4'>Hedger_Long_v1_2</option>
+            <option value='mq4/Hedger_Short_v1_2.mq4'>Hedger_Short_v1_2</option>
+            <option value='mq4/Heiken_Ashi_Smoothed.mq4'>Heiken_Ashi_Smoothed</option>
+            <option value='mq4/Hercules_v1_3_MAJORS.mq4'>Hercules_v1_3_MAJORS</option>
+            <option value='mq4/hjueiisyx8lp2o379e_www_forex-instruments_info.mq4'>hjueiisyx8lp2o379e_www_forex-instruments_info</option>
+            <option value='mq4/hngl4i3gbnw5edyd.mq4'>hngl4i3gbnw5edyd</option>
+            <option value='mq4/HTH.mq4'>HTH</option>
+            <option value='mq4/Huge_Income.mq4'>Huge_Income</option>
+            <option value='mq4/HybridEA01.mq4'>HybridEA01</option>
+            <option value='mq4/HybridEA.mq4'>HybridEA</option>
+            <option value='mq4/hybrid_scalper.mq4'>hybrid_scalper</option>
+            <option value='mq4/ichimok2005.mq4'>ichimok2005</option>
+            <option value='mq4/Ilan1_4.mq4'>Ilan1_4</option>
+            <option value='mq4/ilan1_6dynamic.mq4'>ilan1_6dynamic</option>
+            <option value='mq4/ilan16.mq4'>ilan16</option>
+            <option value='mq4/iMAX3alert1.mq4'>iMAX3alert1</option>
+            <option value='mq4/Inform.mq4'>Inform</option>
+            <option value='mq4/InputResizer_600.mq4'>InputResizer_600</option>
+            <option value='mq4/InputResizerEA_600.mq4'>InputResizerEA_600</option>
+            <option value='mq4/InputResizerEA.mq4'>InputResizerEA</option>
+            <option value='mq4/InputResizer.mq4'>InputResizer</option>
+            <option value='mq4/instantexecution.mq4'>instantexecution</option>
+            <option value='mq4/Intraday_beta.mq4'>Intraday_beta</option>
+            <option value='mq4/Intradayv2.mq4'>Intradayv2</option>
+            <option value='mq4/i-Regr.mq4'>i-Regr</option>
+            <option value='mq4/JimsCloseOrders.mq4'>JimsCloseOrders</option>
+            <option value='mq4/JK_BullP_AutoTrader2.mq4'>JK_BullP_AutoTrader2</option>
+            <option value='mq4/JK_sinkhro1.mq4'>JK_sinkhro1</option>
+            <option value='mq4/jMasterRSXv1C.mq4'>jMasterRSXv1C</option>
+            <option value='mq4/jMasterRSXv1.mq4'>jMasterRSXv1</option>
+            <option value='mq4/Kloss_.mq4'>Kloss_</option>
+            <option value='mq4/knux_1_0.mq4'>knux_1_0</option>
+            <option value='mq4/knux_martingale.mq4'>knux_martingale</option>
+            <option value='mq4/KSRobot_1_5_h1_v1.mq4'>KSRobot_1_5_h1_v1</option>
+            <option value='mq4/labtrend1_v2_1.mq4'>labtrend1_v2_1</option>
+            <option value='mq4/lacuststopandbe_v2.mq4'>lacuststopandbe_v2</option>
+            <option value='mq4/lacuststopandbe_v3.mq4'>lacuststopandbe_v3</option>
+            <option value='mq4/Laguerre_PlusDi.mq4'>Laguerre_PlusDi</option>
+            <option value='mq4/Laptrend_1.mq4'>Laptrend_1</option>
+            <option value='mq4/LBS_V12.mq4'>LBS_V12</option>
+            <option value='mq4/LCS-MACD-Trader.mq4'>LCS-MACD-Trader</option>
+            <option value='mq4/Lego_v3.mq4'>Lego_v3</option>
+            <option value='mq4/Lilith_goes_to_Hollyood.mq4'>Lilith_goes_to_Hollyood</option>
+            <option value='mq4/liquidex_V1.mq4'>liquidex_V1</option>
+            <option value='mq4/LiveAlligator.mq4'>LiveAlligator</option>
+            <option value='mq4/LiveRSI.mq4'>LiveRSI</option>
+            <option value='mq4/LiveSignals.mq4'>LiveSignals</option>
+            <option value='mq4/Logical.mq4'>Logical</option>
+            <option value='mq4/LotScalp.mq4'>LotScalp</option>
+            <option value='mq4/Lucky_acnl6p6j89zn91fa.mq4'>Lucky_acnl6p6j89zn91fa</option>
+            <option value='mq4/Lucky_code.mq4'>Lucky_code</option>
+            <option value='mq4/LWMA.mq4'>LWMA</option>
+            <option value='mq4/MA2CCI.mq4'>MA2CCI</option>
+            <option value='mq4/MACD_Alert.mq4'>MACD_Alert</option>
+            <option value='mq4/MACDcrossAUDD1.mq4'>MACDcrossAUDD1</option>
+            <option value='mq4/MACD_Not_So_Sample.mq4'>MACD_Not_So_Sample</option>
+            <option value='mq4/MacdPatternTraderAll.mq4'>MacdPatternTraderAll</option>
+            <option value='mq4/MacdPatternTraderAllv0_01.mq4'>MacdPatternTraderAllv0_01</option>
+            <option value='mq4/MacdPatternTraderv01.mq4'>MacdPatternTraderv01</option>
+            <option value='mq4/MacdPatternTraderv02.mq4'>MacdPatternTraderv02</option>
+            <option value='mq4/MacdPatternTraderv03.mq4'>MacdPatternTraderv03</option>
+            <option value='mq4/MacdPatternTraderv04cb.mq4'>MacdPatternTraderv04cb</option>
+            <option value='mq4/MacdPatternTraderv05cb.mq4'>MacdPatternTraderv05cb</option>
+            <option value='mq4/macd_sample_1010.mq4'>macd_sample_1010</option>
+            <option value='mq4/MACD_Sample_451.mq4'>MACD_Sample_451</option>
+            <option value='mq4/MACD_Sample_452.mq4'>MACD_Sample_452</option>
+            <option value='mq4/MACD_Sample.mq4'>MACD_Sample</option>
+            <option value='mq4/MACD_signal_mq4_.mq4'>MACD_signal_mq4_</option>
+            <option value='mq4/_MACDvsSignal.mq4'>_MACDvsSignal</option>
+            <option value='mq4/MACFibo_-EA_v1_1.mq4'>MACFibo_-EA_v1_1</option>
+            <option value='mq4/MA_cross_Method_PriceMode.mq4'>MA_cross_Method_PriceMode</option>
+            <option value='mq4/MADX-07.mq4'>MADX-07</option>
+            <option value='mq4/MAGNA_RAPAX_-_COPPER_EDITION_-_BETA.mq4'>MAGNA_RAPAX_-_COPPER_EDITION_-_BETA</option>
+            <option value='mq4/MA_MA_2-35_EA.mq4'>MA_MA_2-35_EA</option>
+            <option value='mq4/MAMACD_novlt.mq4'>MAMACD_novlt</option>
+            <option value='mq4/MAM_Crossover_Trader.mq4'>MAM_Crossover_Trader</option>
+            <option value='mq4/MA_MirrorEA.mq4'>MA_MirrorEA</option>
+            <option value='mq4/Manual_EA.mq4'>Manual_EA</option>
+            <option value='mq4/MARE5_1.mq4'>MARE5_1</option>
+            <option value='mq4/MA_Reverse.mq4'>MA_Reverse</option>
+            <option value='mq4/MarketNewsLib.mq4'>MarketNewsLib</option>
+            <option value='mq4/Marneni_Money_Tree.mq4'>Marneni_Money_Tree</option>
+            <option value='mq4/MartingailExpert_v1_0_Stochastic.mq4'>MartingailExpert_v1_0_Stochastic</option>
+            <option value='mq4/masaradx.mq4'>masaradx</option>
+            <option value='mq4/MA_S_R_Trading_02.mq4'>MA_S_R_Trading_02</option>
+            <option value='mq4/MA_S_R_Trading.mq4'>MA_S_R_Trading</option>
+            <option value='mq4/maximus_vX_lite_EN.mq4'>maximus_vX_lite_EN</option>
+            <option value='mq4/MLTrendE.mq4'>MLTrendE</option>
+            <option value='mq4/MLTrendE_V2.mq4'>MLTrendE_V2</option>
+            <option value='mq4/MMA_Breakout_strategy_Volume_I_-_coded_by_WhooDoo22.mq4'>
+                MMA_Breakout_strategy_Volume_I_-_coded_by_WhooDoo22
+            </option>
+            <option value='mq4/mo_bidir_v0_1.mq4'>mo_bidir_v0_1</option>
+            <option value='mq4/Momo_Trades_V3.mq4'>Momo_Trades_V3</option>
+            <option value='mq4/MoneyRain.mq4'>MoneyRain</option>
+            <option value='mq4/MonitorScreen.mq4'>MonitorScreen</option>
+            <option value='mq4/MoStAsHaR15_Pivot_Expertz30AUG05f.mq4'>MoStAsHaR15_Pivot_Expertz30AUG05f</option>
+            <option value='mq4/move_cross.mq4'>move_cross</option>
+            <option value='mq4/Moving_Average_Money.mq4'>Moving_Average_Money</option>
+            <option value='mq4/Moving_Average.mq4'>Moving_Average</option>
+            <option value='mq4/MovingAveragePositionSystem.mq4'>MovingAveragePositionSystem</option>
+            <option value='mq4/Moving_Averages2.mq4'>Moving_Averages2</option>
+            <option value='mq4/mpm-1_8.mq4'>mpm-1_8</option>
+            <option value='mq4/MSLea.mq4'>MSLea</option>
+            <option value='mq4/mt4mailstatus.mq4'>mt4mailstatus</option>
+            <option value='mq4/MTF_rsi_sar.mq4'>MTF_rsi_sar</option>
+            <option value='mq4/MTrainer.mq4'>MTrainer</option>
+            <option value='mq4/MTrendLine.mq4'>MTrendLine</option>
+            <option value='mq4/Multibreakout_v001k_1_www_forex-instruments_info.mq4'>Multibreakout_v001k_1_www_forex-instruments_info</option>
+            <option value='mq4/MultiHedg_1.mq4'>MultiHedg_1</option>
+            <option value='mq4/MultiIndicatorOptimizer.mq4'>MultiIndicatorOptimizer</option>
+            <option value='mq4/Multi_Lot_Scalper.mq4'>Multi_Lot_Scalper</option>
+            <option value='mq4/Multi-StrategyiFSF.mq4'>Multi-StrategyiFSF</option>
+            <option value='mq4/Multi_Time-Frame_Trader.mq4'>Multi_Time-Frame_Trader</option>
+            <option value='mq4/murrey_ea.mq4'>murrey_ea</option>
+            <option value='mq4/MyLineOrder.mq4'>MyLineOrder</option>
+            <option value='mq4/MyLineOrder_version_2_1.mq4'>MyLineOrder_version_2_1</option>
+            <option value='mq4/MySystem.mq4'>MySystem</option>
+            <option value='mq4/N7S_AO_772012.mq4'>N7S_AO_772012</option>
+            <option value='mq4/NatusekoProtrader4HStrategy.mq4'>NatusekoProtrader4HStrategy</option>
+            <option value='mq4/Neuro_5_MACD.mq4'>Neuro_5_MACD</option>
+            <option value='mq4/NeuroNirvaman.mq4'>NeuroNirvaman</option>
+            <option value='mq4/Nevalyashka_BreakdownLevel.mq4'>Nevalyashka_BreakdownLevel</option>
+            <option value='mq4/new_fscea.mq4'>new_fscea</option>
+            <option value='mq4/newshourtrade.mq4'>newshourtrade</option>
+            <option value='mq4/NewsTrader.mq4'>NewsTrader</option>
+            <option value='mq4/NewsTradingEA.mq4'>NewsTradingEA</option>
+            <option value='mq4/nextbar.mq4'>nextbar</option>
+            <option value='mq4/Nik_PSAR_2B.mq4'>Nik_PSAR_2B</option>
+            <option value='mq4/NirvamanImax.mq4'>NirvamanImax</option>
+            <option value='mq4/NirvamanImaxT.mq4'>NirvamanImaxT</option>
+            <option value='mq4/Noah10pips2006_www_forex-instruments_info.mq4'>Noah10pips2006_www_forex-instruments_info</option>
+            <option value='mq4/Nrtr_revers_www_forex-instruments_info.mq4'>Nrtr_revers_www_forex-instruments_info</option>
+            <option value='mq4/NTOqF_V1.mq4'>NTOqF_V1</option>
+            <option value='mq4/NTOqF_V2.mq4'>NTOqF_V2</option>
+            <option value='mq4/NTOqF_V3.mq4'>NTOqF_V3</option>
+            <option value='mq4/OBJ_EDIT_Example.mq4'>OBJ_EDIT_Example</option>
+            <option value='mq4/OBJ_LABEL_Example.mq4'>OBJ_LABEL_Example</option>
+            <option value='mq4/OCO_EA.mq4'>OCO_EA</option>
+            <option value='mq4/open_close2ampnstochastic_strategy.mq4'>open_close2ampnstochastic_strategy</option>
+            <option value='mq4/open_close.mq4'>open_close</option>
+            <option value='mq4/OpenTiks.mq4'>OpenTiks</option>
+            <option value='mq4/OpenTime.mq4'>OpenTime</option>
+            <option value='mq4/OrderBalansEN_v3_4.mq4'>OrderBalansEN_v3_4</option>
+            <option value='mq4/OrderGuardian.mq4'>OrderGuardian</option>
+            <option value='mq4/OrderLib.mq4'>OrderLib</option>
+            <option value='mq4/ordermanager.mq4'>ordermanager</option>
+            <option value='mq4/OrderManager.mq4'>OrderManager</option>
+            <option value='mq4/OSF.mq4'>OSF</option>
+            <option value='mq4/OsMaSter_V0.mq4'>OsMaSter_V0</option>
+            <option value='mq4/Overhedgev2_www_forex-instruments_info.mq4'>Overhedgev2_www_forex-instruments_info</option>
+            <option value='mq4/OzFx1_02.mq4'>OzFx1_02</option>
+            <option value='mq4/OzFx.mq4'>OzFx</option>
+            <option value='mq4/parallel_strategies.mq4'>parallel_strategies</option>
+            <option value='mq4/Pedroxxmod_www_forex-instruments_info.mq4'>Pedroxxmod_www_forex-instruments_info</option>
+            <option value='mq4/Pendulum_1_01.mq4'>Pendulum_1_01</option>
+            <option value='mq4/personal_assistant.mq4'>personal_assistant</option>
+            <option value='mq4/Pinball_machine.mq4'>Pinball_machine</option>
+            <option value='mq4/Pipsover.mq4'>Pipsover</option>
+            <option value='mq4/Pivotema3rlhv4_www_forex-instruments_info.mq4'>Pivotema3rlhv4_www_forex-instruments_info</option>
+            <option value='mq4/Pivots.mq4'>Pivots</option>
+            <option value='mq4/Pivots_test.mq4'>Pivots_test</option>
+            <option value='mq4/Plan_x_www_forex-instruments_info.mq4'>Plan_x_www_forex-instruments_info</option>
+            <option value='mq4/Polish_Layer_Expert_Advisor_System_Efficient_.mq4'>Polish_Layer_Expert_Advisor_System_Efficient_</option>
+            <option value='mq4/Post-zigzag.mq4'>Post-zigzag</option>
+            <option value='mq4/PracticeMod.mq4'>PracticeMod</option>
+            <option value='mq4/PriceAction.mq4'>PriceAction</option>
+            <option value='mq4/Price_Channel.mq4'>Price_Channel</option>
+            <option value='mq4/Price_Quotes_By_Email.mq4'>Price_Quotes_By_Email</option>
+            <option value='mq4/profit_counter_2.mq4'>profit_counter_2</option>
+            <option value='mq4/profit_counter.mq4'>profit_counter</option>
+            <option value='mq4/Profit_Hunter_HSI_with_fibonacci.mq4'>Profit_Hunter_HSI_with_fibonacci</option>
+            <option value='mq4/profittrailing.mq4'>profittrailing</option>
+            <option value='mq4/ProPan.mq4'>ProPan</option>
+            <option value='mq4/PROphet.mq4'>PROphet</option>
+            <option value='mq4/ProtoType-IX.mq4'>ProtoType-IX</option>
+            <option value='mq4/pSAR_alert2.mq4'>pSAR_alert2</option>
+            <option value='mq4/psar_alert_3.mq4'>psar_alert_3</option>
+            <option value='mq4/pSAR_alert.mq4'>pSAR_alert</option>
+            <option value='mq4/pSAR_bug2.mq4'>pSAR_bug2</option>
+            <option value='mq4/pSAR_bug_3.mq4'>pSAR_bug_3</option>
+            <option value='mq4/pSAR_bug_4.mq4'>pSAR_bug_4</option>
+            <option value='mq4/pSAR_bug_5.mq4'>pSAR_bug_5</option>
+            <option value='mq4/psar_bug_6.mq4'>psar_bug_6</option>
+            <option value='mq4/psar_bug_7.mq4'>psar_bug_7</option>
+            <option value='mq4/pSAR_bug.mq4'>pSAR_bug</option>
+            <option value='mq4/PSAR_trader.mq4'>PSAR_trader</option>
+            <option value='mq4/PSAR_trader_v2.mq4'>PSAR_trader_v2</option>
+            <option value='mq4/Pure_Martingale.mq4'>Pure_Martingale</option>
+            <option value='mq4/PZ_ParabolicSar_EA.mq4'>PZ_ParabolicSar_EA</option>
+            <option value='mq4/PZ_ReversalTrendFollowingEA.mq4'>PZ_ReversalTrendFollowingEA</option>
+            <option value='mq4/qf1.mq4'>qf1</option>
+            <option value='mq4/QFollow.mq4'>QFollow</option>
+            <option value='mq4/q_indicate_orders.mq4'>q_indicate_orders</option>
+            <option value='mq4/qiut_symbol.mq4'>qiut_symbol</option>
+            <option value='mq4/RabbitM2.mq4'>RabbitM2</option>
+            <option value='mq4/RabbitM3.mq4'>RabbitM3</option>
+            <option value='mq4/rampokScalp.mq4'>rampokScalp</option>
+            <option value='mq4/rand002.mq4'>rand002</option>
+            <option value='mq4/RandomT.mq4'>RandomT</option>
+            <option value='mq4/RangeBoundMA.mq4'>RangeBoundMA</option>
+            <option value='mq4/RAVIiAO.mq4'>RAVIiAO</option>
+            <option value='mq4/Ravi.mq4'>Ravi</option>
+            <option value='mq4/RelDownTrLen_forCodeBase_v01.mq4'>RelDownTrLen_forCodeBase_v01</option>
+            <option value='mq4/RelUpTrLen_forCodeBase_v01.mq4'>RelUpTrLen_forCodeBase_v01</option>
+            <option value='mq4/RenkoLiveChart_v3_2.mq4'>RenkoLiveChart_v3_2</option>
+            <option value='mq4/Renko_Scalper.mq4'>Renko_Scalper</option>
+            <option value='mq4/Reverse.mq4'>Reverse</option>
+            <option value='mq4/RGT_2.mq4'>RGT_2</option>
+            <option value='mq4/rich.mq4'>rich</option>
+            <option value='mq4/RideAlligator.mq4'>RideAlligator</option>
+            <option value='mq4/risk.mq4'>risk</option>
+            <option value='mq4/RndTrade.mq4'>RndTrade</option>
+            <option value='mq4/Robot_ADXs2MA.mq4'>Robot_ADXs2MA</option>
+            <option value='mq4/Robot_Danu.mq4'>Robot_Danu</option>
+            <option value='mq4/robotiadxprofitwining.mq4'>robotiadxprofitwining</option>
+            <option value='mq4/Robot_MACD_12_26_9.mq4'>Robot_MACD_12_26_9</option>
+            <option value='mq4/RobotPowerM5_meta4V12.mq4'>RobotPowerM5_meta4V12</option>
+            <option value='mq4/robust_ea_template.mq4'>robust_ea_template</option>
+            <option value='mq4/ronz_auto_sl_n_tp.mq4'>ronz_auto_sl_n_tp</option>
+            <option value='mq4/ronz_auto_sl-ts-tp.mq4'>ronz_auto_sl-ts-tp</option>
+            <option value='mq4/ronz_rapid-fire_strategy.mq4'>ronz_rapid-fire_strategy</option>
+            <option value='mq4/Rpm5_mt4v1_geaw_www_forex-instruments_info.mq4'>Rpm5_mt4v1_geaw_www_forex-instruments_info</option>
+            <option value='mq4/rsi_ea.mq4'>rsi_ea</option>
+            <option value='mq4/RSI_MA.mq4'>RSI_MA</option>
+            <option value='mq4/RSI_Test.mq4'>RSI_Test</option>
+            <option value='mq4/Rsi_trader_v0_10_www_forex-instruments_info.mq4'>Rsi_trader_v0_10_www_forex-instruments_info</option>
+            <option value='mq4/RSI_trader_v1.mq4'>RSI_trader_v1</option>
+            <option value='mq4/RSI_Value_EA.mq4'>RSI_Value_EA</option>
+            <option value='mq4/RSX.mq4'>RSX</option>
+            <option value='mq4/RUBBERBANDS_1_6.mq4'>RUBBERBANDS_1_6</option>
+            <option value='mq4/RUBBERBANDS_2.mq4'>RUBBERBANDS_2</option>
+            <option value='mq4/RUBBERBANDS_3.mq4'>RUBBERBANDS_3</option>
+            <option value='mq4/Russian20-hp1_www_forex-instruments_info.mq4'>Russian20-hp1_www_forex-instruments_info</option>
+            <option value='mq4/Scalpel.mq4'>Scalpel</option>
+            <option value='mq4/Scalping_EA.mq4'>Scalping_EA</option>
+            <option value='mq4/Sea_Dragon2_v1.mq4'>Sea_Dragon2_v1</option>
+            <option value='mq4/Second_Easiest.mq4'>Second_Easiest</option>
+            <option value='mq4/SendCloseOrder.mq4'>SendCloseOrder</option>
+            <option value='mq4/Session_breakout_v01_mbk_www_forex-instruments_info.mq4'>Session_breakout_v01_mbk_www_forex-instruments_info
+            </option>
+            <option value='mq4/SHE_kanskigor.mq4'>SHE_kanskigor</option>
+            <option value='mq4/sicker_EA.mq4'>sicker_EA</option>
+            <option value='mq4/Sidus_v1.mq4'>Sidus_v1</option>
+            <option value='mq4/SilverTrendV3.mq4'>SilverTrendV3</option>
+            <option value='mq4/simplefx2.mq4'>simplefx2</option>
+            <option value='mq4/Simple-macd-ea_www_forex-instruments_info.mq4'>Simple-macd-ea_www_forex-instruments_info</option>
+            <option value='mq4/Simplepivot_www_forex-instruments_info.mq4'>Simplepivot_www_forex-instruments_info</option>
+            <option value='mq4/SimpleTrade.mq4'>SimpleTrade</option>
+            <option value='mq4/Simulator.mq4'>Simulator</option>
+            <option value='mq4/SL2BE_Jpy.mq4'>SL2BE_Jpy</option>
+            <option value='mq4/SL2BE.mq4'>SL2BE</option>
+            <option value='mq4/Slope_Direction_Line_Alert.mq4'>Slope_Direction_Line_Alert</option>
+            <option value='mq4/SLOPE_RSI_MTF_LBranjord.mq4'>SLOPE_RSI_MTF_LBranjord</option>
+            <option value='mq4/sltp-currency.mq4'>sltp-currency</option>
+            <option value='mq4/SMA_MultiHdege2.mq4'>SMA_MultiHdege2</option>
+            <option value='mq4/SmartAssTrade.mq4'>SmartAssTrade</option>
+            <option value='mq4/SmartAssTrade_update2.mq4'>SmartAssTrade_update2</option>
+            <option value='mq4/SmartAssTrade_update.mq4'>SmartAssTrade_update</option>
+            <option value='mq4/smartasstrade-v2.mq4'>smartasstrade-v2</option>
+            <option value='mq4/Smc_hilo_v11_1_www_forex-instruments_info.mq4'>Smc_hilo_v11_1_www_forex-instruments_info</option>
+            <option value='mq4/Smc_trader_camel_cci_macd1_www_forex-instruments_info.mq4'>
+                Smc_trader_camel_cci_macd1_www_forex-instruments_info
+            </option>
+            <option value='mq4/smoothingaverage.mq4'>smoothingaverage</option>
+            <option value='mq4/snowiesoEA.mq4'>snowiesoEA</option>
+            <option value='mq4/Sophia1_1.mq4'>Sophia1_1</option>
+            <option value='mq4/SourceCode2.mq4'>SourceCode2</option>
+            <option value='mq4/SourceCode2_testing.mq4'>SourceCode2_testing</option>
+            <option value='mq4/SourceCode.mq4'>SourceCode</option>
+            <option value='mq4/spreadinfo.mq4'>spreadinfo</option>
+            <option value='mq4/SpreadProbe.mq4'>SpreadProbe</option>
+            <option value='mq4/Stairs.mq4'>Stairs</option>
+            <option value='mq4/starter.mq4'>starter</option>
+            <option value='mq4/Starter_v6mod_e_www_forex-instruments_info.mq4'>Starter_v6mod_e_www_forex-instruments_info</option>
+            <option value='mq4/StatusMailandAlertOnOrderClose.mq4'>StatusMailandAlertOnOrderClose</option>
+            <option value='mq4/Stmple.mq4'>Stmple</option>
+            <option value='mq4/Stoch.mq4'>Stoch</option>
+            <option value='mq4/Stoch_TP_TS_V3103.mq4'>Stoch_TP_TS_V3103</option>
+            <option value='mq4/STO_m5xm15xm30.mq4'>STO_m5xm15xm30</option>
+            <option value='mq4/STO_m5xm15xm30_V2.mq4'>STO_m5xm15xm30_V2</option>
+            <option value='mq4/Stop_Hunter.mq4'>Stop_Hunter</option>
+            <option value='mq4/Stop_Loss_Mover.mq4'>Stop_Loss_Mover</option>
+            <option value='mq4/Straddle_Trail.mq4'>Straddle_Trail</option>
+            <option value='mq4/Strategy_of_Regularities_of_Exchange_Rates.mq4'>Strategy_of_Regularities_of_Exchange_Rates</option>
+            <option value='mq4/Strategytester1_www_forex-instruments_info.mq4'>Strategytester1_www_forex-instruments_info</option>
+            <option value='mq4/stuficstoch.mq4'>stuficstoch</option>
+            <option value='mq4/Suffic369_www_forex-instruments_info.mq4'>Suffic369_www_forex-instruments_info</option>
+            <option value='mq4/SuperForexV2.mq4'>SuperForexV2</option>
+            <option value='mq4/SupportResistTrade.mq4'>SupportResistTrade</option>
+            <option value='mq4/Surefirething_www_forex-instruments_info.mq4'>Surefirething_www_forex-instruments_info</option>
+            <option value='mq4/Sv2.mq4'>Sv2</option>
+            <option value='mq4/SVOS_EURJPY_D1.mq4'>SVOS_EURJPY_D1</option>
+            <option value='mq4/Sweet_spot_extreme_www_forex-instruments_info.mq4'>Sweet_spot_extreme_www_forex-instruments_info</option>
+            <option value='mq4/Swetten.mq4'>Swetten</option>
+            <option value='mq4/SwingCyborg.mq4'>SwingCyborg</option>
+            <option value='mq4/syndicate_trader_v_1_04.mq4'>syndicate_trader_v_1_04</option>
+            <option value='mq4/T3MAlMTC9.mq4'>T3MAlMTC9</option>
+            <option value='mq4/take-profit.mq4'>take-profit</option>
+            <option value='mq4/TDSGlobal_4.mq4'>TDSGlobal_4</option>
+            <option value='mq4/Terminator_v2_0_www_forex-instruments_info.mq4'>Terminator_v2_0_www_forex-instruments_info</option>
+            <option value='mq4/Tester_v0_14_.mq4'>Tester_v0_14_</option>
+            <option value='mq4/Tester_v0_15_.mq4'>Tester_v0_15_</option>
+            <option value='mq4/TheMasterMind2.mq4'>TheMasterMind2</option>
+            <option value='mq4/TheMasterMind3.mq4'>TheMasterMind3</option>
+            <option value='mq4/TheMasterMind.mq4'>TheMasterMind</option>
+            <option value='mq4/ThePuncher.mq4'>ThePuncher</option>
+            <option value='mq4/TickSave.mq4'>TickSave</option>
+            <option value='mq4/TicksInMySQL.mq4'>TicksInMySQL</option>
+            <option value='mq4/Ticks.mq4'>Ticks</option>
+            <option value='mq4/tiger.mq4'>tiger</option>
+            <option value='mq4/time_trader.mq4'>time_trader</option>
+            <option value='mq4/time_trader_v1_1.mq4'>time_trader_v1_1</option>
+            <option value='mq4/tIsConnectedo.mq4'>tIsConnectedo</option>
+            <option value='mq4/t_ma.mq4'>t_ma</option>
+            <option value='mq4/TPSL-Insert.mq4'>TPSL-Insert</option>
+            <option value='mq4/Trade-Arbitrage.mq4'>Trade-Arbitrage</option>
+            <option value='mq4/TradeChannel.mq4'>TradeChannel</option>
+            <option value='mq4/Trade.mq4'>Trade</option>
+            <option value='mq4/trade_protector-1_0.mq4'>trade_protector-1_0</option>
+            <option value='mq4/trade_protector-1_1.mq4'>trade_protector-1_1</option>
+            <option value='mq4/trade_protector-1_2.mq4'>trade_protector-1_2</option>
+            <option value='mq4/trades_to_csv.mq4'>trades_to_csv</option>
+            <option value='mq4/TrailingAll.mq4'>TrailingAll</option>
+            <option value='mq4/trailing.mq4'>trailing</option>
+            <option value='mq4/trailingstop_ea.mq4'>trailingstop_ea</option>
+            <option value='mq4/TrailingStopFrCn.mq4'>TrailingStopFrCn</option>
+            <option value='mq4/TrailingStopFrCnSARen_v4.mq4'>TrailingStopFrCnSARen_v4</option>
+            <option value='mq4/Training2.mq4'>Training2</option>
+            <option value='mq4/Training.mq4'>Training</option>
+            <option value='mq4/TrainYourself-V1_1-1.mq4'>TrainYourself-V1_1-1</option>
+            <option value='mq4/TRAYLERv.mq4'>TRAYLERv</option>
+            <option value='mq4/Trendcapture.mq4'>Trendcapture</option>
+            <option value='mq4/TrendCapture.mq4'>TrendCapture</option>
+            <option value='mq4/trend_catcher.mq4'>trend_catcher</option>
+            <option value='mq4/trend_catcher_v2.mq4'>trend_catcher_v2</option>
+            <option value='mq4/trendcollector.mq4'>trendcollector</option>
+            <option value='mq4/TrendFollowerRainbowMethodkyast773.mq4'>TrendFollowerRainbowMethodkyast773</option>
+            <option value='mq4/trendlinealert.mq4'>trendlinealert</option>
+            <option value='mq4/TrendMeLeaveMe.mq4'>TrendMeLeaveMe</option>
+            <option value='mq4/Trend_RDS.mq4'>Trend_RDS</option>
+            <option value='mq4/Trix_EA.mq4'>Trix_EA</option>
+            <option value='mq4/TRIX.mq4'>TRIX</option>
+            <option value='mq4/TrueScalperProfitLock.mq4'>TrueScalperProfitLock</option>
+            <option value='mq4/TST.mq4'>TST</option>
+            <option value='mq4/Tttttt_www_forex-instruments_info.mq4'>Tttttt_www_forex-instruments_info</option>
+            <option value='mq4/Tunnelmethod_www_forex-instruments_info.mq4'>Tunnelmethod_www_forex-instruments_info</option>
+            <option value='mq4/TurtleTraderV1_0_1.mq4'>TurtleTraderV1_0_1</option>
+            <option value='mq4/Universal_EA.mq4'>Universal_EA</option>
+            <option value='mq4/Universal_Investor.mq4'>Universal_Investor</option>
+            <option value='mq4/Universalmacrossea_www_forex-instruments_info.mq4'>Universalmacrossea_www_forex-instruments_info</option>
+            <option value='mq4/Universum_3_0.mq4'>Universum_3_0</option>
+            <option value='mq4/Unseasonalised_ATR_and_Forecast.mq4'>Unseasonalised_ATR_and_Forecast</option>
+            <option value='mq4/Unseasonalised_JPY_ATR_and_Forecast.mq4'>Unseasonalised_JPY_ATR_and_Forecast</option>
+            <option value='mq4/up3x1_Investor.mq4'>up3x1_Investor</option>
+            <option value='mq4/up3x1_Krohabor_D.mq4'>up3x1_Krohabor_D</option>
+            <option value='mq4/up3x1.mq4'>up3x1</option>
+            <option value='mq4/up3x1_Premium_2vM.mq4'>up3x1_Premium_2vM</option>
+            <option value='mq4/UsdChf_new.mq4'>UsdChf_new</option>
+            <option value='mq4/VBS_-_Very_Blondie_System.mq4'>VBS_-_Very_Blondie_System</option>
+            <option value='mq4/Vector.mq4'>Vector</option>
+            <option value='mq4/VHF.mq4'>VHF</option>
+            <option value='mq4/VisualTrader-BUYScript.mq4'>VisualTrader-BUYScript</option>
+            <option value='mq4/VisualTrader-SELLScript.mq4'>VisualTrader-SELLScript</option>
+            <option value='mq4/VisualTrader-SimulatorEdition.mq4'>VisualTrader-SimulatorEdition</option>
+            <option value='mq4/VivaLasVegas.mq4'>VivaLasVegas</option>
+            <option value='mq4/Vlado_www_forex-instruments_info.mq4'>Vlado_www_forex-instruments_info</option>
+            <option value='mq4/VLT_TRADER.mq4'>VLT_TRADER</option>
+            <option value='mq4/vMATRIXDoubleZero.mq4'>vMATRIXDoubleZero</option>
+            <option value='mq4/Volume_EA_buy.mq4'>Volume_EA_buy</option>
+            <option value='mq4/Volume_EA_sell.mq4'>Volume_EA_sell</option>
+            <option value='mq4/Volume_trader_v2_www_forex-instruments_info.mq4'>Volume_trader_v2_www_forex-instruments_info</option>
+            <option value='mq4/Vortex_Indicator_System.mq4'>Vortex_Indicator_System</option>
+            <option value='mq4/Vortex_Oscillator_System.mq4'>Vortex_Oscillator_System</option>
+            <option value='mq4/VQ_EA.mq4'>VQ_EA</option>
+            <option value='mq4/VQ.mq4'>VQ</option>
+            <option value='mq4/VR---MARS-EN.mq4'>VR---MARS-EN</option>
+            <option value='mq4/VR---Overturn.mq4'>VR---Overturn</option>
+            <option value='mq4/VR---SETKAa3hM.mq4'>VR---SETKAa3hM</option>
+            <option value='mq4/VR---SETKAp2.mq4'>VR---SETKAp2</option>
+            <option value='mq4/VR---STEALS-3-EN.mq4'>VR---STEALS-3-EN</option>
+            <option value='mq4/Waddah_Attar_Win.mq4'>Waddah_Attar_Win</option>
+            <option value='mq4/wajdyss_MA_expert_v3.mq4'>wajdyss_MA_expert_v3</option>
+            <option value='mq4/Wave_Power_EA1.mq4'>Wave_Power_EA1</option>
+            <option value='mq4/Wipeout.mq4'>Wipeout</option>
+            <option value='mq4/X3MA_EA_V2_0.mq4'>X3MA_EA_V2_0</option>
+            <option value='mq4/X_alert_3.mq4'>X_alert_3</option>
+            <option value='mq4/xbug_free.mq4'>xbug_free</option>
+            <option value='mq4/xbug_free_v4.mq4'>xbug_free_v4</option>
+            <option value='mq4/X_bug.mq4'>X_bug</option>
+            <option value='mq4/x-liquidex.mq4'>x-liquidex</option>
+            <option value='mq4/xliquidex_v2_mod1.mq4'>xliquidex_v2_mod1</option>
+            <option value='mq4/xMTF_Trix.mq4'>xMTF_Trix</option>
+            <option value='mq4/X_trader.mq4'>X_trader</option>
+            <option value='mq4/X_trader_v2.mq4'>X_trader_v2</option>
+            <option value='mq4/X_trader_v3.mq4'>X_trader_v3</option>
+            <option value='mq4/X_trail_2.mq4'>X_trail_2</option>
+            <option value='mq4/X_trail.mq4'>X_trail</option>
+            <option value='mq4/YEA3.mq4'>YEA3</option>
+            <option value='mq4/ytg_2MA_4Level.mq4'>ytg_2MA_4Level</option>
+            <option value='mq4/ytg_Multi_Stoch.mq4'>ytg_Multi_Stoch</option>
+            <option value='mq4/ytg_Parabolic_exp.mq4'>ytg_Parabolic_exp</option>
+            <option value='mq4/ytg_Speed_MA_ea.mq4'>ytg_Speed_MA_ea</option>
+            <option value='mq4/ZeroLagEA-AIP_v0_0_4.mq4'>ZeroLagEA-AIP_v0_0_4</option>
+            <option value='mq4/ZeroLag_MACD.mq4'>ZeroLag_MACD</option>
+            <option value='mq4/ZigAndZag.mq4'>ZigAndZag</option>
+            <option value='mq4/ZigAndZag_trader.mq4'>ZigAndZag_trader</option>
+            <option value='mq4/Zig_dan_Zag_Danu_Ultimate_Investment_Long_Term.mq4'>Zig_dan_Zag_Danu_Ultimate_Investment_Long_Term</option>
+            <option value='mq4/ZigZagEvgeTrofi_1.mq4'>ZigZagEvgeTrofi_1</option>
+            <option value='mq4/ZIGZAG-FRACTALS.mq4'>ZIGZAG-FRACTALS</option>
+            <option value='mq4/ZMFX_Stolid_5a_EA.mq4'>ZMFX_Stolid_5a_EA</option>
+            <option value='mq4/zzf.mq4'>zzf</option>
+        </optgroup>
+
+
     </select>
 
     <textarea id="source"></textarea>
-    <button onclick="parseAndShow()">Convert</button>
-    <input type="checkbox" id="keep-types"/> Keep types in javascript
 
+    <input type="checkbox" id="keep-types"/> Keep types in javascript<br>
+    <input type="checkbox" id="keep-original"/> Keep original code as comment<br>
+    <input type="checkbox" id="keep-comments" checked/> Keep comments (experimental)<br>
+    <button onclick="parseAndShow()">Convert</button>
     <h3>AST</h3>
 
     <textarea id="AST"></textarea>
@@ -164,7 +930,21 @@
     </table>
 
     <h3>Javascript File</h3>
-    <textarea id="js"></textarea>
+    <pre>
+        <code id="js">
+
+
+        </code>
+    </pre>
+
+    <h3>Execution</h3>
+    <select id="functionToExecute">
+
+    </select>
+    <button id="executeBtn">Execute generated javascript</button>
+    <h3>log</h3>
+    <pre><code id="log"></code></pre>
+
 
 </div>
 

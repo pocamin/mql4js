@@ -1,0 +1,6 @@
+int func(){
+	EventSetMillisecondTimer();
+	EventSetTimer();
+	EventKillTimer();
+	EventChartCustom();
+}

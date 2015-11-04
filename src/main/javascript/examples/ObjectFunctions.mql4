@@ -1,0 +1,31 @@
+void test(){
+	ObjectCreate();
+	ObjectName();
+	ObjectDelete();
+	ObjectsDeleteAll();
+	ObjectFind();
+	ObjectGetTimeByValue();
+	ObjectGetValueByTime();
+	ObjectMove();
+	ObjectsTotal();
+	ObjectGetDouble();
+	ObjectGetInteger();
+	ObjectGetString();
+	ObjectSetDouble();
+	ObjectSetInteger();
+	ObjectSetString();
+	TextSetFont();
+	TextOut();
+	TextGetSize();
+	ObjectDescription();
+	ObjectGet();
+	ObjectGetFiboDescription();
+	ObjectGetShiftByValue();
+	ObjectGetValueByShift();
+	ObjectSet();
+	ObjectSetFiboDescription();
+	ObjectSetText();
+	ObjectType();
+}
+
+

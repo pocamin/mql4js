@@ -1,0 +1,14 @@
+int func(){
+	SignalBaseGetDouble();
+	SignalBaseGetInteger();
+	SignalBaseGetString();
+	SignalBaseSelect();
+	SignalBaseTotal();
+	SignalInfoGetDouble();
+	SignalInfoGetInteger();
+	SignalInfoGetString();
+	SignalInfoSetDouble();
+	SignalInfoSetInteger();
+	SignalSubscribe();
+	SignalUnsubscribe();
+}

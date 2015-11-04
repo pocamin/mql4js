@@ -1,0 +1,40 @@
+void test(){
+	double result=iAC(NULL,0,1);
+	result=iAD(NULL, 0, 1);
+	if(iADX(NULL,0,14,PRICE_HIGH,MODE_MAIN,0)>iADX(NULL,0,14,PRICE_HIGH,MODE_PLUSDI,0)) return(0);
+	double jaw_val=iAlligator(NULL,0,13,8,8,5,5,3,MODE_SMMA,PRICE_MEDIAN,MODE_GATORJAW,1);
+	double val=iAO(NULL,0,2);
+	if(iATR(NULL,0,12,0)>iATR(NULL,0,20,0)) return(0);
+	val=iBearsPower(NULL,0,13,PRICE_CLOSE,0);
+	if(iBands(NULL,0,20,2,0,PRICE_LOW,MODE_LOWER,0)>Low[0]) return(0);
+	if(iBandsOnArray(ExtBuffer,total,2,0,0,MODE_LOWER,0)>Low[0]) return(0);
+	val=iBullsPower(NULL,0,13,PRICE_CLOSE,0);
+	if(iCCI(Symbol(),0,12,PRICE_TYPICAL,0)>iCCI(Symbol(),0,20,PRICE_TYPICAL,0)) return(0);
+	if(iCCIOnArray(ExtBuffer,total,12,0)>iCCIOnArray(ExtBuffer,total,20,0)) return(1);
+	/*Should we support custom indicators ?*/
+	val=iCustom(NULL,0,"SampleInd",13,1,0);
+	val=iDeMarker(NULL,0,13,1);
+	val=iEnvelopes(NULL,0,13,MODE_SMA,10,PRICE_CLOSE,0.2,MODE_UPPER,0);
+	val=iEnvelopesOnArray(ExtBuffer,10,13,MODE_SMA,0,0.2,MODE_UPPER,0);
+	val=iForce(NULL,0,13,MODE_SMA,PRICE_CLOSE,0);
+	val=iFractals(NULL,0,MODE_UPPER,3);
+	double diff=iGator(NULL,0,13,8,8,5,5,3,MODE_SMMA,PRICE_MEDIAN,MODE_UPPER,1);
+	double tenkan_sen=iIchimoku(NULL,0,9,26,52,MODE_TENKANSEN,1);
+	val=iBWMFI(NULL,10,0);
+	if(iMomentum(NULL,0,12,PRICE_CLOSE,0)>iMomentum(NULL,0,20,PRICE_CLOSE,0)) return(0);
+	if(iMomentumOnArray(mybuffer,100,12,0)>iMomentumOnArray(mybuffer,100,20,0)) return(0);
+	if(iMFI(NULL,0,14,0)>iMFI(NULL,0,14,1)) return(0);
+	AlligatorJawsBuffer[i]=iMA(NULL,0,13,8,MODE_SMMA,PRICE_MEDIAN,i);
+	iMAOnArray(ExtBuffer,0,10,0,MODE_LWMA,0);
+	if(iOsMA(NULL,0,12,26,9,PRICE_OPEN,1)>iOsMA(NULL,0,12,26,9,PRICE_OPEN,0)) return(0);
+	if(iMACD(NULL,0,12,26,9,PRICE_CLOSE,MODE_MAIN,0)>iMACD(NULL,0,12,26,9,PRICE_CLOSE,MODE_SIGNAL,0)) return(0);
+	val=iOBV(NULL,0,PRICE_CLOSE,1);
+	if(iSAR(NULL,0,0.02,0.2,0)>Close[0]) return(0);
+	if(iRSI(NULL,0,14,PRICE_CLOSE,0)>iRSI(NULL,0,14,PRICE_CLOSE,1)) return(0);
+	if(iRSIOnArray(ExtBuffer,1000,14,0)>iRSI(NULL,0,14,PRICE_CLOSE,1)) return(0);
+	val=iRVI(NULL,0,10,MODE_MAIN,0);
+	val=iStdDev(NULL,0,10,0,MODE_EMA,PRICE_CLOSE,0);
+	val=iStdDevOnArray(ExtBuffer,100,10,0,MODE_EMA,0);
+	if(iStochastic(NULL,0,5,3,3,MODE_SMA,0,MODE_MAIN,0)>iStochastic(NULL,0,5,3,3,MODE_SMA,0,MODE_SIGNAL,0)) return(0);
+	if(iWPR(NULL,0,14,0)>iWPR(NULL,0,14,1)) return(0);
+}

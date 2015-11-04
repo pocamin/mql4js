@@ -2,7 +2,7 @@ grammar MQL4;
 
 
 root
- : (property|declaration|enumDef|functionDecl|struct)*
+ : (property|declaration ';'|enumDef|functionDecl|struct)*
  ;
 
 
@@ -12,7 +12,7 @@ property
 
 
 statement
- : declaration
+ : declaration ';'
  | operation
  ;
 
@@ -23,9 +23,19 @@ operation :
     | '{' (statement)* '}'                                                                 #blockOperation
     | 'switch' '(' leftCondition=expression ')' '{' switchCase+ '}'                        #switchOperation
     | 'while' '(' expression ')' operation                                                 #whileOperation
-    | 'for' '(' (init=expression)? ';' (term=expression)? ';' (inc=expression)? ')'
+    | 'for' '(' (init=forMultiExpressions)? ';'
+    (term=forMultiExpressions)? ';'
+    (inc=forMultiExpressions)? ')'
     operator=operation                                                                     #forOperation
     | 'do' operator=operation 'while' '(' condition=expression ')'                         #doWhileOperation
+;
+
+forMultiExpressions:
+    forExpression (',' forExpression)*
+;
+
+forExpression:
+    declaration| expression
 ;
 
 
@@ -53,7 +63,6 @@ functionArgument : type (name=Identifier) ('=' + expression)?;
 
 declaration :
        (memoryClass=MemoryClass)? type declarationElement (',' declarationElement)*
-       ';'
   ;
 
 declarationElement :
@@ -73,11 +82,6 @@ type
     : Identifier
     | PredifinedType
     ;
-
-idList
- : Identifier (',' Identifier)*
- ;
-
 
 
 expression
@@ -131,6 +135,7 @@ expression
  | expression '||' expression                #orExpression
  | (name=Identifier) '.' (right=expression)      #specializationExpression
 
+
  // Ternary operation
  | expression '?' expression ':' expression  #ternaryExpression
 
@@ -140,19 +145,18 @@ expression
  | Number                                    #numberExpression
  | Identifier                                #identifierExpression
  | Null                                      #nullExpression
-
+ | Char                                      #charExpression
 
 
  // indexing
- | expression '[' expression ']'             #indexingExpression
+ | expression '[' (expression ',')* expression? ']'      #indexingExpression
 
  // Others
- | '(' expression ')'                        #expressionExpression
+ | '(' expression ')'                                    #expressionExpression
 
  // function call
-  | Identifier '(' (expression ',')* expression? ')'              #functionCallExpression
+  | Identifier '(' (expression ',')* expression? ')'     #functionCallExpression
 
- //| expression ',' expression                 #multipleExpressions
 
  // Operator expression
  | 'return' expression?                      #returnExpression
@@ -160,7 +164,7 @@ expression
 
 
 indexes
- : ('[' expression ']')+
+ : (dynamic=DynaArray)? ('[' expression ']')+
  ;
 
 Null: 'NULL';
@@ -213,13 +217,19 @@ String
 
 Date : [D]['] [0-9.: ]* ['];
 
+Char : ['] . ['];
+
 Comment
- : ('//' ~[\r\n]* | '/*' .*? '*/') -> skip
+ : ('//' ~[\r\n]* | '/*' .*? '*/') -> channel(2)
  ;
 
 Space
  : [ \t\r\n\u000C] -> skip
  ;
+
+DynaArray
+: '[' ']'
+;
 
 fragment Int
  : [1-9] Digit*

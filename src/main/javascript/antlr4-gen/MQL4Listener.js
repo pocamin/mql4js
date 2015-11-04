@@ -101,6 +101,24 @@ MQL4Listener.prototype.exitDoWhileOperation = function(ctx) {
 };
 
 
+// Enter a parse tree produced by MQL4Parser#forMultiExpressions.
+MQL4Listener.prototype.enterForMultiExpressions = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#forMultiExpressions.
+MQL4Listener.prototype.exitForMultiExpressions = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#forExpression.
+MQL4Listener.prototype.enterForExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#forExpression.
+MQL4Listener.prototype.exitForExpression = function(ctx) {
+};
+
+
 // Enter a parse tree produced by MQL4Parser#switchCase.
 MQL4Listener.prototype.enterSwitchCase = function(ctx) {
 };
@@ -209,12 +227,12 @@ MQL4Listener.prototype.exitType = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#idList.
-MQL4Listener.prototype.enterIdList = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#assignMinusExpression.
+MQL4Listener.prototype.enterAssignMinusExpression = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#idList.
-MQL4Listener.prototype.exitIdList = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#assignMinusExpression.
+MQL4Listener.prototype.exitAssignMinusExpression = function(ctx) {
 };
 
 
@@ -227,12 +245,183 @@ MQL4Listener.prototype.exitDivideExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#assignMinusExpression.
-MQL4Listener.prototype.enterAssignMinusExpression = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#eqExpression.
+MQL4Listener.prototype.enterEqExpression = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#assignMinusExpression.
-MQL4Listener.prototype.exitAssignMinusExpression = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#eqExpression.
+MQL4Listener.prototype.exitEqExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#assignExpression.
+MQL4Listener.prototype.enterAssignExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#assignExpression.
+MQL4Listener.prototype.exitAssignExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#assignBitOrExpression.
+MQL4Listener.prototype.enterAssignBitOrExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#assignBitOrExpression.
+MQL4Listener.prototype.exitAssignBitOrExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#complementExpression.
+MQL4Listener.prototype.enterComplementExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#complementExpression.
+MQL4Listener.prototype.exitComplementExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#expressionExpression.
+MQL4Listener.prototype.enterExpressionExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#expressionExpression.
+MQL4Listener.prototype.exitExpressionExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#bitOrExpression.
+MQL4Listener.prototype.enterBitOrExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#bitOrExpression.
+MQL4Listener.prototype.exitBitOrExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#assignBitAndExpression.
+MQL4Listener.prototype.enterAssignBitAndExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#assignBitAndExpression.
+MQL4Listener.prototype.exitAssignBitAndExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#bitXorExpression.
+MQL4Listener.prototype.enterBitXorExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#bitXorExpression.
+MQL4Listener.prototype.exitBitXorExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#ltEqExpression.
+MQL4Listener.prototype.enterLtEqExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#ltEqExpression.
+MQL4Listener.prototype.exitLtEqExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#stringExpression.
+MQL4Listener.prototype.enterStringExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#stringExpression.
+MQL4Listener.prototype.exitStringExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#identifierExpression.
+MQL4Listener.prototype.enterIdentifierExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#identifierExpression.
+MQL4Listener.prototype.exitIdentifierExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#notExpression.
+MQL4Listener.prototype.enterNotExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#notExpression.
+MQL4Listener.prototype.exitNotExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#shiftBitRightExpression.
+MQL4Listener.prototype.enterShiftBitRightExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#shiftBitRightExpression.
+MQL4Listener.prototype.exitShiftBitRightExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#bitAndExpression.
+MQL4Listener.prototype.enterBitAndExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#bitAndExpression.
+MQL4Listener.prototype.exitBitAndExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#assignModulusExpression.
+MQL4Listener.prototype.enterAssignModulusExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#assignModulusExpression.
+MQL4Listener.prototype.exitAssignModulusExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#ternaryExpression.
+MQL4Listener.prototype.enterTernaryExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#ternaryExpression.
+MQL4Listener.prototype.exitTernaryExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#gtExpression.
+MQL4Listener.prototype.enterGtExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#gtExpression.
+MQL4Listener.prototype.exitGtExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#functionCallExpression.
+MQL4Listener.prototype.enterFunctionCallExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#functionCallExpression.
+MQL4Listener.prototype.exitFunctionCallExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#assignAddExpression.
+MQL4Listener.prototype.enterAssignAddExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#assignAddExpression.
+MQL4Listener.prototype.exitAssignAddExpression = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#PostDecExpression.
+MQL4Listener.prototype.enterPostDecExpression = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#PostDecExpression.
+MQL4Listener.prototype.exitPostDecExpression = function(ctx) {
 };
 
 
@@ -254,30 +443,12 @@ MQL4Listener.prototype.exitModulusExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#eqExpression.
-MQL4Listener.prototype.enterEqExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#eqExpression.
-MQL4Listener.prototype.exitEqExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#dateExpression.
 MQL4Listener.prototype.enterDateExpression = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#dateExpression.
 MQL4Listener.prototype.exitDateExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#addExpression.
-MQL4Listener.prototype.enterAddExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#addExpression.
-MQL4Listener.prototype.exitAddExpression = function(ctx) {
 };
 
 
@@ -290,12 +461,12 @@ MQL4Listener.prototype.exitAssignDivideExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#assignExpression.
-MQL4Listener.prototype.enterAssignExpression = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#addExpression.
+MQL4Listener.prototype.enterAddExpression = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#assignExpression.
-MQL4Listener.prototype.exitAssignExpression = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#addExpression.
+MQL4Listener.prototype.exitAddExpression = function(ctx) {
 };
 
 
@@ -317,30 +488,12 @@ MQL4Listener.prototype.exitOrExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#assignBitOrExpression.
-MQL4Listener.prototype.enterAssignBitOrExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#assignBitOrExpression.
-MQL4Listener.prototype.exitAssignBitOrExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#indexingExpression.
 MQL4Listener.prototype.enterIndexingExpression = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#indexingExpression.
 MQL4Listener.prototype.exitIndexingExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#complementExpression.
-MQL4Listener.prototype.enterComplementExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#complementExpression.
-MQL4Listener.prototype.exitComplementExpression = function(ctx) {
 };
 
 
@@ -371,24 +524,6 @@ MQL4Listener.prototype.exitLtExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#bitOrExpression.
-MQL4Listener.prototype.enterBitOrExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#bitOrExpression.
-MQL4Listener.prototype.exitBitOrExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#expressionExpression.
-MQL4Listener.prototype.enterExpressionExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#expressionExpression.
-MQL4Listener.prototype.exitExpressionExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#nullExpression.
 MQL4Listener.prototype.enterNullExpression = function(ctx) {
 };
@@ -407,48 +542,12 @@ MQL4Listener.prototype.exitAssignShiftBitLeftExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#assignBitAndExpression.
-MQL4Listener.prototype.enterAssignBitAndExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#assignBitAndExpression.
-MQL4Listener.prototype.exitAssignBitAndExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#PostIncExpression.
 MQL4Listener.prototype.enterPostIncExpression = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#PostIncExpression.
 MQL4Listener.prototype.exitPostIncExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#bitXorExpression.
-MQL4Listener.prototype.enterBitXorExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#bitXorExpression.
-MQL4Listener.prototype.exitBitXorExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#ltEqExpression.
-MQL4Listener.prototype.enterLtEqExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#ltEqExpression.
-MQL4Listener.prototype.exitLtEqExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#shiftBitLeftExpression.
-MQL4Listener.prototype.enterShiftBitLeftExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#shiftBitLeftExpression.
-MQL4Listener.prototype.exitShiftBitLeftExpression = function(ctx) {
 };
 
 
@@ -461,21 +560,12 @@ MQL4Listener.prototype.exitSpecializationExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#stringExpression.
-MQL4Listener.prototype.enterStringExpression = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#shiftBitLeftExpression.
+MQL4Listener.prototype.enterShiftBitLeftExpression = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#stringExpression.
-MQL4Listener.prototype.exitStringExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#identifierExpression.
-MQL4Listener.prototype.enterIdentifierExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#identifierExpression.
-MQL4Listener.prototype.exitIdentifierExpression = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#shiftBitLeftExpression.
+MQL4Listener.prototype.exitShiftBitLeftExpression = function(ctx) {
 };
 
 
@@ -485,15 +575,6 @@ MQL4Listener.prototype.enterGtEqExpression = function(ctx) {
 
 // Exit a parse tree produced by MQL4Parser#gtEqExpression.
 MQL4Listener.prototype.exitGtEqExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#notExpression.
-MQL4Listener.prototype.enterNotExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#notExpression.
-MQL4Listener.prototype.exitNotExpression = function(ctx) {
 };
 
 
@@ -515,33 +596,6 @@ MQL4Listener.prototype.exitNotEqExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#bitAndExpression.
-MQL4Listener.prototype.enterBitAndExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#bitAndExpression.
-MQL4Listener.prototype.exitBitAndExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#shiftBitRightExpression.
-MQL4Listener.prototype.enterShiftBitRightExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#shiftBitRightExpression.
-MQL4Listener.prototype.exitShiftBitRightExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#assignModulusExpression.
-MQL4Listener.prototype.enterAssignModulusExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#assignModulusExpression.
-MQL4Listener.prototype.exitAssignModulusExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#subtractExpression.
 MQL4Listener.prototype.enterSubtractExpression = function(ctx) {
 };
@@ -551,30 +605,12 @@ MQL4Listener.prototype.exitSubtractExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#ternaryExpression.
-MQL4Listener.prototype.enterTernaryExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#ternaryExpression.
-MQL4Listener.prototype.exitTernaryExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#multiplyExpression.
 MQL4Listener.prototype.enterMultiplyExpression = function(ctx) {
 };
 
 // Exit a parse tree produced by MQL4Parser#multiplyExpression.
 MQL4Listener.prototype.exitMultiplyExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#gtExpression.
-MQL4Listener.prototype.enterGtExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#gtExpression.
-MQL4Listener.prototype.exitGtExpression = function(ctx) {
 };
 
 
@@ -605,15 +641,6 @@ MQL4Listener.prototype.exitPreIncExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#functionCallExpression.
-MQL4Listener.prototype.enterFunctionCallExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#functionCallExpression.
-MQL4Listener.prototype.exitFunctionCallExpression = function(ctx) {
-};
-
-
 // Enter a parse tree produced by MQL4Parser#assignShiftBitRightExpression.
 MQL4Listener.prototype.enterAssignShiftBitRightExpression = function(ctx) {
 };
@@ -632,21 +659,12 @@ MQL4Listener.prototype.exitNumberExpression = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#assignAddExpression.
-MQL4Listener.prototype.enterAssignAddExpression = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#charExpression.
+MQL4Listener.prototype.enterCharExpression = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#assignAddExpression.
-MQL4Listener.prototype.exitAssignAddExpression = function(ctx) {
-};
-
-
-// Enter a parse tree produced by MQL4Parser#PostDecExpression.
-MQL4Listener.prototype.enterPostDecExpression = function(ctx) {
-};
-
-// Exit a parse tree produced by MQL4Parser#PostDecExpression.
-MQL4Listener.prototype.exitPostDecExpression = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#charExpression.
+MQL4Listener.prototype.exitCharExpression = function(ctx) {
 };
 
 

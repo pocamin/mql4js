@@ -2,10 +2,27 @@ h1, h2, h3, h4, h5, h6 {
     color: #7070A0;
 }
 
+span.error {
+    color: red;
+}
+
+span.log {
+    color: white;
+}
+
+pre #log {
+    background: black;
+    height: 500px;
+    overflow: scroll;
+    width: 100%;
+    display: block;
+}
+
 textarea {
     display: block;
     width: 100%;
     min-height: 300px;
+
 }
 
 table {

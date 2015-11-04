@@ -62,6 +62,16 @@ MQL4Visitor.prototype.visitDoWhileOperation = function(ctx) {
 };
 
 
+// Visit a parse tree produced by MQL4Parser#forMultiExpressions.
+MQL4Visitor.prototype.visitForMultiExpressions = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#forExpression.
+MQL4Visitor.prototype.visitForExpression = function(ctx) {
+};
+
+
 // Visit a parse tree produced by MQL4Parser#switchCase.
 MQL4Visitor.prototype.visitSwitchCase = function(ctx) {
 };
@@ -122,8 +132,8 @@ MQL4Visitor.prototype.visitType = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#idList.
-MQL4Visitor.prototype.visitIdList = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#assignMinusExpression.
+MQL4Visitor.prototype.visitAssignMinusExpression = function(ctx) {
 };
 
 
@@ -132,8 +142,103 @@ MQL4Visitor.prototype.visitDivideExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#assignMinusExpression.
-MQL4Visitor.prototype.visitAssignMinusExpression = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#eqExpression.
+MQL4Visitor.prototype.visitEqExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#assignExpression.
+MQL4Visitor.prototype.visitAssignExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#assignBitOrExpression.
+MQL4Visitor.prototype.visitAssignBitOrExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#complementExpression.
+MQL4Visitor.prototype.visitComplementExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#expressionExpression.
+MQL4Visitor.prototype.visitExpressionExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#bitOrExpression.
+MQL4Visitor.prototype.visitBitOrExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#assignBitAndExpression.
+MQL4Visitor.prototype.visitAssignBitAndExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#bitXorExpression.
+MQL4Visitor.prototype.visitBitXorExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#ltEqExpression.
+MQL4Visitor.prototype.visitLtEqExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#stringExpression.
+MQL4Visitor.prototype.visitStringExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#identifierExpression.
+MQL4Visitor.prototype.visitIdentifierExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#notExpression.
+MQL4Visitor.prototype.visitNotExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#shiftBitRightExpression.
+MQL4Visitor.prototype.visitShiftBitRightExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#bitAndExpression.
+MQL4Visitor.prototype.visitBitAndExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#assignModulusExpression.
+MQL4Visitor.prototype.visitAssignModulusExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#ternaryExpression.
+MQL4Visitor.prototype.visitTernaryExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#gtExpression.
+MQL4Visitor.prototype.visitGtExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#functionCallExpression.
+MQL4Visitor.prototype.visitFunctionCallExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#assignAddExpression.
+MQL4Visitor.prototype.visitAssignAddExpression = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#PostDecExpression.
+MQL4Visitor.prototype.visitPostDecExpression = function(ctx) {
 };
 
 
@@ -147,18 +252,8 @@ MQL4Visitor.prototype.visitModulusExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#eqExpression.
-MQL4Visitor.prototype.visitEqExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#dateExpression.
 MQL4Visitor.prototype.visitDateExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#addExpression.
-MQL4Visitor.prototype.visitAddExpression = function(ctx) {
 };
 
 
@@ -167,8 +262,8 @@ MQL4Visitor.prototype.visitAssignDivideExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#assignExpression.
-MQL4Visitor.prototype.visitAssignExpression = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#addExpression.
+MQL4Visitor.prototype.visitAddExpression = function(ctx) {
 };
 
 
@@ -182,18 +277,8 @@ MQL4Visitor.prototype.visitOrExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#assignBitOrExpression.
-MQL4Visitor.prototype.visitAssignBitOrExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#indexingExpression.
 MQL4Visitor.prototype.visitIndexingExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#complementExpression.
-MQL4Visitor.prototype.visitComplementExpression = function(ctx) {
 };
 
 
@@ -212,16 +297,6 @@ MQL4Visitor.prototype.visitLtExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#bitOrExpression.
-MQL4Visitor.prototype.visitBitOrExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#expressionExpression.
-MQL4Visitor.prototype.visitExpressionExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#nullExpression.
 MQL4Visitor.prototype.visitNullExpression = function(ctx) {
 };
@@ -232,28 +307,8 @@ MQL4Visitor.prototype.visitAssignShiftBitLeftExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#assignBitAndExpression.
-MQL4Visitor.prototype.visitAssignBitAndExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#PostIncExpression.
 MQL4Visitor.prototype.visitPostIncExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#bitXorExpression.
-MQL4Visitor.prototype.visitBitXorExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#ltEqExpression.
-MQL4Visitor.prototype.visitLtEqExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#shiftBitLeftExpression.
-MQL4Visitor.prototype.visitShiftBitLeftExpression = function(ctx) {
 };
 
 
@@ -262,23 +317,13 @@ MQL4Visitor.prototype.visitSpecializationExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#stringExpression.
-MQL4Visitor.prototype.visitStringExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#identifierExpression.
-MQL4Visitor.prototype.visitIdentifierExpression = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#shiftBitLeftExpression.
+MQL4Visitor.prototype.visitShiftBitLeftExpression = function(ctx) {
 };
 
 
 // Visit a parse tree produced by MQL4Parser#gtEqExpression.
 MQL4Visitor.prototype.visitGtEqExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#notExpression.
-MQL4Visitor.prototype.visitNotExpression = function(ctx) {
 };
 
 
@@ -292,38 +337,13 @@ MQL4Visitor.prototype.visitNotEqExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#bitAndExpression.
-MQL4Visitor.prototype.visitBitAndExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#shiftBitRightExpression.
-MQL4Visitor.prototype.visitShiftBitRightExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#assignModulusExpression.
-MQL4Visitor.prototype.visitAssignModulusExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#subtractExpression.
 MQL4Visitor.prototype.visitSubtractExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#ternaryExpression.
-MQL4Visitor.prototype.visitTernaryExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#multiplyExpression.
 MQL4Visitor.prototype.visitMultiplyExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#gtExpression.
-MQL4Visitor.prototype.visitGtExpression = function(ctx) {
 };
 
 
@@ -342,11 +362,6 @@ MQL4Visitor.prototype.visitPreIncExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#functionCallExpression.
-MQL4Visitor.prototype.visitFunctionCallExpression = function(ctx) {
-};
-
-
 // Visit a parse tree produced by MQL4Parser#assignShiftBitRightExpression.
 MQL4Visitor.prototype.visitAssignShiftBitRightExpression = function(ctx) {
 };
@@ -357,13 +372,8 @@ MQL4Visitor.prototype.visitNumberExpression = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#assignAddExpression.
-MQL4Visitor.prototype.visitAssignAddExpression = function(ctx) {
-};
-
-
-// Visit a parse tree produced by MQL4Parser#PostDecExpression.
-MQL4Visitor.prototype.visitPostDecExpression = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#charExpression.
+MQL4Visitor.prototype.visitCharExpression = function(ctx) {
 };
 
 

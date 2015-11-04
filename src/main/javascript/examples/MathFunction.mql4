@@ -1,0 +1,23 @@
+int func(){
+	MathAbs(10);
+	MathArccos(10);
+	MathArcsin(10);
+	MathArctan(10);
+	MathCeil(10);
+	MathCos(10);
+	MathExp(10);
+	MathFloor(10);
+	MathLog(10);
+	MathLog10(7);
+	MathMax(5,2);
+	MathMin(5,2);
+	MathMod(5,2);
+	MathPow(5,2);
+	MathRand();
+	MathRound(3.2);
+	MathSin(10);
+	MathSqrt(4);
+	MathSrand(50);
+	MathTan(50);
+	MathIsValidNumber(10/0);
+}
