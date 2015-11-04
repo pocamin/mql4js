@@ -465,7 +465,31 @@ MQL4ToJsVisitor.prototype.visitRoot = function (ctx) {
   var toReturn = utils.passThrough(this)(ctx);
   toReturn.externalParameters = externalParameters;
   toReturn.callableFunctions = callableFunctions;
+  toReturn.js = this.notice() + this.externalParametersAsJs() + toReturn.js;
   return toReturn;
+};
+
+MQL4ToJsVisitor.prototype.notice = function () {
+  return "// Js file generated using Mql4ToJs on " + new Date() + "\n";
+};
+
+MQL4ToJsVisitor.prototype.externalParametersAsJs = function () {
+  var js = "//BEGIN Script Parameters \n";
+
+  js += "var $externalParameters = [";
+
+  js += externalParameters.map(function (param) {
+    return "\n\t" + param.name + ": {type: '" + param.type + "', defaultValue:" + param.defaultValue + "}"
+  }).join(", ");
+  js += "];\n";
+
+
+  js += "var $parameters = {" +
+    externalParameters.map(function (param) {
+      return "\n\t" + param.name + ":" + param.defaultValue
+    }).join(", ") + "};\n";
+  js += "// END Script Parameters \n\n";
+  return js;
 };
 
 

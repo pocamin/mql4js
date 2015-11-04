@@ -58,10 +58,12 @@
             console.error("------");
             console.error("running " + functionName + " on " + new Date());
             console.error("------");
-            eval(safeJs);
-            console.log = _log;
-            console.error = _error;
-
+            try {
+                eval(safeJs);
+            } finally {
+                console.log = _log;
+                console.error = _error;
+            }
         }
 
 
@@ -154,7 +156,7 @@
             <option value="structure.mql4">Structures</option>
             <option value="FunctionDeclarations.mql4">Function Declaration</option>
             <option value="ControlStructures.mql4">Control structures</option>
-
+            <option value="date.mql4">Date</option>
         </optGroup>
 
         <optgroup label="mql4 standard api">
