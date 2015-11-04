@@ -3,7 +3,15 @@ var mql4 = {
 
 
 };
-mql4.setCharacter = notYetImplemented;
+
+var notYetImplemented = function (functionName) {
+  return function () {
+    console.error(functionName + " : not yet implemented");
+    throw new Error(msg);
+  }
+};
+
+mql4.setCharacter = notYetImplemented('setCharacter');
 mql4.normalizeDouble = function (value, digits) {
   var exp = Math.pow(10, digits);
   return Math.round(value * exp) / exp;
@@ -13,161 +21,160 @@ mql4.toNumber = function (str) {
 };
 
 //Conversion
-mql4.charArrayToString = notYetImplemented;
-mql4.doubleToString = notYetImplemented;
-mql4.integerToString = notYetImplemented;
-mql4.shortToString = notYetImplemented;
-mql4.shortArrayToString = notYetImplemented;
-mql4.stringToCharArray = notYetImplemented;
-mql4.stringToShortArray = notYetImplemented;
-mql4.stringToTime = notYetImplemented;
-mql4.stringFormat = notYetImplemented;
-mql4.timeToString = notYetImplemented;
+mql4.charArrayToString = notYetImplemented('charArrayToString');
+mql4.doubleToString = notYetImplemented('doubleToString');
+mql4.integerToString = notYetImplemented('integerToString');
+mql4.shortToString = notYetImplemented('shortToString');
+mql4.shortArrayToString = notYetImplemented('shortArrayToString');
+mql4.stringToCharArray = notYetImplemented('stringToCharArray');
+mql4.stringToShortArray = notYetImplemented('stringToShortArray');
+mql4.stringToTime = notYetImplemented('stringToTime');
+mql4.stringFormat = notYetImplemented('stringFormat');
+mql4.timeToString = notYetImplemented('timeToString');
 
 // array
-mql4.arrayBsearch = notYetImplemented;
-mql4.arrayCompare = notYetImplemented;
-mql4.arrayGetAsSeries = notYetImplemented;
-mql4.arrayFill = notYetImplemented;
-mql4.arrayIsSeries = notYetImplemented;
-mql4.arrayMaximum = notYetImplemented;
-mql4.arrayMinimum = notYetImplemented;
-mql4.arrayRange = notYetImplemented;
-mql4.arrayResize = notYetImplemented;
-mql4.arraySetAsSeries = notYetImplemented;
-mql4.arraySort = notYetImplemented;
-mql4.arrayCopyRates = notYetImplemented;
-mql4.arrayCopySeries = notYetImplemented;
-mql4.arrayDimension = notYetImplemented;
+mql4.arrayBsearch = notYetImplemented('arrayBsearch');
+mql4.arrayCompare = notYetImplemented('arrayCompare');
+mql4.arrayGetAsSeries = notYetImplemented('arrayGetAsSeries');
+mql4.arrayFill = notYetImplemented('arrayFill');
+mql4.arrayIsSeries = notYetImplemented('arrayIsSeries');
+mql4.arrayMaximum = notYetImplemented('arrayMaximum');
+mql4.arrayMinimum = notYetImplemented('arrayMinimum');
+mql4.arrayRange = notYetImplemented('arrayRange');
+mql4.arrayResize = notYetImplemented('arrayResize');
+mql4.arraySetAsSeries = notYetImplemented('arraySetAsSeries');
+mql4.arraySort = notYetImplemented('arraySort');
+mql4.arrayCopyRates = notYetImplemented('arrayCopyRates');
+mql4.arrayCopySeries = notYetImplemented('arrayCopySeries');
+mql4.arrayDimension = notYetImplemented('arrayDimension');
 
 // account
-mql4.accountInfo = notYetImplemented;
-mql4.accountBalance = notYetImplemented;
-mql4.accountCompany = notYetImplemented;
-mql4.accountCredit = notYetImplemented;
-mql4.accountCurrency = notYetImplemented;
-mql4.accountEquity = notYetImplemented;
-mql4.accountFreeMargin = notYetImplemented;
-mql4.accountFreeMarginCheck = notYetImplemented;
-mql4.accountFreeMarginMode = notYetImplemented;
-mql4.accountLeverage = notYetImplemented;
-mql4.accountMargin = notYetImplemented;
-mql4.accountName = notYetImplemented;
-mql4.accountNumber = notYetImplemented;
-mql4.accountProfit = notYetImplemented;
-mql4.accountServer = notYetImplemented;
-mql4.accountStopoutLevel = notYetImplemented;
-mql4.accountStopoutMode = notYetImplemented;
+mql4.accountInfo = notYetImplemented('accountInfo');
+mql4.accountBalance = notYetImplemented('accountBalance');
+mql4.accountCompany = notYetImplemented('accountCompany');
+mql4.accountCredit = notYetImplemented('accountCredit');
+mql4.accountCurrency = notYetImplemented('accountCurrency');
+mql4.accountEquity = notYetImplemented('accountEquity');
+mql4.accountFreeMargin = notYetImplemented('accountFreeMargin');
+mql4.accountFreeMarginCheck = notYetImplemented('accountFreeMarginCheck');
+mql4.accountFreeMarginMode = notYetImplemented('accountFreeMarginMode');
+mql4.accountLeverage = notYetImplemented('accountLeverage');
+mql4.accountMargin = notYetImplemented('accountMargin');
+mql4.accountName = notYetImplemented('accountName');
+mql4.accountNumber = notYetImplemented('accountNumber');
+mql4.accountProfit = notYetImplemented('accountProfit');
+mql4.accountServer = notYetImplemented('accountServer');
+mql4.accountStopoutLevel = notYetImplemented('accountStopoutLevel');
+mql4.accountStopoutMode = notYetImplemented('accountStopoutMode');
 
 // common
-mql4.sendMail = notYetImplemented;
-mql4.periodSeconds = notYetImplemented;
+mql4.sendMail = notYetImplemented('sendMail');
+mql4.periodSeconds = notYetImplemented('periodSeconds');
 
 // Time
-mql4.dayOfYear = notYetImplemented;
-mql4.TimeDayOfYear = notYetImplemented;
-mql4.timeCurrent = notYetImplemented;
-mql4.timeGMT = notYetImplemented;
-mql4.timeDaylightSavings = notYetImplemented;
-mql4.timeGMTOffset = notYetImplemented;
-mql4.timeToStruct = notYetImplemented;
-mql4.structToTime = notYetImplemented;
-mql4.timeDayOfYear = notYetImplemented;
-mql4.dayOfYear = notYetImplemented;
+mql4.dayOfYear = notYetImplemented('dayOfYear');
+mql4.TimeDayOfYear = notYetImplemented('TimeDayOfYear');
+mql4.timeCurrent = notYetImplemented('timeCurrent');
+mql4.timeGMT = notYetImplemented('timeGMT');
+mql4.timeDaylightSavings = notYetImplemented('timeDaylightSavings');
+mql4.timeGMTOffset = notYetImplemented('timeGMTOffset');
+mql4.timeToStruct = notYetImplemented('timeToStruct');
+mql4.structToTime = notYetImplemented('structToTime');
+mql4.timeDayOfYear = notYetImplemented('timeDayOfYear');
+mql4.dayOfYear = notYetImplemented('dayOfYear');
 
 // TimeSeries
-mql4.seriesInfo = notYetImplemented;
-mql4.refreshRates = notYetImplemented;
-mql4.getRates = notYetImplemented;
-mql4.getTimes = notYetImplemented;
-mql4.getOpens = notYetImplemented;
-mql4.getHighs = notYetImplemented;
-mql4.getLows = notYetImplemented;
-mql4.getCloses = notYetImplemented;
-mql4.getTickVolumes = notYetImplemented;
-mql4.bars = notYetImplemented;
-mql4.iBars = notYetImplemented;
-mql4.iBarShift = notYetImplemented;
-mql4.iTime = notYetImplemented;
-mql4.iOpen = notYetImplemented;
-mql4.iHigh = notYetImplemented;
-mql4.iLow = notYetImplemented;
-mql4.iClose = notYetImplemented;
-mql4.iVolume = notYetImplemented;
+mql4.seriesInfo = notYetImplemented('seriesInfo');
+mql4.refreshRates = notYetImplemented('refreshRates');
+mql4.getRates = notYetImplemented('getRates');
+mql4.getTimes = notYetImplemented('getTimes');
+mql4.getOpens = notYetImplemented('getOpens');
+mql4.getHighs = notYetImplemented('getHighs');
+mql4.getLows = notYetImplemented('getLows');
+mql4.getCloses = notYetImplemented('getCloses');
+mql4.getTickVolumes = notYetImplemented('getTickVolumes');
+mql4.bars = notYetImplemented('bars');
+mql4.iBars = notYetImplemented('iBars');
+mql4.iBarShift = notYetImplemented('iBarShift');
+mql4.iTime = notYetImplemented('iTime');
+mql4.iOpen = notYetImplemented('iOpen');
+mql4.iHigh = notYetImplemented('iHigh');
+mql4.iLow = notYetImplemented('iLow');
+mql4.iClose = notYetImplemented('iClose');
+mql4.iVolume = notYetImplemented('iVolume');
 
 // Trades
-mql4.orderClose = notYetImplemented;
-mql4.orderCloseBy = notYetImplemented;
-mql4.orderClosePrice = notYetImplemented;
-mql4.orderCloseTime = notYetImplemented;
-mql4.orderComment = notYetImplemented;
-mql4.orderCommission = notYetImplemented;
-mql4.orderDelete = notYetImplemented;
-mql4.orderExpiration = notYetImplemented;
-mql4.orderLots = notYetImplemented;
-mql4.orderMagicNumber = notYetImplemented;
-mql4.orderModify = notYetImplemented;
-mql4.orderSelect = notYetImplemented;
-mql4.orderSend = notYetImplemented;
-mql4.ordersHistoryTotal = notYetImplemented;
-mql4.orderStopLoss = notYetImplemented;
-mql4.ordersTotal = notYetImplemented;
-mql4.orderSwap = notYetImplemented;
-mql4.orderSymbol = notYetImplemented;
-mql4.orderTakeProfit = notYetImplemented;
-mql4.orderTicket = notYetImplemented;
-mql4.orderType = notYetImplemented;
+mql4.orderClose = notYetImplemented('orderClose');
+mql4.orderCloseBy = notYetImplemented('orderCloseBy');
+mql4.orderClosePrice = notYetImplemented('orderClosePrice');
+mql4.orderCloseTime = notYetImplemented('orderCloseTime');
+mql4.orderComment = notYetImplemented('orderComment');
+mql4.orderCommission = notYetImplemented('orderCommission');
+mql4.orderDelete = notYetImplemented('orderDelete');
+mql4.orderExpiration = notYetImplemented('orderExpiration');
+mql4.orderLots = notYetImplemented('orderLots');
+mql4.orderMagicNumber = notYetImplemented('orderMagicNumber');
+mql4.orderModify = notYetImplemented('orderModify');
+mql4.orderSelect = notYetImplemented('orderSelect');
+mql4.orderSend = notYetImplemented('orderSend');
+mql4.ordersHistoryTotal = notYetImplemented('ordersHistoryTotal');
+mql4.orderStopLoss = notYetImplemented('orderStopLoss');
+mql4.ordersTotal = notYetImplemented('ordersTotal');
+mql4.orderSwap = notYetImplemented('orderSwap');
+mql4.orderSymbol = notYetImplemented('orderSymbol');
+mql4.orderTakeProfit = notYetImplemented('orderTakeProfit');
+mql4.orderTicket = notYetImplemented('orderTicket');
+mql4.orderType = notYetImplemented('orderType');
 
-mql4.iAC = notYetImplemented;
-mql4.iAD = notYetImplemented;
-mql4.iADX = notYetImplemented;
-mql4.iAlligator = notYetImplemented;
-mql4.iAO = notYetImplemented;
-mql4.iATR = notYetImplemented;
-mql4.iBearsPower = notYetImplemented;
-mql4.iBands = notYetImplemented;
-mql4.iBandsOnArray = notYetImplemented;
-mql4.iBullsPower = notYetImplemented;
-mql4.iCCI = notYetImplemented;
-mql4.iCCIOnArray = notYetImplemented;
-mql4.iCustom = notYetImplemented;
-mql4.iDeMarker = notYetImplemented;
-mql4.iEnvelopes = notYetImplemented;
-mql4.iEnvelopesOnArray = notYetImplemented;
-mql4.iForce = notYetImplemented;
-mql4.iFractals = notYetImplemented;
-mql4.iGator = notYetImplemented;
-mql4.iIchimoku = notYetImplemented;
-mql4.iBWMFI = notYetImplemented;
-mql4.iMomentum = notYetImplemented;
-mql4.iMomentumOnArray = notYetImplemented;
-mql4.iMFI = notYetImplemented;
-mql4.iMA = notYetImplemented;
-mql4.iMAOnArray = notYetImplemented;
-mql4.iOsMA = notYetImplemented;
-mql4.iMACD = notYetImplemented;
-mql4.iOBV = notYetImplemented;
-mql4.iSAR = notYetImplemented;
-mql4.iRSI = notYetImplemented;
-mql4.iRSIOnArray = notYetImplemented;
-mql4.iRVI = notYetImplemented;
-mql4.iStdDev = notYetImplemented;
-mql4.iStdDevOnArray = notYetImplemented;
-mql4.iStochastic = notYetImplemented;
-mql4.iWPR = notYetImplemented;
+mql4.iAC = notYetImplemented('iAC');
+mql4.iAD = notYetImplemented('iAD');
+mql4.iADX = notYetImplemented('iADX');
+mql4.iAlligator = notYetImplemented('iAlligator');
+mql4.iAO = notYetImplemented('iAO');
+mql4.iATR = notYetImplemented('iATR');
+mql4.iBearsPower = notYetImplemented('iBearsPower');
+mql4.iBands = notYetImplemented('iBands');
+mql4.iBandsOnArray = notYetImplemented('iBandsOnArray');
+mql4.iBullsPower = notYetImplemented('iBullsPower');
+mql4.iCCI = notYetImplemented('iCCI');
+mql4.iCCIOnArray = notYetImplemented('iCCIOnArray');
+mql4.iCustom = notYetImplemented('iCustom');
+mql4.iDeMarker = notYetImplemented('iDeMarker');
+mql4.iEnvelopes = notYetImplemented('iEnvelopes');
+mql4.iEnvelopesOnArray = notYetImplemented('iEnvelopesOnArray');
+mql4.iForce = notYetImplemented('iForce');
+mql4.iFractals = notYetImplemented('iFractals');
+mql4.iGator = notYetImplemented('iGator');
+mql4.iIchimoku = notYetImplemented('iIchimoku');
+mql4.iBWMFI = notYetImplemented('iBWMFI');
+mql4.iMomentum = notYetImplemented('iMomentum');
+mql4.iMomentumOnArray = notYetImplemented('iMomentumOnArray');
+mql4.iMFI = notYetImplemented('iMFI');
+mql4.iMA = notYetImplemented('iMA');
+mql4.iMAOnArray = notYetImplemented('iMAOnArray');
+mql4.iOsMA = notYetImplemented('iOsMA');
+mql4.iMACD = notYetImplemented('iMACD');
+mql4.iOBV = notYetImplemented('iOBV');
+mql4.iSAR = notYetImplemented('iSAR');
+mql4.iRSI = notYetImplemented('iRSI');
+mql4.iRSIOnArray = notYetImplemented('iRSIOnArray');
+mql4.iRVI = notYetImplemented('iRVI');
+mql4.iStdDev = notYetImplemented('iStdDev');
+mql4.iStdDevOnArray = notYetImplemented('iStdDevOnArray');
+mql4.iStochastic = notYetImplemented('iStochastic');
+mql4.iWPR = notYetImplemented('iWPR');
 
 // language artifacts
-mql4.defineStruct = notYetImplemented;
-mql4.date = notYetImplemented;
-mql4.newArray = notYetImplemented;
-mql4.newStruct = notYetImplemented;
+mql4.defineStruct = notYetImplemented('defineStruct');
+mql4.date = notYetImplemented('date');
+mql4.newArray = notYetImplemented('newArray');
+mql4.newStruct = notYetImplemented('newStruct');
 
 mql4.throwNotSupportedFunction = function (msg) {
-  throw new Error(msg);
+  console.error(msg + " : Not supported");
+  throw new Error(msg + " : Not supported");
 };
 
-var notYetImplemented = function () {
-  throw new Error("not yet implemented")
-};
+
 
 
