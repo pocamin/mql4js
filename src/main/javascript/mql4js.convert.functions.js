@@ -116,10 +116,10 @@ mql4Functions = (function () {
       return args[0] + "= " + functionRenameTo("mql4.setCharacter")(args);
     },
 
-
-    ExpertRemove: functionRenameTo("this.getRuntime().kill"),
-    GetTickCount: functionRenameTo("this.getRuntime().getUpTime"),
-    GetMicrosecondCount: functionRenameTo("this.getRuntime().getUpTime"),
+    Sleep: functionRenameTo("/* Deprecated */getRuntime().sleep"),
+    ExpertRemove: functionRenameTo("getRuntime().kill"),
+    GetTickCount: functionRenameTo("getRuntime().getUpTime"),
+    GetMicrosecondCount: functionRenameTo("getRuntime().getUpTime"),
     ArrayInitialize: function (args) {
       return "mql4.arrayFill(" + args[0] + ",0," + args[0].length + "," + args[1] + ")";
     },
@@ -315,7 +315,7 @@ mql4Functions = (function () {
     "ColorToARGB", "ColorToString", "StringToColor",
     "MathSrand", // No seed in js random function
     "EnumToString", // need typing
-    "ArrayIsDynamic", "SetUserError", "SendFTP", "SendNotification", "PlaySound", "Sleep", "TerminalClose", "TesterStatistics", "WebRequest", "ZeroMemory",
+    "ArrayIsDynamic", "SetUserError", "SendFTP", "SendNotification", "PlaySound", "TerminalClose", "TesterStatistics", "WebRequest", "ZeroMemory",
     "ResourceSave", "ResourceReadImage", "ResourceFree", "ResourceCreate", "ResetLastError", "CheckPointer", "Comment", "CryptEncode", "CryptDecode",
     "DebugBreak", "GetPointer", "MessageBox"
   ].forEach(function (mql4functionName) {
