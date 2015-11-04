@@ -162,6 +162,9 @@ mql4.date = notYetImplemented;
 mql4.newArray = notYetImplemented;
 mql4.newStruct = notYetImplemented;
 
+mql4.throwNotSupportedFunction = function (msg) {
+  throw new Error(msg);
+};
 
 var notYetImplemented = function () {
   throw new Error("not yet implemented")
