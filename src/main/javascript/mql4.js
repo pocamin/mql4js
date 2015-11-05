@@ -41,7 +41,30 @@ mql4.arrayIsSeries = notYetImplemented('arrayIsSeries');
 mql4.arrayMaximum = notYetImplemented('arrayMaximum');
 mql4.arrayMinimum = notYetImplemented('arrayMinimum');
 mql4.arrayRange = notYetImplemented('arrayRange');
-mql4.arrayResize = notYetImplemented('arrayResize');
+
+mql4.arrayPrepend = function (array, value) {
+  var toReturn = [value];
+  Array.prototype.push.apply(toReturn, array);
+  return toReturn;
+};
+
+mql4.arrayResize = function (array, newSize) {
+  if (array.length > newSize) {
+    while (array.length > newSize) {
+      array.pop();
+    }
+  } else if (array.length < newSize) {
+
+    var increment = mql4.newArray({
+      dimensions: mql4.arrayPrepend(array.sizes, newSize - array.length),
+      dynamic: false,
+      defaultValue: array.defaultValue
+    });
+    Array.prototype.push.apply(array, increment);
+  }
+};
+
+
 mql4.arraySetAsSeries = notYetImplemented('arraySetAsSeries');
 mql4.arraySort = notYetImplemented('arraySort');
 mql4.arrayCopyRates = notYetImplemented('arrayCopyRates');
@@ -167,8 +190,51 @@ mql4.iWPR = notYetImplemented('iWPR');
 // language artifacts
 mql4.defineStruct = notYetImplemented('defineStruct');
 mql4.date = notYetImplemented('date');
-mql4.newArray = notYetImplemented('newArray');
 mql4.newStruct = notYetImplemented('newStruct');
+
+
+mql4.newArray = function (arrayArguments) {
+  var createSubArray = function (sizes, currentIndex) {
+    if (!currentIndex) {
+      currentIndex = 0;
+    }
+    var toReturn = [];
+    var isSubArray = sizes.length > 1;
+    for (var i = 0; i < sizes[0]; i++) {
+      if (isSubArray) {
+        toReturn[i] = createSubArray(sizes.slice(1), currentIndex);
+        currentIndex += sizes.slice(2).reduce(function (acc, i) {
+          return acc * i
+        }, sizes[1]);
+      } else {
+        toReturn[i] = arrayArguments.data ? arrayArguments.data[currentIndex + i] : arrayArguments.defaultValue;
+      }
+    }
+    return toReturn;
+  };
+
+  var toReturn = [];
+  toReturn.sizes = arrayArguments.dimensions;
+  toReturn.dynamic = arrayArguments.dynamic;
+  toReturn.dim = toReturn.sizes.length + (toReturn.dynamic ? 1 : 0);
+  toReturn.defaultValue = arrayArguments.defaultValue;
+
+
+  if (!arrayArguments.dynamic) {
+    toReturn = createSubArray(toReturn.sizes, 0);
+  } else if (arrayArguments.data) {
+    toReturn = createSubArray(
+      mql4.arrayPrepend(toReturn.sizes,
+        arrayArguments.data.length / toReturn.sizes.reduce(function (val, acc) {
+          return acc * val
+        }, 1)
+      )
+    );
+
+  }
+  return toReturn;
+};
+
 
 mql4.throwNotSupportedFunction = function (msg) {
   console.error(msg + " : Not supported");

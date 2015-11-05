@@ -5,12 +5,13 @@ int test(){
 	bool Mas_b[5] = { false, true, false, true, true };
 	string Text[101];
 	Text[1]="one ";
-	Print(Mas_d[2][3]);
-	Print(Mas_d[2,3]);
+	Print(Mas_d[1][2]);
+	Print(Mas_d[1,2]);
 
 	// Dynamic arrays
 	double matrix[][10][20];
     ArrayResize(matrix,5);
+    Print(matrix[0,1,2]);
 
 }
 

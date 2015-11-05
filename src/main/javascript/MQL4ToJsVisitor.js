@@ -30,7 +30,7 @@ var getMql4DefaultValue = function (type, arrayIndexes, dynamicArray) {
   }
 
   if (arrayIndexes) {
-    return "mql4.newArray({dimensions:[" + arrayIndexes.join(",") + "], dynamic : " + dynamicArray + " , defaultValue:" + defaultValue + ")";
+    return "mql4.newArray({dimensions:[" + arrayIndexes.join(",") + "], dynamic : " + dynamicArray + " , defaultValue:" + defaultValue + "})";
   } else {
     return defaultValue;
   }
