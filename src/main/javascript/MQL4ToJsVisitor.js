@@ -1,11 +1,14 @@
-var mql4Visitor = require('./antlr4-gen/MQL4Visitor');
-var externalParameters;
-var typeKept;
-var originalKept;
-var callableFunctions = [];
+var MQL4ToJsVisitor = function (keepType, keepOriginal, tokens, keepComments) {
+  this.keepComments = keepComments;
+  this.tokens = tokens;
+  this.typeKept = keepType;
+  this.isOriginalKept = keepOriginal;
+  this.externalParameters = [];
+  this.callableFunctions = [];
+  return this;
+};
 
-var getMql4DefaultValue = function (type, arrayIndexes, dynamicArray) {
-
+MQL4ToJsVisitor.prototype.getMql4DefaultValue = function (type, arrayIndexes, dynamicArray) {
   var defaultValue = "{}";
   switch (type) {
     case "bool" :
@@ -30,112 +33,94 @@ var getMql4DefaultValue = function (type, arrayIndexes, dynamicArray) {
   }
 
   if (arrayIndexes) {
-    return "mql4.newArray({dimensions:[" + arrayIndexes.join(",") + "], dynamic : " + dynamicArray + " , defaultValue:" + defaultValue + "})";
+    return "mql4.newArray({dimensions:[" + arrayIndexes.join(",") + "], dynamic : " + dynamicArray + ", defaultValue:" + defaultValue + "})";
   } else {
     return defaultValue;
   }
 };
 
+MQL4ToJsVisitor.prototype.pad = function (str, nbTab) {
+  return str.replace(/\s*$/, '').split("\n").map(function (line) {
+    return _.repeat("  ", nbTab || 1) + line + "\n";
+  }).join("");
+};
 
-var utils = {
-  isDefined: _.negate(_.isUndefined),
-  pad: function (str, nbTab) {
-    return str.replace(/\s*$/, '').split("\n").map(function (line) {
-      return _.repeat("  ", nbTab || 1) + line + "\n";
-    }).join("");
-  },
-  isBlock: function (ctx) {
-    return ctx.constructor.name == "BlockOperationContext";
-  },
-  resultToJS: function (result) {
-    return result.js;
-  },
-  visit: function (that) {
-    return function (x) {
-      return that.visit(x)
-    };
-  },
-  visitAndUnwrapJS: function (that, ctx) {
-    return that.js(ctx);
-  },
-  aggregate: function (acc, val) {
-    return acc + "\n" + val;
-  },
-  noConversion: function (ctx) {
-    return utils.wrapJS(ctx.getText());
-  },
-  wrapJS: function (js) {
-    return {js: js};
-  },
-  passThrough: function (that) {
-    return function (ctx) {
-      return utils.wrapJS(_(ctx.children)
-        .map(utils.visit(that))
-        .filter(utils.isDefined)
-        .map(utils.resultToJS)
-        .reduce(utils.aggregate));
-    };
-  },
-  originalText: function (ctx) {
-    return ctx.start.getInputStream().strdata.substring(ctx.start.start, ctx.stop.stop);
-  },
-  convertType: function (type, arrayIndexes) {
-    return typeKept ? "/*<" + type + ((arrayIndexes) ? "[]" : "") + ">*/ " : "";
-  },
-  biOp: function (opConvertTo) {
-    return function (ctx) {
-      return utils.wrapJS(utils.visitAndUnwrapJS(this, ctx.expression(0)) + opConvertTo + utils.visitAndUnwrapJS(this, ctx.expression(1)));
-    }
-  },
-  leftUniOp: function (opConvertTo) {
-    return function (ctx) {
-      return utils.wrapJS(opConvertTo + utils.visitAndUnwrapJS(this, ctx.expression(0)));
-    }
-  },
-  rightUniOp: function (opConvertTo) {
-    return function (ctx) {
-      return utils.wrapJS(utils.visitAndUnwrapJS(this, ctx.expression(0)) + opConvertTo);
-    }
-  },
-  printStatement: function (ctx) {
-    return originalKept ? "//" + this.originalText(ctx) + "\n" : "";
+MQL4ToJsVisitor.prototype.isBlock = function (ctx) {
+  return ctx.constructor.name == "BlockOperationContext";
+};
+
+
+MQL4ToJsVisitor.prototype.textAsJs = function (ctx) {
+  return this.wrapJS(ctx.getText());
+};
+
+MQL4ToJsVisitor.prototype.wrapJS = function (js) {
+  return {js: js};
+};
+
+MQL4ToJsVisitor.prototype.originalText = function (ctx) {
+  return ctx.start.getInputStream().strdata.substring(ctx.start.start, ctx.stop.stop + 1);
+};
+
+MQL4ToJsVisitor.prototype.printStatement = function (ctx) {
+  return this.isOriginalKept ? "//" + this.originalText(ctx) + "\n" : "";
+};
+
+MQL4ToJsVisitor.prototype.convertType = function (type, arrayIndexes) {
+  return this.typeKept ? "/*<" + type + ((arrayIndexes) ? "[]" : "") + ">*/ " : "";
+};
+
+MQL4ToJsVisitor.prototype.biOp = function (opConvertTo) {
+  return function (ctx) {
+    //noinspection JSPotentiallyInvalidUsageOfThis partial function
+    return this.wrapJS(this.js(ctx.expression(0)) + opConvertTo + this.js(ctx.expression(1)));
   }
 };
 
-var MQL4ToJsVisitor = function (keepType, keepOriginal, tokens, keepComments) {
-  this.keepComments = keepComments;
-  this.tokens = tokens;
-  typeKept = keepType;
-  originalKept = keepOriginal;
-  externalParameters = [];
-  callableFunctions = [];
-  mql4Visitor.MQL4Visitor.call(this);
-  return this;
+MQL4ToJsVisitor.prototype.leftUniOp = function (opConvertTo) {
+  return function (ctx) {
+    //noinspection JSPotentiallyInvalidUsageOfThis partial function
+    return this.wrapJS(opConvertTo + this.js(ctx.expression(0)));
+  }
+};
+
+MQL4ToJsVisitor.prototype.rightUniOp = function (opConvertTo) {
+  return function (ctx) {
+    //noinspection JSPotentiallyInvalidUsageOfThis partial function
+    return this.wrapJS(this.js(ctx.expression(0)) + opConvertTo);
+  }
 };
 
 
-MQL4ToJsVisitor.prototype = Object.create(mql4Visitor.MQL4Visitor.prototype);
-
-
 MQL4ToJsVisitor.prototype.visitStruct = function (ctx) {
+  var that = this;
   var js = "mql4.defineStruct('" + ctx.name.text + "'";
   js += ctx.structElement().map(function (e) {
-    return ", " + utils.convertType(e.elementType.getText()) + "'" + e.name.text + "'"
+    return ", " + that.convertType(e.elementType.getText()) + "'" + e.name.text + "'"
   }).join("");
   js += ");\n";
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 
 MQL4ToJsVisitor.prototype.visitExpressionOperation = function (ctx) {
-  return utils.wrapJS(this.showComment(ctx) + this.js(ctx.expression(0)) + ";");
+  return this.wrapJS(this.showComment(ctx) + this.js(ctx.expression(0)) + ";");
 
 };
 
 MQL4ToJsVisitor.prototype.visitDateExpression = function (ctx) {
-  return utils.wrapJS("mql4.date(" + ctx.getText().substring(1) + ")");
+  return this.wrapJS("mql4.date(" + ctx.getText().substring(1) + ")");
 };
 
+
+MQL4ToJsVisitor.prototype.visitDefine = function (ctx) {
+  return this.wrapJS("var " + ctx.name.text + " = " + this.js(ctx.expression()) + ";")
+};
+
+MQL4ToJsVisitor.prototype.visitInclude = function (ctx) {
+  var filename = ctx.filename ? ctx.filename.text.substring(1, ctx.filename.text.length - 1) : this.js(ctx.expression());
+  return this.wrapJS('mql4.include("' + filename + '.js");');
+};
 
 MQL4ToJsVisitor.prototype.visitEnumDef = function (ctx) {
   var that = this;
@@ -150,7 +135,7 @@ MQL4ToJsVisitor.prototype.visitEnumDef = function (ctx) {
     }
   );
 
-  js += utils.pad(ctx.enumInstance().map(
+  js += that.pad(ctx.enumInstance().map(
     function (enumInstance) {
       var toReturn = that.showComment(enumInstance) + enumInstance.name.text + ":";
       if (enumInstance.value)
@@ -159,19 +144,19 @@ MQL4ToJsVisitor.prototype.visitEnumDef = function (ctx) {
     }
   ).join(",\n"));
   js += "}";
-  return utils.wrapJS(this.showComment(ctx) + js)
+  return this.wrapJS(this.showComment(ctx) + js)
 };
 
 
 MQL4ToJsVisitor.prototype.visitFunctionDecl = function (ctx) {
   var that = this;
-  var js = "var " + utils.convertType(ctx.type().getText()) + ctx.name.text + "= function(";
+  var js = "var " + that.convertType(ctx.type().getText()) + ctx.name.text + "= function(";
 
 
   var nbArguments = ctx.functionArgument().length;
 
   if (nbArguments == 0) {
-    callableFunctions.push(ctx.name.text);
+    this.callableFunctions.push(ctx.name.text);
   }
 
   var optionalArguments = [];
@@ -187,21 +172,21 @@ MQL4ToJsVisitor.prototype.visitFunctionDecl = function (ctx) {
   js += "\n";
 
   if (optionalArguments.length > 0) {
-    js += utils.pad("switch(arguments.length) {");
+    js += that.pad("switch(arguments.length) {");
     optionalArguments.forEach(function (optionalArgument, idx) {
-      js += utils.pad("case " + (nbArguments - optionalArguments.length + idx) + ": " + optionalArgument.name + "=" + optionalArgument.defaultValue + ";", 2);
+      js += that.pad("case " + (nbArguments - optionalArguments.length + idx) + ": " + optionalArgument.name + "=" + optionalArgument.defaultValue + ";", 2);
     });
-    js += utils.pad("}");
+    js += that.pad("}");
   }
-  js += utils.pad(that.js(ctx.functionContent));
+  js += that.pad(that.js(ctx.functionContent));
 
   js += "}\n";
-  return utils.wrapJS(this.showComment(ctx) + js)
+  return this.wrapJS(this.showComment(ctx) + js)
 };
 
 
 MQL4ToJsVisitor.prototype.visitFunctionArgument = function (ctx) {
-  var toReturn = utils.wrapJS(utils.convertType(ctx.type().getText()) + ctx.name.text);
+  var toReturn = this.wrapJS(this.convertType(ctx.type().getText()) + ctx.name.text);
   toReturn.hasDefaultValue = false;
   if (ctx.expression()) {
     toReturn.hasDefaultValue = true;
@@ -213,78 +198,78 @@ MQL4ToJsVisitor.prototype.visitFunctionArgument = function (ctx) {
 
 // expression
 // unary expression
-MQL4ToJsVisitor.prototype.visitUnaryMinusExpression = utils.leftUniOp("-");
-MQL4ToJsVisitor.prototype.visitNotExpression = utils.leftUniOp("!");
-MQL4ToJsVisitor.prototype.visitComplementExpression = utils.leftUniOp("~");
+MQL4ToJsVisitor.prototype.visitUnaryMinusExpression = MQL4ToJsVisitor.prototype.leftUniOp("-");
+MQL4ToJsVisitor.prototype.visitNotExpression = MQL4ToJsVisitor.prototype.leftUniOp("!");
+MQL4ToJsVisitor.prototype.visitComplementExpression = MQL4ToJsVisitor.prototype.leftUniOp("~");
 
 // assignement expression
-MQL4ToJsVisitor.prototype.visitAssignExpression = utils.biOp("=");
-MQL4ToJsVisitor.prototype.visitAssignAddExpression = utils.biOp("+=");
-MQL4ToJsVisitor.prototype.visitAssignMinusExpression = utils.biOp("-=");
-MQL4ToJsVisitor.prototype.visitAssignMultiplyExpression = utils.biOp("*=");
-MQL4ToJsVisitor.prototype.visitAssignDivideExpression = utils.biOp("/=");
-MQL4ToJsVisitor.prototype.visitAssignModulusExpression = utils.biOp("%=");
-MQL4ToJsVisitor.prototype.visitAssignShiftBitRightExpression = utils.biOp(">>=");
-MQL4ToJsVisitor.prototype.visitAssignShiftBitLeftExpression = utils.biOp("<<=");
-MQL4ToJsVisitor.prototype.visitAssignBitAndExpression = utils.biOp("&=");
-MQL4ToJsVisitor.prototype.visitAssignBitOrExpression = utils.biOp("|=");
-MQL4ToJsVisitor.prototype.visitAssignBitXorExpression = utils.biOp("^=");
+MQL4ToJsVisitor.prototype.visitAssignExpression = MQL4ToJsVisitor.prototype.biOp("=");
+MQL4ToJsVisitor.prototype.visitAssignAddExpression = MQL4ToJsVisitor.prototype.biOp("+=");
+MQL4ToJsVisitor.prototype.visitAssignMinusExpression = MQL4ToJsVisitor.prototype.biOp("-=");
+MQL4ToJsVisitor.prototype.visitAssignMultiplyExpression = MQL4ToJsVisitor.prototype.biOp("*=");
+MQL4ToJsVisitor.prototype.visitAssignDivideExpression = MQL4ToJsVisitor.prototype.biOp("/=");
+MQL4ToJsVisitor.prototype.visitAssignModulusExpression = MQL4ToJsVisitor.prototype.biOp("%=");
+MQL4ToJsVisitor.prototype.visitAssignShiftBitRightExpression = MQL4ToJsVisitor.prototype.biOp(">>=");
+MQL4ToJsVisitor.prototype.visitAssignShiftBitLeftExpression = MQL4ToJsVisitor.prototype.biOp("<<=");
+MQL4ToJsVisitor.prototype.visitAssignBitAndExpression = MQL4ToJsVisitor.prototype.biOp("&=");
+MQL4ToJsVisitor.prototype.visitAssignBitOrExpression = MQL4ToJsVisitor.prototype.biOp("|=");
+MQL4ToJsVisitor.prototype.visitAssignBitXorExpression = MQL4ToJsVisitor.prototype.biOp("^=");
 
 // inc dec expression
-MQL4ToJsVisitor.prototype.visitPreDecExpression = utils.leftUniOp("--");
-MQL4ToJsVisitor.prototype.visitPreIncExpression = utils.leftUniOp("++");
-MQL4ToJsVisitor.prototype.visitPostDecExpression = utils.rightUniOp("--");
-MQL4ToJsVisitor.prototype.visitPostIncExpression = utils.rightUniOp("++");
+MQL4ToJsVisitor.prototype.visitPreDecExpression = MQL4ToJsVisitor.prototype.leftUniOp("--");
+MQL4ToJsVisitor.prototype.visitPreIncExpression = MQL4ToJsVisitor.prototype.leftUniOp("++");
+MQL4ToJsVisitor.prototype.visitPostDecExpression = MQL4ToJsVisitor.prototype.rightUniOp("--");
+MQL4ToJsVisitor.prototype.visitPostIncExpression = MQL4ToJsVisitor.prototype.rightUniOp("++");
 
 // bit manipulation expression
-MQL4ToJsVisitor.prototype.visitShiftBitRightExpression = utils.biOp(">>");
-MQL4ToJsVisitor.prototype.visitShiftBitLeftExpression = utils.biOp("<<");
-MQL4ToJsVisitor.prototype.visitBitAndExpression = utils.biOp("&");
-MQL4ToJsVisitor.prototype.visitBitOrExpression = utils.biOp("|");
-MQL4ToJsVisitor.prototype.visitBitXorExpression = utils.biOp("^");
+MQL4ToJsVisitor.prototype.visitShiftBitRightExpression = MQL4ToJsVisitor.prototype.biOp(">>");
+MQL4ToJsVisitor.prototype.visitShiftBitLeftExpression = MQL4ToJsVisitor.prototype.biOp("<<");
+MQL4ToJsVisitor.prototype.visitBitAndExpression = MQL4ToJsVisitor.prototype.biOp("&");
+MQL4ToJsVisitor.prototype.visitBitOrExpression = MQL4ToJsVisitor.prototype.biOp("|");
+MQL4ToJsVisitor.prototype.visitBitXorExpression = MQL4ToJsVisitor.prototype.biOp("^");
 
 // math expression
-MQL4ToJsVisitor.prototype.visitAddExpression = utils.biOp("+");
-MQL4ToJsVisitor.prototype.visitSubtractExpression = utils.biOp("-");
-MQL4ToJsVisitor.prototype.visitMultiplyExpression = utils.biOp("*");
-MQL4ToJsVisitor.prototype.visitDivideExpression = utils.biOp("/");
-MQL4ToJsVisitor.prototype.visitModulusExpression = utils.biOp("%");
+MQL4ToJsVisitor.prototype.visitAddExpression = MQL4ToJsVisitor.prototype.biOp("+");
+MQL4ToJsVisitor.prototype.visitSubtractExpression = MQL4ToJsVisitor.prototype.biOp("-");
+MQL4ToJsVisitor.prototype.visitMultiplyExpression = MQL4ToJsVisitor.prototype.biOp("*");
+MQL4ToJsVisitor.prototype.visitDivideExpression = MQL4ToJsVisitor.prototype.biOp("/");
+MQL4ToJsVisitor.prototype.visitModulusExpression = MQL4ToJsVisitor.prototype.biOp("%");
 
 // Boolean operation
-MQL4ToJsVisitor.prototype.visitGtEqExpression = utils.biOp(">=");
-MQL4ToJsVisitor.prototype.visitLtEqExpression = utils.biOp("<=");
-MQL4ToJsVisitor.prototype.visitGtExpression = utils.biOp(">");
-MQL4ToJsVisitor.prototype.visitLtExpression = utils.biOp("<");
-MQL4ToJsVisitor.prototype.visitEqExpression = utils.biOp("===");
-MQL4ToJsVisitor.prototype.visitNotEqExpression = utils.biOp("!==");
-MQL4ToJsVisitor.prototype.visitAndExpression = utils.biOp(" && ");
-MQL4ToJsVisitor.prototype.visitOrExpression = utils.biOp(" || ");
+MQL4ToJsVisitor.prototype.visitGtEqExpression = MQL4ToJsVisitor.prototype.biOp(">=");
+MQL4ToJsVisitor.prototype.visitLtEqExpression = MQL4ToJsVisitor.prototype.biOp("<=");
+MQL4ToJsVisitor.prototype.visitGtExpression = MQL4ToJsVisitor.prototype.biOp(">");
+MQL4ToJsVisitor.prototype.visitLtExpression = MQL4ToJsVisitor.prototype.biOp("<");
+MQL4ToJsVisitor.prototype.visitEqExpression = MQL4ToJsVisitor.prototype.biOp("===");
+MQL4ToJsVisitor.prototype.visitNotEqExpression = MQL4ToJsVisitor.prototype.biOp("!==");
+MQL4ToJsVisitor.prototype.visitAndExpression = MQL4ToJsVisitor.prototype.biOp(" && ");
+MQL4ToJsVisitor.prototype.visitOrExpression = MQL4ToJsVisitor.prototype.biOp(" || ");
 
 // Ternary operation
 MQL4ToJsVisitor.prototype.visitTernaryExpression = function (ctx) {
-  return utils.wrapJS(this.js(ctx.expression(0)) + "?" + this.js(ctx.expression(1)) + ":" + this.js(ctx.expression(2)))
+  return this.wrapJS(this.js(ctx.expression(0)) + "?" + this.js(ctx.expression(1)) + ":" + this.js(ctx.expression(2)))
 };
 
 // direct value operation
-MQL4ToJsVisitor.prototype.visitStringExpression = utils.noConversion;
-MQL4ToJsVisitor.prototype.visitBoolExpression = utils.noConversion;
-MQL4ToJsVisitor.prototype.visitNumberExpression = utils.noConversion;
+MQL4ToJsVisitor.prototype.visitStringExpression = MQL4ToJsVisitor.prototype.textAsJs;
+MQL4ToJsVisitor.prototype.visitBoolExpression = MQL4ToJsVisitor.prototype.textAsJs;
+MQL4ToJsVisitor.prototype.visitNumberExpression = MQL4ToJsVisitor.prototype.textAsJs;
 MQL4ToJsVisitor.prototype.visitCharExpression = function (ctx) {
-  return utils.wrapJS(ctx.getText() + ".charCodeAt(0)");
+  return this.wrapJS(ctx.getText() + ".charCodeAt(0)");
 };
 
 
 MQL4ToJsVisitor.prototype.visitIdentifierExpression = function (ctx) {
-  return utils.wrapJS(MQL4_IDENTIFIER.toJs(ctx.getText()))
+  return this.wrapJS(MQL4_IDENTIFIER.toJs(ctx.getText()))
 };
 
 MQL4ToJsVisitor.prototype.visitSpecializationExpression = function (ctx) {
-  return utils.wrapJS(ctx.name.text + "." + this.js(ctx.right));
+  return this.wrapJS(ctx.name.text + "." + this.js(ctx.right));
 };
 
 
 MQL4ToJsVisitor.prototype.visitNullExpression = function () {
-  return utils.wrapJS("null");
+  return this.wrapJS("null");
 };
 
 
@@ -296,13 +281,12 @@ MQL4ToJsVisitor.prototype.visitFunctionCallExpression = function (ctx) {
     return that.js(expression);
   });
   if (mql4Functions.hasOwnProperty(name)) {
-    return utils.wrapJS(mql4Functions[name](argsAsJs));
-
+    return this.wrapJS(mql4Functions[name](argsAsJs));
   } else {
     var js = name + "(";
     js += argsAsJs.join(", ");
     js += ")";
-    return utils.wrapJS(js);
+    return this.wrapJS(js);
   }
 };
 
@@ -313,33 +297,29 @@ MQL4ToJsVisitor.prototype.visitIndexingExpression = function (ctx) {
   js += ctx.expression().slice(1).map(function (expression) {
     return '[' + that.js(expression) + ']'
   }).join("");
-  return utils.wrapJS(js);
+  return this.wrapJS(js);
 };
 // Others
 MQL4ToJsVisitor.prototype.visitBlockOperation = function (ctx) {
   var that = this;
   var js = ctx.statement().map(function (statement) {
-    return utils.printStatement(statement) + that.js(statement.getChild(0));
+    return that.printStatement(statement) + that.js(statement.getChild(0));
   }).join("\n");
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 
 MQL4ToJsVisitor.prototype.visitExpressionExpression = function (ctx) {
-  return utils.wrapJS("(" + this.js(ctx.expression(0)) + ")");
+  return this.wrapJS("(" + this.js(ctx.expression(0)) + ")");
 };
 
 MQL4ToJsVisitor.prototype.visitReturnExpression = function (ctx) {
   if (ctx.expression(0)) {
-    return utils.wrapJS("return " + this.js(ctx.expression(0)).replace(/^\((.*)\)$/, "$1"));
+    return this.wrapJS("return " + this.js(ctx.expression(0)).replace(/^\((.*)\)$/, "$1"));
   }
-  return utils.wrapJS("return;");
+  return this.wrapJS("return");
 };
 
-
-MQL4ToJsVisitor.prototype.visitIndexes = function (ctx) {
-  return this.visit(ctx.expression(0));
-};
 
 MQL4ToJsVisitor.prototype.visitDeclaration = function (ctx) {
   var that = this;
@@ -356,7 +336,7 @@ MQL4ToJsVisitor.prototype.visitDeclaration = function (ctx) {
     var name = variable.name.text;
     var value = null;
     if (!initValue) {
-      value = getMql4DefaultValue(type, arrayIndexes, dynamicArray);
+      value = that.getMql4DefaultValue(type, arrayIndexes, dynamicArray);
     } else if (initValue.expression()) {
       value = that.js(initValue.expression());
     } else if (initValue.structInit()) {
@@ -371,36 +351,36 @@ MQL4ToJsVisitor.prototype.visitDeclaration = function (ctx) {
         value += initValue.structInit().expression().map(function (expr) {
           return that.js(expr)
         }).join(", ");
-        value += "})"
+        value += ")"
       }
     }
     if (external) {
-      externalParameters.push({name: name, type: type, defaultValue: value});
+      that.externalParameters.push({name: name, type: type, defaultValue: value});
       value = "$parameters." + name;
     }
 
-    return "var " + utils.convertType(type, arrayIndexes) + name + "=" + value + ";";
+    return "var " + that.convertType(type, arrayIndexes) + name + "=" + value + ";";
   }).join("");
 
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 
 MQL4ToJsVisitor.prototype.visitIfElseOperation = function (ctx) {
-  var opTrueIsBlock = utils.isBlock(ctx.opTrue);
-  var opFalseIsBlock = ctx.opFalse && utils.isBlock(ctx.opFalse);
+  var opTrueIsBlock = this.isBlock(ctx.opTrue);
+  var opFalseIsBlock = ctx.opFalse && this.isBlock(ctx.opFalse);
   var js = "if (" + this.js(ctx.condition) + ")" + (opTrueIsBlock ? "{" : "") + "\n";
-  js += utils.pad(this.js(ctx.opTrue));
+  js += this.pad(this.js(ctx.opTrue));
   if (opTrueIsBlock) {
     js += "} ";
   }
   if (ctx.opFalse) {
     if (opFalseIsBlock) {
-      js += "else {\n" + utils.pad(this.js(ctx.opFalse)) + "}";
+      js += "else {\n" + this.pad(this.js(ctx.opFalse)) + "}";
     } else js += "else " + this.js(ctx.opFalse);
   }
 
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 MQL4ToJsVisitor.prototype.visitSwitchOperation = function (ctx) {
@@ -408,65 +388,98 @@ MQL4ToJsVisitor.prototype.visitSwitchOperation = function (ctx) {
   var js = "switch(" + this.js(ctx.leftCondition) + "){\n";
   ctx.switchCase().forEach(function (sc) {
       if (sc.rightCondition) {
-        js += utils.pad("case " + that.js(sc.rightCondition) + ":");
+        js += that.pad("case " + that.js(sc.rightCondition) + ":");
       } else {
-        js += utils.pad("default:");
+        js += that.pad("default:");
       }
       sc.statement().forEach(function (statement) {
-        js += utils.pad(that.js(statement.getChild(0)), 2);
+        js += that.pad(that.js(statement.getChild(0)), 2);
       });
     }
   );
   js += "}";
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 
 MQL4ToJsVisitor.prototype.visitForMultiExpressions = function (ctx) {
   var that = this;
-  return utils.wrapJS(ctx.forExpression().map(function (forExpression) {
-    return that.js(forExpression.getChild(0));
+  return this.wrapJS(ctx.forExpression().map(function (forExpression) {
+    return that.js(forExpression.getChild(0))
+      .replace(/;$/, ''); // TODO for declaration not very clean
   }).join(", "));
 };
 
 MQL4ToJsVisitor.prototype.visitWhileOperation = function (ctx) {
   js = "while (" + this.js(ctx.expression(0)) + "){\n";
-  js += utils.pad(this.js(ctx.operation(0)));
+  js += this.pad(this.js(ctx.operation(0)));
   js += "}";
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 
 MQL4ToJsVisitor.prototype.visitDoWhileOperation = function (ctx) {
   js = "do {\n";
-  js += utils.pad(this.js(ctx.operator));
+  js += this.pad(this.js(ctx.operator));
   js += "} while (" + this.js(ctx.condition) + ")\n";
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
 MQL4ToJsVisitor.prototype.visitForOperation = function (ctx) {
   js = "for(" + this.js(ctx.init) + ";" + this.js(ctx.term) + ";" + this.js(ctx.inc) + "){\n";
-  js += utils.pad(this.js(ctx.operator));
+  js += this.pad(this.js(ctx.operator));
   js += "}";
-  return utils.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.showComment(ctx) + js);
 };
 
-MQL4ToJsVisitor.prototype.visitTerminalNodeImpl = function () {
-  return utils.wrapJS("");
+MQL4ToJsVisitor.prototype.visitTerminal = function () {
+  return this.wrapJS("");
 };
 
 
-MQL4ToJsVisitor.prototype.visitProperty = function (ctx) {
-  return utils.wrapJS(this.showComment(ctx) + "// mql4-to-js[PROPERTIES_NOT_SUPPORTED] : " + utils.originalText(ctx) + "\n");
+MQL4ToJsVisitor.prototype.visitNotSupportedPreprocessor = function (ctx) {
+  return this.wrapJS(this.showComment(ctx) + "// NOT SUPPORTED\n" + this.originalText(ctx).split("\n").map(function (line) {
+      return "//" + line + "\n"
+    }).join(""));
 };
 
 
 MQL4ToJsVisitor.prototype.visitRoot = function (ctx) {
-  var toReturn = utils.passThrough(this)(ctx);
-  toReturn.externalParameters = externalParameters;
-  toReturn.callableFunctions = callableFunctions;
+  var that = this;
+  var toReturn = this.wrapJS(
+    ctx.children
+      .map(function (ctx) {
+        return that.visit(ctx)
+      })
+      .filter(function (result) {
+        return result && result.js
+      })
+      .map(function (result) {
+        return result.js
+      })
+      .join("\n")
+  );
+  toReturn.externalParameters = this.externalParameters;
+  toReturn.callableFunctions = this.callableFunctions;
   toReturn.js = this.notice() + this.externalParametersAsJs() + toReturn.js;
   return toReturn;
+};
+
+
+// -----------------------//
+// TODO simple fix should be updated in a future version of antlr js (>= 4.5.2).
+MQL4ToJsVisitor.prototype.visit = function (ctx) {
+  var contextClassName = ctx.constructor.name;
+  if (contextClassName.match(/.*Context$/)) {
+    contextClassName = contextClassName.substring(0, contextClassName.length - 7);
+  }
+  if (contextClassName == "TerminalNodeImpl") {
+    contextClassName = "Terminal";
+  }
+
+
+  var funcName = "visit" + contextClassName;
+  return this[funcName](ctx);
 };
 
 MQL4ToJsVisitor.prototype.notice = function () {
@@ -478,30 +491,18 @@ MQL4ToJsVisitor.prototype.externalParametersAsJs = function () {
 
   js += "var $externalParameters = [";
 
-  js += externalParameters.map(function (param) {
+  js += this.externalParameters.map(function (param) {
     return "\n\t{" + param.name + ": {'type': '" + param.type + "', defaultValue:" + param.defaultValue + "}}"
   }).join(", ");
   js += "];\n";
 
 
   js += "var $parameters = {" +
-    externalParameters.map(function (param) {
+    this.externalParameters.map(function (param) {
       return "\n\t" + param.name + ":" + param.defaultValue
     }).join(", ") + "};\n";
   js += "// END Script Parameters \n\n";
   return js;
-};
-
-
-// -----------------------//
-// TODO simple fix should be updated in a future version of antlr js (>= 4.5.2).
-MQL4ToJsVisitor.prototype.visit = function (ctx) {
-  var contextClassName = ctx.constructor.name;
-  if (contextClassName.match(/.*Context$/)) {
-    contextClassName = contextClassName.substring(0, contextClassName.length - 7);
-  }
-  var funcName = "visit" + contextClassName;
-  return this[funcName](ctx);
 };
 
 
@@ -510,7 +511,6 @@ MQL4ToJsVisitor.prototype.js = function (ctx) {
 };
 
 MQL4ToJsVisitor.prototype.showComment = function (ctx) {
-
   var comments = this.tokens.getHiddenTokensToLeft(ctx.start.tokenIndex, 2);
   if (comments && this.keepComments) {
     return comments.map(function (comment) {
@@ -521,6 +521,3 @@ MQL4ToJsVisitor.prototype.showComment = function (ctx) {
   }
   return "";
 };
-
-
-exports.MQL4ToJsVisitor = MQL4ToJsVisitor;

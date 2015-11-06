@@ -17,8 +17,18 @@ MQL4Visitor.prototype.visitRoot = function(ctx) {
 };
 
 
-// Visit a parse tree produced by MQL4Parser#property.
-MQL4Visitor.prototype.visitProperty = function(ctx) {
+// Visit a parse tree produced by MQL4Parser#include.
+MQL4Visitor.prototype.visitInclude = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#define.
+MQL4Visitor.prototype.visitDefine = function(ctx) {
+};
+
+
+// Visit a parse tree produced by MQL4Parser#notSupportedPreprocessor.
+MQL4Visitor.prototype.visitNotSupportedPreprocessor = function(ctx) {
 };
 
 

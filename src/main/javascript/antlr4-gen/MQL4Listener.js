@@ -20,12 +20,30 @@ MQL4Listener.prototype.exitRoot = function(ctx) {
 };
 
 
-// Enter a parse tree produced by MQL4Parser#property.
-MQL4Listener.prototype.enterProperty = function(ctx) {
+// Enter a parse tree produced by MQL4Parser#include.
+MQL4Listener.prototype.enterInclude = function(ctx) {
 };
 
-// Exit a parse tree produced by MQL4Parser#property.
-MQL4Listener.prototype.exitProperty = function(ctx) {
+// Exit a parse tree produced by MQL4Parser#include.
+MQL4Listener.prototype.exitInclude = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#define.
+MQL4Listener.prototype.enterDefine = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#define.
+MQL4Listener.prototype.exitDefine = function(ctx) {
+};
+
+
+// Enter a parse tree produced by MQL4Parser#notSupportedPreprocessor.
+MQL4Listener.prototype.enterNotSupportedPreprocessor = function(ctx) {
+};
+
+// Exit a parse tree produced by MQL4Parser#notSupportedPreprocessor.
+MQL4Listener.prototype.exitNotSupportedPreprocessor = function(ctx) {
 };
 
 

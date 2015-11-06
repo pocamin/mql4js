@@ -11,6 +11,7 @@
     <script language="JavaScript" src="lib/jquery-2.1.4.min.js"></script>
     <script language="JavaScript" src="lib/lodash.min.js"></script>
     <script language="JavaScript" src="lib/highlight.pack.js"></script>
+    <script language="JavaScript" src="MQL4ToJsVisitor.js"></script>
     <script language="JavaScript" src="mql4.js"></script>
 
 
@@ -18,7 +19,6 @@
         var antlr4 = require('antlr4/index');
         var mql4Lexer = require('./antlr4-gen/MQL4Lexer');
         var mql4Parser = require('./antlr4-gen/MQL4Parser');
-        var mql4ToJsVisitor = require('./MQL4ToJsVisitor.js');
 
         var readMql4 = function () {
             jQuery.ajax({
@@ -111,7 +111,7 @@
 
                 var tree = parser.root();
 
-                var result = new mql4ToJsVisitor.MQL4ToJsVisitor(keepType, keepOriginal, tokens, keepComment).visit(tree);
+                var result = new MQL4ToJsVisitor(keepType, keepOriginal, tokens, keepComment).visit(tree);
                 return {parser: parser, tree: tree, mql4ToJs: result};
             };
 
@@ -160,6 +160,7 @@
             <option value="FunctionDeclarations.mql4">Function Declaration</option>
             <option value="ControlStructures.mql4">Control structures</option>
             <option value="date.mql4">Date</option>
+            <option value="preprocessors.mql4">Preprocessors</option>
         </optGroup>
 
         <optgroup label="mql4 standard api">

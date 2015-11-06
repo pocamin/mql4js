@@ -2,18 +2,29 @@ grammar MQL4;
 
 
 root
- : (property|declaration ';'|enumDef|functionDecl|struct)*
+ : (include|define|notSupportedPreprocessor|declaration ';'|enumDef|functionDecl|struct)*
  ;
 
+include:
+    '#include' filename=String
+    | '#include' '<' expression '>'
+;
 
-property
- : '#property' (name=Identifier) (value=String)? /*TODO value shoud be expression*/
+define:
+    '#define' name=Identifier value=expression
+;
+
+notSupportedPreprocessor
+ : NotSupportedPreprocessor
  ;
 
 
 statement
  : declaration ';'
  | operation
+ | include
+ | define
+ | notSupportedPreprocessor
  ;
 
 
@@ -218,6 +229,12 @@ String
 Date : [D]['] [0-9.: ]* ['];
 
 Char : ['] . ['];
+
+NotSupportedPreprocessor
+ : ('#ifdef'|'#ifndef'|'#else'|'#endif'|'#property') ~[\r\n]*
+ | '#import' .*? '#import'
+ ;
+
 
 Comment
  : ('//' ~[\r\n]* | '/*' .*? '*/') -> channel(2)

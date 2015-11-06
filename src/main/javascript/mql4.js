@@ -1,7 +1,5 @@
 var mql4 = {
   _buffer: 0
-
-
 };
 
 var notYetImplemented = function (functionName) {
@@ -191,7 +189,7 @@ mql4.iWPR = notYetImplemented('iWPR');
 mql4.defineStruct = notYetImplemented('defineStruct');
 mql4.date = notYetImplemented('date');
 mql4.newStruct = notYetImplemented('newStruct');
-
+mql4.include = notYetImplemented('include');
 
 mql4.newArray = function (arrayArguments) {
   var createSubArray = function (sizes, currentIndex) {
