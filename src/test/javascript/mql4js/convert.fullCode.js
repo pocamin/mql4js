@@ -3,6 +3,8 @@ describe('mql4js can convert', function () {
     assertParseEquals(
       "root",
       'extern string str="test"; int main(){Print(str);}',
+      // JS
+      "var mql4 = new MQL4();" +
       "var $externalParameters = [{" +
       "  str: {" +
       "    'type': 'string'," +

@@ -1,8 +1,14 @@
-enum intervals  // Enumeration of named constants
+enum intervals
    {
-    month=1,     // Interval of one month
-    two_months,  // Two months
-    quarter,     // Three months - quarter
-    halfyear=6,  // Half a year
-    year=12,     // Year - 12 months
+   // Interval of one month
+    month=1,
+    // Three months - quarter
+    quarter,
+    // Year - 12 months
+    year=12,
    };
+
+
+void init(){
+  console.log(intervals.month);
+}

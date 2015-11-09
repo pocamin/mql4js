@@ -62,8 +62,8 @@ MQL4ToJsVisitor.prototype.originalText = function (ctx) {
   return ctx.start.getInputStream().strdata.substring(ctx.start.start, ctx.stop.stop + 1);
 };
 
-MQL4ToJsVisitor.prototype.printStatement = function (ctx) {
-  return this.isOriginalKept ? "//" + this.originalText(ctx) + "\n" : "";
+MQL4ToJsVisitor.prototype.printOriginal = function (ctx) {
+  return this.isOriginalKept ? "//" + this.originalText(ctx).replace(/\n/g, '\n//') + "\n" : "";
 };
 
 MQL4ToJsVisitor.prototype.convertType = function (type, arrayIndexes) {
@@ -303,7 +303,7 @@ MQL4ToJsVisitor.prototype.visitIndexingExpression = function (ctx) {
 MQL4ToJsVisitor.prototype.visitBlockOperation = function (ctx) {
   var that = this;
   var js = ctx.statement().map(function (statement) {
-    return that.printStatement(statement) + that.js(statement.getChild(0));
+    return that.printOriginal(statement) + that.js(statement.getChild(0));
   }).join("\n");
   return this.wrapJS(this.showComment(ctx) + js);
 };
@@ -362,7 +362,7 @@ MQL4ToJsVisitor.prototype.visitDeclaration = function (ctx) {
     return "var " + that.convertType(type, arrayIndexes) + name + "=" + value + ";";
   }).join("");
 
-  return this.wrapJS(this.showComment(ctx) + js);
+  return this.wrapJS(this.printOriginal(ctx) + this.showComment(ctx) + js);
 };
 
 
@@ -461,10 +461,13 @@ MQL4ToJsVisitor.prototype.visitRoot = function (ctx) {
   );
   toReturn.externalParameters = this.externalParameters;
   toReturn.callableFunctions = this.callableFunctions;
-  toReturn.js = this.notice() + this.externalParametersAsJs() + toReturn.js;
+  toReturn.js = this.notice() + this.init() + this.externalParametersAsJs() + toReturn.js;
   return toReturn;
 };
 
+MQL4ToJsVisitor.prototype.init = function () {
+  return "var mql4 = new MQL4();\n"
+};
 
 // -----------------------//
 // TODO simple fix should be updated in a future version of antlr js (>= 4.5.2).

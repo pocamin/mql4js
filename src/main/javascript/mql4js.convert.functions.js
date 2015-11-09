@@ -264,7 +264,7 @@ mql4Functions = (function () {
   };
 
 
-  // Not supported mql4 function
+  // Not supported MQL4 function
   [
     // TODO check if not used
     "GetLastError", "IsStopped", "UninitializeReason", "MQLInfoInteger", "MQLInfoString", "MQLSetInteger", "TerminalInfoInteger",
@@ -325,7 +325,7 @@ mql4Functions = (function () {
     });
 
 
-  // Direct conversion mql4 function
+  // Direct conversion MQL4 function
   [
     "TimeDaylightSavings", "TimeGMTOffset", "StructToTime", "DayOfYear", "TimeDayOfYear", "RefreshRates", "Bars", "iBars", "iBarShift",
     "iTime", "iOpen", "iHigh", "iLow", "iClose", "iVolume",

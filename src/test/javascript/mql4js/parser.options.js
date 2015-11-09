@@ -1,21 +1,31 @@
 describe('mql4js accept options', function () {
-  fit('keep comments', function () {
+  it('keep comments', function () {
     assertParseEquals(
       "declaration",
-      '/*test*/int a;',
+      '/*test*/int a',
       //js
       '/*test*/\n' +
       'var a = 0;'
       , {keepComments: true});
   });
 
-  fit('keep code as comment', function () {
+  it('keep code as comment', function () {
     assertParseEquals(
       "declaration",
-      '/*test*/int a;',
+      'int a',
       //js
-      '/*test*/\n' +
-      'var a = 0;'
-      , {keepComments: true});
+      '//int a\nvar a = 0;'
+      , {keepOriginal: true});
   });
+
+  it('keep type', function () {
+    assertParseEquals(
+      "declaration",
+      'int a',
+      //js
+      'var /*<int>*/ a = 0;'
+      , {keepType: true});
+  });
+
+
 });

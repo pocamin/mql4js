@@ -184,9 +184,9 @@ var MQL4_IDENTIFIER = {
     if (this.converted[identifierName]) {
       return this.converted[identifierName]
     } else if (this.SUPPORTED.indexOf(identifierName) != -1) {
-      return "mql4." + identifierName;
+      return "MQL4." + identifierName;
     } else if (this.NOT_SUPPORTED.indexOf(identifierName) != -1) {
-      return "mql4.throwNotSupportedConstant('" + identifierName + "')";
+      return "MQL4.throwNotSupportedConstant('" + identifierName + "')";
     } else {
       return identifierName;
     }

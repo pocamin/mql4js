@@ -1,4 +1,5 @@
-describe('mql4.js supports', function () {
+describe('MQL4.js supports', function () {
+  var mql4 = new MQL4();
   describe('newArray function', function () {
     it('for static arrays with multi-dimensional data', function () {
       var array = mql4.newArray({dimensions: [2, 2, 2], dynamic: false, data: [0, 1, 2, 3, 4, 5, 6, 7]});

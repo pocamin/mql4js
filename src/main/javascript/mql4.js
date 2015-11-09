@@ -1,7 +1,3 @@
-var mql4 = {
-  _buffer: 0
-};
-
 var notYetImplemented = function (functionName) {
   return function () {
     console.error(functionName + " : not yet implemented");
@@ -9,52 +5,71 @@ var notYetImplemented = function (functionName) {
   }
 };
 
-mql4.setCharacter = notYetImplemented('setCharacter');
-mql4.normalizeDouble = function (value, digits) {
+
+var MQL4 = function () {
+  this._knownStructures = {};
+  this._lastTickDate = new Date(); // TODO need real updates
+
+  this.defineStruct = function () {
+    this._knownStructures[arguments[0]] = Array.prototype.slice.call(arguments, 1);
+  };
+
+  this.defineStruct('MqlDateTime', 'year', 'mon', 'day', 'hour', 'min', 'sec', 'day_of_week', 'day_of_year');
+  this.defineStruct('MqlRates', 'time', 'open', 'high', 'low', 'close', 'tick_volume', 'spread', 'real_volume');
+  this.defineStruct('MqlTick', 'time', 'bid', 'ask', 'last', 'volume');
+  return this;
+};
+
+MQL4.prototype._updateLastTickDate = function (date) {
+  return this._lastTickDate = date;
+};
+
+MQL4.prototype.setCharacter = notYetImplemented('setCharacter');
+MQL4.prototype.normalizeDouble = function (value, digits) {
   var exp = Math.pow(10, digits);
   return Math.round(value * exp) / exp;
 };
-mql4.toNumber = function (str) {
+MQL4.prototype.toNumber = function (str) {
   return 1 * str;
 };
 
 //Conversion
-mql4.charArrayToString = notYetImplemented('charArrayToString');
-mql4.doubleToString = notYetImplemented('doubleToString');
-mql4.integerToString = notYetImplemented('integerToString');
-mql4.shortToString = notYetImplemented('shortToString');
-mql4.shortArrayToString = notYetImplemented('shortArrayToString');
-mql4.stringToCharArray = notYetImplemented('stringToCharArray');
-mql4.stringToShortArray = notYetImplemented('stringToShortArray');
-mql4.stringToTime = notYetImplemented('stringToTime');
-mql4.stringFormat = notYetImplemented('stringFormat');
-mql4.timeToString = notYetImplemented('timeToString');
+MQL4.prototype.charArrayToString = notYetImplemented('charArrayToString');
+MQL4.prototype.doubleToString = notYetImplemented('doubleToString');
+MQL4.prototype.integerToString = notYetImplemented('integerToString');
+MQL4.prototype.shortToString = notYetImplemented('shortToString');
+MQL4.prototype.shortArrayToString = notYetImplemented('shortArrayToString');
+MQL4.prototype.stringToCharArray = notYetImplemented('stringToCharArray');
+MQL4.prototype.stringToShortArray = notYetImplemented('stringToShortArray');
+MQL4.prototype.stringToTime = notYetImplemented('stringToTime');
+MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
+MQL4.prototype.timeToString = notYetImplemented('timeToString');
 
 // array
-mql4.arrayBsearch = notYetImplemented('arrayBsearch');
-mql4.arrayCompare = notYetImplemented('arrayCompare');
-mql4.arrayGetAsSeries = notYetImplemented('arrayGetAsSeries');
-mql4.arrayFill = notYetImplemented('arrayFill');
-mql4.arrayIsSeries = notYetImplemented('arrayIsSeries');
-mql4.arrayMaximum = notYetImplemented('arrayMaximum');
-mql4.arrayMinimum = notYetImplemented('arrayMinimum');
-mql4.arrayRange = notYetImplemented('arrayRange');
+MQL4.prototype.arrayBsearch = notYetImplemented('arrayBsearch');
+MQL4.prototype.arrayCompare = notYetImplemented('arrayCompare');
+MQL4.prototype.arrayGetAsSeries = notYetImplemented('arrayGetAsSeries');
+MQL4.prototype.arrayFill = notYetImplemented('arrayFill');
+MQL4.prototype.arrayIsSeries = notYetImplemented('arrayIsSeries');
+MQL4.prototype.arrayMaximum = notYetImplemented('arrayMaximum');
+MQL4.prototype.arrayMinimum = notYetImplemented('arrayMinimum');
+MQL4.prototype.arrayRange = notYetImplemented('arrayRange');
 
-mql4.arrayPrepend = function (array, value) {
+MQL4.prototype.arrayPrepend = function (array, value) {
   var toReturn = [value];
   Array.prototype.push.apply(toReturn, array);
   return toReturn;
 };
 
-mql4.arrayResize = function (array, newSize) {
+MQL4.prototype.arrayResize = function (array, newSize) {
   if (array.length > newSize) {
     while (array.length > newSize) {
       array.pop();
     }
   } else if (array.length < newSize) {
 
-    var increment = mql4.newArray({
-      dimensions: mql4.arrayPrepend(array.sizes, newSize - array.length),
+    var increment = this.newArray({
+      dimensions: this.arrayPrepend(array.sizes, newSize - array.length),
       dynamic: false,
       defaultValue: array.defaultValue
     });
@@ -63,135 +78,234 @@ mql4.arrayResize = function (array, newSize) {
 };
 
 
-mql4.arraySetAsSeries = notYetImplemented('arraySetAsSeries');
-mql4.arraySort = notYetImplemented('arraySort');
-mql4.arrayCopyRates = notYetImplemented('arrayCopyRates');
-mql4.arrayCopySeries = notYetImplemented('arrayCopySeries');
-mql4.arrayDimension = notYetImplemented('arrayDimension');
+MQL4.prototype.arraySetAsSeries = notYetImplemented('arraySetAsSeries');
+MQL4.prototype.arraySort = notYetImplemented('arraySort');
+MQL4.prototype.arrayCopyRates = notYetImplemented('arrayCopyRates');
+MQL4.prototype.arrayCopySeries = notYetImplemented('arrayCopySeries');
+MQL4.prototype.arrayDimension = notYetImplemented('arrayDimension');
 
 // account
-mql4.accountInfo = notYetImplemented('accountInfo');
-mql4.accountBalance = notYetImplemented('accountBalance');
-mql4.accountCompany = notYetImplemented('accountCompany');
-mql4.accountCredit = notYetImplemented('accountCredit');
-mql4.accountCurrency = notYetImplemented('accountCurrency');
-mql4.accountEquity = notYetImplemented('accountEquity');
-mql4.accountFreeMargin = notYetImplemented('accountFreeMargin');
-mql4.accountFreeMarginCheck = notYetImplemented('accountFreeMarginCheck');
-mql4.accountFreeMarginMode = notYetImplemented('accountFreeMarginMode');
-mql4.accountLeverage = notYetImplemented('accountLeverage');
-mql4.accountMargin = notYetImplemented('accountMargin');
-mql4.accountName = notYetImplemented('accountName');
-mql4.accountNumber = notYetImplemented('accountNumber');
-mql4.accountProfit = notYetImplemented('accountProfit');
-mql4.accountServer = notYetImplemented('accountServer');
-mql4.accountStopoutLevel = notYetImplemented('accountStopoutLevel');
-mql4.accountStopoutMode = notYetImplemented('accountStopoutMode');
+MQL4.prototype.accountInfo = notYetImplemented('accountInfo');
+MQL4.prototype.accountBalance = notYetImplemented('accountBalance');
+MQL4.prototype.accountCompany = notYetImplemented('accountCompany');
+MQL4.prototype.accountCredit = notYetImplemented('accountCredit');
+MQL4.prototype.accountCurrency = notYetImplemented('accountCurrency');
+MQL4.prototype.accountEquity = notYetImplemented('accountEquity');
+MQL4.prototype.accountFreeMargin = notYetImplemented('accountFreeMargin');
+MQL4.prototype.accountFreeMarginCheck = notYetImplemented('accountFreeMarginCheck');
+MQL4.prototype.accountFreeMarginMode = notYetImplemented('accountFreeMarginMode');
+MQL4.prototype.accountLeverage = notYetImplemented('accountLeverage');
+MQL4.prototype.accountMargin = notYetImplemented('accountMargin');
+MQL4.prototype.accountName = notYetImplemented('accountName');
+MQL4.prototype.accountNumber = notYetImplemented('accountNumber');
+MQL4.prototype.accountProfit = notYetImplemented('accountProfit');
+MQL4.prototype.accountServer = notYetImplemented('accountServer');
+MQL4.prototype.accountStopoutLevel = notYetImplemented('accountStopoutLevel');
+MQL4.prototype.accountStopoutMode = notYetImplemented('accountStopoutMode');
 
 // common
-mql4.sendMail = notYetImplemented('sendMail');
-mql4.periodSeconds = notYetImplemented('periodSeconds');
+MQL4.prototype.sendMail = notYetImplemented('sendMail');
+MQL4.prototype.periodSeconds = notYetImplemented('periodSeconds');
 
 // Time
-mql4.dayOfYear = notYetImplemented('dayOfYear');
-mql4.TimeDayOfYear = notYetImplemented('TimeDayOfYear');
-mql4.timeCurrent = notYetImplemented('timeCurrent');
-mql4.timeGMT = notYetImplemented('timeGMT');
-mql4.timeDaylightSavings = notYetImplemented('timeDaylightSavings');
-mql4.timeGMTOffset = notYetImplemented('timeGMTOffset');
-mql4.timeToStruct = notYetImplemented('timeToStruct');
-mql4.structToTime = notYetImplemented('structToTime');
-mql4.timeDayOfYear = notYetImplemented('timeDayOfYear');
-mql4.dayOfYear = notYetImplemented('dayOfYear');
+MQL4.prototype.timeCurrent = function (dtStruct) {
+  if (dtStruct) {
+    this.timeToStruct(this._lastTickDate, dtStruct);
+  }
+  return this._lastTickDate;
+};
+
+
+MQL4.prototype.timeGMT = function (dtStruct) {
+
+  var date = new Date();
+  var timeGMT = new Date(date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds());
+
+  timeGMT.offset = (date - timeGMT) / 1000;
+  timeGMT.dateLocale = date;
+
+  if (dtStruct) {
+    this.timeToStruct(timeGMT, dtStruct);
+  }
+  return timeGMT;
+};
+
+MQL4.prototype.timeDaylightSavings = function () {
+  var dateGMT = this.timeGMT();
+  return (dateGMT.dateLocale - dateGMT) / 1000 + this.timeGMTOffset();
+};
+
+
+MQL4.prototype.timeGMTOffset = function () {
+  return new Date().getTimezoneOffset() * 60;
+};
+
+
+MQL4.prototype.timeDayOfYear = function (date) {
+  return 1 + (new Date(date.getFullYear(), date.getMonth(), date.getDate()) - new Date(date.getFullYear(), 0, 1)) / 86400000;
+};
+
+MQL4.prototype.timeToStruct = function (date, dtStruct) {
+  if (!dtStruct) {
+    dtStruct = {};
+  }
+
+  dtStruct.year = date.getFullYear();
+  dtStruct.mon = date.getMonth() + 1;
+  dtStruct.day = date.getDate();
+  dtStruct.hour = date.getHours();
+  dtStruct.min = date.getMinutes();
+  dtStruct.sec = date.getSeconds();
+  dtStruct.day_of_week = date.getDay();
+  dtStruct.day_of_year = this.timeDayOfYear(date);
+
+  return dtStruct;
+};
+
+MQL4.prototype.structToTime = function (dateStruct) {
+  return new Date(dateStruct.year, dateStruct.mon - 1, dateStruct.day, dateStruct.hour, dateStruct.min, dateStruct.sec);
+};
+
+
+MQL4.prototype.dayOfYear = function () {
+  return this.timeDayOfYear(new Date());
+};
 
 // TimeSeries
-mql4.seriesInfo = notYetImplemented('seriesInfo');
-mql4.refreshRates = notYetImplemented('refreshRates');
-mql4.getRates = notYetImplemented('getRates');
-mql4.getTimes = notYetImplemented('getTimes');
-mql4.getOpens = notYetImplemented('getOpens');
-mql4.getHighs = notYetImplemented('getHighs');
-mql4.getLows = notYetImplemented('getLows');
-mql4.getCloses = notYetImplemented('getCloses');
-mql4.getTickVolumes = notYetImplemented('getTickVolumes');
-mql4.bars = notYetImplemented('bars');
-mql4.iBars = notYetImplemented('iBars');
-mql4.iBarShift = notYetImplemented('iBarShift');
-mql4.iTime = notYetImplemented('iTime');
-mql4.iOpen = notYetImplemented('iOpen');
-mql4.iHigh = notYetImplemented('iHigh');
-mql4.iLow = notYetImplemented('iLow');
-mql4.iClose = notYetImplemented('iClose');
-mql4.iVolume = notYetImplemented('iVolume');
+MQL4.prototype.seriesInfo = notYetImplemented('seriesInfo');
+MQL4.prototype.refreshRates = notYetImplemented('refreshRates');
+MQL4.prototype.getRates = notYetImplemented('getRates');
+MQL4.prototype.getTimes = notYetImplemented('getTimes');
+MQL4.prototype.getOpens = notYetImplemented('getOpens');
+MQL4.prototype.getHighs = notYetImplemented('getHighs');
+MQL4.prototype.getLows = notYetImplemented('getLows');
+MQL4.prototype.getCloses = notYetImplemented('getCloses');
+MQL4.prototype.getTickVolumes = notYetImplemented('getTickVolumes');
+MQL4.prototype.bars = notYetImplemented('bars');
+MQL4.prototype.iBars = notYetImplemented('iBars');
+MQL4.prototype.iBarShift = notYetImplemented('iBarShift');
+MQL4.prototype.iTime = notYetImplemented('iTime');
+MQL4.prototype.iOpen = notYetImplemented('iOpen');
+MQL4.prototype.iHigh = notYetImplemented('iHigh');
+MQL4.prototype.iLow = notYetImplemented('iLow');
+MQL4.prototype.iClose = notYetImplemented('iClose');
+MQL4.prototype.iVolume = notYetImplemented('iVolume');
 
 // Trades
-mql4.orderClose = notYetImplemented('orderClose');
-mql4.orderCloseBy = notYetImplemented('orderCloseBy');
-mql4.orderClosePrice = notYetImplemented('orderClosePrice');
-mql4.orderCloseTime = notYetImplemented('orderCloseTime');
-mql4.orderComment = notYetImplemented('orderComment');
-mql4.orderCommission = notYetImplemented('orderCommission');
-mql4.orderDelete = notYetImplemented('orderDelete');
-mql4.orderExpiration = notYetImplemented('orderExpiration');
-mql4.orderLots = notYetImplemented('orderLots');
-mql4.orderMagicNumber = notYetImplemented('orderMagicNumber');
-mql4.orderModify = notYetImplemented('orderModify');
-mql4.orderSelect = notYetImplemented('orderSelect');
-mql4.orderSend = notYetImplemented('orderSend');
-mql4.ordersHistoryTotal = notYetImplemented('ordersHistoryTotal');
-mql4.orderStopLoss = notYetImplemented('orderStopLoss');
-mql4.ordersTotal = notYetImplemented('ordersTotal');
-mql4.orderSwap = notYetImplemented('orderSwap');
-mql4.orderSymbol = notYetImplemented('orderSymbol');
-mql4.orderTakeProfit = notYetImplemented('orderTakeProfit');
-mql4.orderTicket = notYetImplemented('orderTicket');
-mql4.orderType = notYetImplemented('orderType');
+MQL4.prototype.orderClose = notYetImplemented('orderClose');
+MQL4.prototype.orderCloseBy = notYetImplemented('orderCloseBy');
+MQL4.prototype.orderClosePrice = notYetImplemented('orderClosePrice');
+MQL4.prototype.orderCloseTime = notYetImplemented('orderCloseTime');
+MQL4.prototype.orderComment = notYetImplemented('orderComment');
+MQL4.prototype.orderCommission = notYetImplemented('orderCommission');
+MQL4.prototype.orderDelete = notYetImplemented('orderDelete');
+MQL4.prototype.orderExpiration = notYetImplemented('orderExpiration');
+MQL4.prototype.orderLots = notYetImplemented('orderLots');
+MQL4.prototype.orderMagicNumber = notYetImplemented('orderMagicNumber');
+MQL4.prototype.orderModify = notYetImplemented('orderModify');
+MQL4.prototype.orderSelect = notYetImplemented('orderSelect');
+MQL4.prototype.orderSend = notYetImplemented('orderSend');
+MQL4.prototype.ordersHistoryTotal = notYetImplemented('ordersHistoryTotal');
+MQL4.prototype.orderStopLoss = notYetImplemented('orderStopLoss');
+MQL4.prototype.ordersTotal = notYetImplemented('ordersTotal');
+MQL4.prototype.orderSwap = notYetImplemented('orderSwap');
+MQL4.prototype.orderSymbol = notYetImplemented('orderSymbol');
+MQL4.prototype.orderTakeProfit = notYetImplemented('orderTakeProfit');
+MQL4.prototype.orderTicket = notYetImplemented('orderTicket');
+MQL4.prototype.orderType = notYetImplemented('orderType');
 
-mql4.iAC = notYetImplemented('iAC');
-mql4.iAD = notYetImplemented('iAD');
-mql4.iADX = notYetImplemented('iADX');
-mql4.iAlligator = notYetImplemented('iAlligator');
-mql4.iAO = notYetImplemented('iAO');
-mql4.iATR = notYetImplemented('iATR');
-mql4.iBearsPower = notYetImplemented('iBearsPower');
-mql4.iBands = notYetImplemented('iBands');
-mql4.iBandsOnArray = notYetImplemented('iBandsOnArray');
-mql4.iBullsPower = notYetImplemented('iBullsPower');
-mql4.iCCI = notYetImplemented('iCCI');
-mql4.iCCIOnArray = notYetImplemented('iCCIOnArray');
-mql4.iCustom = notYetImplemented('iCustom');
-mql4.iDeMarker = notYetImplemented('iDeMarker');
-mql4.iEnvelopes = notYetImplemented('iEnvelopes');
-mql4.iEnvelopesOnArray = notYetImplemented('iEnvelopesOnArray');
-mql4.iForce = notYetImplemented('iForce');
-mql4.iFractals = notYetImplemented('iFractals');
-mql4.iGator = notYetImplemented('iGator');
-mql4.iIchimoku = notYetImplemented('iIchimoku');
-mql4.iBWMFI = notYetImplemented('iBWMFI');
-mql4.iMomentum = notYetImplemented('iMomentum');
-mql4.iMomentumOnArray = notYetImplemented('iMomentumOnArray');
-mql4.iMFI = notYetImplemented('iMFI');
-mql4.iMA = notYetImplemented('iMA');
-mql4.iMAOnArray = notYetImplemented('iMAOnArray');
-mql4.iOsMA = notYetImplemented('iOsMA');
-mql4.iMACD = notYetImplemented('iMACD');
-mql4.iOBV = notYetImplemented('iOBV');
-mql4.iSAR = notYetImplemented('iSAR');
-mql4.iRSI = notYetImplemented('iRSI');
-mql4.iRSIOnArray = notYetImplemented('iRSIOnArray');
-mql4.iRVI = notYetImplemented('iRVI');
-mql4.iStdDev = notYetImplemented('iStdDev');
-mql4.iStdDevOnArray = notYetImplemented('iStdDevOnArray');
-mql4.iStochastic = notYetImplemented('iStochastic');
-mql4.iWPR = notYetImplemented('iWPR');
+MQL4.prototype.iAC = notYetImplemented('iAC');
+MQL4.prototype.iAD = notYetImplemented('iAD');
+MQL4.prototype.iADX = notYetImplemented('iADX');
+MQL4.prototype.iAlligator = notYetImplemented('iAlligator');
+MQL4.prototype.iAO = notYetImplemented('iAO');
+MQL4.prototype.iATR = notYetImplemented('iATR');
+MQL4.prototype.iBearsPower = notYetImplemented('iBearsPower');
+MQL4.prototype.iBands = notYetImplemented('iBands');
+MQL4.prototype.iBandsOnArray = notYetImplemented('iBandsOnArray');
+MQL4.prototype.iBullsPower = notYetImplemented('iBullsPower');
+MQL4.prototype.iCCI = notYetImplemented('iCCI');
+MQL4.prototype.iCCIOnArray = notYetImplemented('iCCIOnArray');
+MQL4.prototype.iCustom = notYetImplemented('iCustom');
+MQL4.prototype.iDeMarker = notYetImplemented('iDeMarker');
+MQL4.prototype.iEnvelopes = notYetImplemented('iEnvelopes');
+MQL4.prototype.iEnvelopesOnArray = notYetImplemented('iEnvelopesOnArray');
+MQL4.prototype.iForce = notYetImplemented('iForce');
+MQL4.prototype.iFractals = notYetImplemented('iFractals');
+MQL4.prototype.iGator = notYetImplemented('iGator');
+MQL4.prototype.iIchimoku = notYetImplemented('iIchimoku');
+MQL4.prototype.iBWMFI = notYetImplemented('iBWMFI');
+MQL4.prototype.iMomentum = notYetImplemented('iMomentum');
+MQL4.prototype.iMomentumOnArray = notYetImplemented('iMomentumOnArray');
+MQL4.prototype.iMFI = notYetImplemented('iMFI');
+MQL4.prototype.iMA = notYetImplemented('iMA');
+MQL4.prototype.iMAOnArray = notYetImplemented('iMAOnArray');
+MQL4.prototype.iOsMA = notYetImplemented('iOsMA');
+MQL4.prototype.iMACD = notYetImplemented('iMACD');
+MQL4.prototype.iOBV = notYetImplemented('iOBV');
+MQL4.prototype.iSAR = notYetImplemented('iSAR');
+MQL4.prototype.iRSI = notYetImplemented('iRSI');
+MQL4.prototype.iRSIOnArray = notYetImplemented('iRSIOnArray');
+MQL4.prototype.iRVI = notYetImplemented('iRVI');
+MQL4.prototype.iStdDev = notYetImplemented('iStdDev');
+MQL4.prototype.iStdDevOnArray = notYetImplemented('iStdDevOnArray');
+MQL4.prototype.iStochastic = notYetImplemented('iStochastic');
+MQL4.prototype.iWPR = notYetImplemented('iWPR');
 
 // language artifacts
-mql4.defineStruct = notYetImplemented('defineStruct');
-mql4.date = notYetImplemented('date');
-mql4.newStruct = notYetImplemented('newStruct');
-mql4.include = notYetImplemented('include');
+MQL4.prototype.newStruct = function () {
+  var toReturn = {}
+  var names = this._knownStructures[arguments[0]];
+  for (var i = 0; i < names.length; i++) {
+    toReturn[names[i]] = arguments[i + 1];
+  }
+  return toReturn;
+};
 
-mql4.newArray = function (arrayArguments) {
+
+MQL4.prototype.date = function (dateStr) {
+  if (dateStr) {
+    var dateAndTime = dateStr.split(" ");
+    var dateComponents = dateAndTime[0].split('.');
+    var year = 1 * (dateComponents[0].length == 4 ? dateComponents[0] : dateComponents[2]);
+    var month = 1 * dateComponents[1] - 1;
+    var day = 1 * (dateComponents[0].length == 4 ? dateComponents[2] : dateComponents[0]);
+
+    var hours = 0;
+    var minutes = 0;
+    var seconds = 0;
+    var milliseconds = 0;
+
+    if (dateAndTime.length > 1) {
+      var timeComponents = dateAndTime[1].split(':');
+      //noinspection FallThroughInSwitchStatementJS
+      switch (timeComponents.length) {
+        case 4:
+          milliseconds = 1 * (timeComponents[3]);
+        case 3:
+          seconds = 1 * (timeComponents[2]);
+        case 2:
+          minutes = 1 * (timeComponents[1]);
+        case 1:
+          hours = 1 * (timeComponents[0]);
+      }
+    }
+
+    return new Date(year, month, day, hours, minutes, seconds, milliseconds);
+  }
+  return new Date();
+};
+
+
+MQL4.prototype.include = notYetImplemented('include');
+
+MQL4.prototype.newArray = function (arrayArguments) {
   var createSubArray = function (sizes, currentIndex) {
     if (!currentIndex) {
       currentIndex = 0;
@@ -222,7 +336,7 @@ mql4.newArray = function (arrayArguments) {
     toReturn = createSubArray(toReturn.sizes, 0);
   } else if (arrayArguments.data) {
     toReturn = createSubArray(
-      mql4.arrayPrepend(toReturn.sizes,
+      this.arrayPrepend(toReturn.sizes,
         arrayArguments.data.length / toReturn.sizes.reduce(function (val, acc) {
           return acc * val
         }, 1)
@@ -234,11 +348,7 @@ mql4.newArray = function (arrayArguments) {
 };
 
 
-mql4.throwNotSupportedFunction = function (msg) {
+MQL4.prototype.throwNotSupportedFunction = function (msg) {
   console.error(msg + " : Not supported");
   throw new Error(msg + " : Not supported");
 };
-
-
-
-

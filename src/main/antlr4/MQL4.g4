@@ -18,7 +18,6 @@ notSupportedPreprocessor
  : NotSupportedPreprocessor
  ;
 
-
 statement
  : declaration ';'
  | operation
@@ -26,7 +25,6 @@ statement
  | define
  | notSupportedPreprocessor
  ;
-
 
 operation :
     expression ';'                                                                         #expressionOperation
@@ -49,7 +47,6 @@ forExpression:
     declaration| expression
 ;
 
-
 switchCase :
     ('case' rightCondition=expression | 'default') ':' (statement)*
 ;
@@ -59,21 +56,19 @@ struct : 'struct'  name=Identifier '{' (structElement)* '}' ';'?;
 structElement : elementType = type name=Identifier ';';
 structInit : '{' expression (',' expression)* '}';
 
-
 // Enum
 enumDef : 'enum' name=Identifier '{' (enumInstance ','?)* '}' ';'?;
 enumInstance : (name=Identifier) ('=' (value=Number))?;
-
 
 functionDecl
  : type (name=Identifier) '(' functionArgument? (',' functionArgument)* ')' functionContent=operation
  ;
 
-functionArgument : type (name=Identifier) ('=' + expression)?;
+functionArgument : type '&'? (name=Identifier) ('=' + expression)?;
 
 
 declaration :
-       (memoryClass=MemoryClass)? type declarationElement (',' declarationElement)*
+       (memoryClass=MemoryClass)? type '*'? declarationElement (',' declarationElement)*
   ;
 
 declarationElement :
@@ -87,13 +82,10 @@ declarationInitialValue :
     |expression
 ;
 
-
-
 type
     : Identifier
     | PredifinedType
     ;
-
 
 expression
  // unary expression
@@ -168,11 +160,9 @@ expression
  // function call
   | Identifier '(' (expression ',')* expression? ')'     #functionCallExpression
 
-
  // Operator expression
  | 'return' expression?                      #returnExpression
  ;
-
 
 indexes
  : (dynamic=DynaArray)? ('[' expression ']')+
@@ -186,7 +176,6 @@ MemoryClass
     | 'input'
     | 'static'
 ;
-
 
 PredifinedType
     : 'bool'
@@ -235,7 +224,6 @@ NotSupportedPreprocessor
  | '#import' .*? '#import'
  ;
 
-
 Comment
  : ('//' ~[\r\n]* | '/*' .*? '*/') -> channel(2)
  ;
@@ -256,4 +244,3 @@ fragment Int
 fragment Digit
  : [0-9]
  ;
-
