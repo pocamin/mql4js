@@ -164,7 +164,7 @@ mql4Functions = (function () {
       return "(" + args[0] + " % " + args[1] + ")";
     },
     MathPow: functionRenameTo("Math.pow"),
-    MathRand: function (args) {
+    MathRand: function () {
       return "Math.round(Math.random()*32768)"
     },
     MathRound: functionRenameTo("Math.round"),
@@ -204,7 +204,6 @@ mql4Functions = (function () {
     TimeSeconds: functionChain("getSeconds"),
     TimeYear: functionChain("getFullYear"),
     SeriesInfoInteger: function (args) {
-      var toReturn = "";
       if (args.length == 4) {
         return args[3] + "= mql4.seriesInfo(" + args.slice(0, -1).join(", ") + ")";
       }
@@ -258,9 +257,7 @@ mql4Functions = (function () {
         args = args.slice(0, -1);
       }
       return "mql4.orderSend(" + args.join(", ") + ")";
-    },
-
-
+    }
   };
 
 

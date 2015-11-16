@@ -51,7 +51,18 @@ describe('MQL4.js supports', function () {
 
     it("stringToTime", function () {
       expect(mql4.stringToTime("2010.01.02 15:30")).toEqual(new Date(2010, 2, 2, 15, 30));
-    })
+    });
+
+    it("timeToString", function () {
+      expect(mql4.timeToString(new Date(2010, 2, 2, 1, 3,4))).toEqual("2010.03.02 01:03");
+      expect(mql4.timeToString(new Date(2010, 2, 2, 1, 3,4), MQL4.TIME_DATE)).toEqual("2010.03.02");
+      expect(mql4.timeToString(new Date(2010, 2, 2, 1, 3,4), MQL4.TIME_MINUTES)).toEqual("01:03");
+      expect(mql4.timeToString(new Date(2010, 2, 2, 1, 3,4), MQL4.TIME_SECONDS)).toEqual("01:03:04");
+      expect(mql4.timeToString(new Date(2010, 2, 2, 1, 3,4), MQL4.TIME_DATE | MQL4.TIME_SECONDS)).toEqual("2010.03.02 01:03:04");
+    });
+
+
+
 
   });
 });

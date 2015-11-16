@@ -53,9 +53,9 @@ MQL4.prototype.charArrayToString = function (array, start, count) {
 
 
 MQL4.prototype.doubleToString = function (value, digits) {
-  switch (arguments.length) {
-    case 1:
-      digits = 8;
+
+  if (arguments.length == 1) {
+    digits = 8;
   }
 
   return digits > 0 ? value.toFixed(digits) : value.toExponential(-digits);
@@ -111,7 +111,34 @@ MQL4.prototype.stringToTime = function (value) {
 };
 
 
-MQL4.prototype.timeToString = notYetImplemented('timeToString');
+MQL4.prototype.timeToString = function (date, mode) {
+  if (arguments.length == 1) {
+    mode = MQL4.TIME_DATE | MQL4.TIME_MINUTES;
+  }
+  var toReturn = [];
+
+  //noinspection JSBitwiseOperatorUsage
+  if ((mode & MQL4.TIME_DATE) > 0) {
+    toReturn.push(date.getFullYear() + "." +
+      (this.integerToString(date.getMonth() + 1, 2, "0")) + "." +
+      this.integerToString(date.getDate(), 2, "0"));
+  }
+
+  //noinspection JSBitwiseOperatorUsage
+  if ((mode & MQL4.TIME_MINUTES) > 0) {
+    toReturn.push((this.integerToString(date.getHours(), 2, "0") ) +
+      ":" + this.integerToString(date.getMinutes(), 2, "0"));
+  }
+
+  //noinspection JSBitwiseOperatorUsage
+  if ((mode & MQL4.TIME_SECONDS) > 0) {
+    toReturn.push((this.integerToString(date.getHours(), 2, "0") ) +
+      ":" + this.integerToString(date.getMinutes(), 2, "0") +
+      ":" + this.integerToString(date.getSeconds(), 2, "0"));
+  }
+
+  return toReturn.join(" ");
+};
 
 MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
 
@@ -423,3 +450,8 @@ MQL4.prototype.throwNotSupportedFunction = function (msg) {
   console.error(msg + " : Not supported");
   throw new Error(msg + " : Not supported");
 };
+
+// Constants
+MQL4.TIME_DATE = 1;
+MQL4.TIME_MINUTES = 2;
+MQL4.TIME_SECONDS = 4;
