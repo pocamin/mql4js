@@ -9,15 +9,18 @@ In oder to build mql4 to js :
 This dependencies are no longer required after the build.
 
 ## Building 
-> git clone https://github.com/pocamin/mql4js
-> cd mql4js
-> npm install
-> gulp
+```bash
+git clone https://github.com/pocamin/mql4js
+cd mql4js
+npm install
+gulp
+```
 
 The web application is started and available at  http://localhost:3000
 
 ## Testing
-> gulp test
-
+```bash
+gulp test
+```
 
 
