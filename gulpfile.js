@@ -81,7 +81,7 @@ gulp.task('bower', function () {
 gulp.task('html', ['bower'], function () {
   return gulp.src('app/*.html')
     .pipe(template({samples: fs.readdirSync("app/mql4/samples")}))
-    .pipe(useref())ls
+    .pipe(useref())
     /*.pipe(gulpif('js/*.js', uglify()))*/
     .pipe(gulpif('*.css', minifyCss()))
     .pipe(gulp.dest('dist'))
