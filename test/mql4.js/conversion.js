@@ -49,5 +49,9 @@ describe('MQL4.js supports', function () {
       expect(mql4.stringToShortArray("こんにちは", 0, 2)).toEqual([12371, 12435]);
     });
 
+    it("stringToTime", function () {
+      expect(mql4.stringToTime("2010.01.02 15:30")).toEqual(new Date(2010, 2, 2, 15, 30));
+    })
+
   });
 });

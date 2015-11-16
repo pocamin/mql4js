@@ -1,7 +1,7 @@
 var notYetImplemented = function (functionName) {
   return function () {
     console.error(functionName + " : not yet implemented");
-    throw new Error(msg);
+    throw new Error(functionName);
   }
 };
 
@@ -104,9 +104,17 @@ MQL4.prototype.stringToCharArray = function (text_string, start, count) {
 
 
 MQL4.prototype.stringToShortArray = MQL4.prototype.stringToCharArray;
-MQL4.prototype.stringToTime = notYetImplemented('stringToTime');
-MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
+
+MQL4.prototype.stringToTime = function (value) {
+  var split = value.split(/[\. :]/);
+  return new Date(split[0], 1 * split[1] + 1, split[2], split[3], split[4]);
+};
+
+
 MQL4.prototype.timeToString = notYetImplemented('timeToString');
+
+MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
+
 
 // array
 MQL4.prototype.arrayBsearch = notYetImplemented('arrayBsearch');
