@@ -63,7 +63,23 @@ MQL4.prototype.doubleToString = function (value, digits) {
 };
 
 
-MQL4.prototype.integerToString = notYetImplemented('integerToString');
+MQL4.prototype.integerToString = function (number, str_len, fill_symbol) {
+  switch (arguments.length) {
+    case 1:
+      str_len = 0;
+    case 2:
+      fill_symbol = " ";
+  }
+  fill_symbol = (typeof fill_symbol === "string") ? fill_symbol : String.fromCharCode(fill_symbol);
+
+
+  var value = '' + number;
+  while (value.length < str_len) {
+    value = fill_symbol + value;
+  }
+  return value;
+};
+
 MQL4.prototype.shortToString = notYetImplemented('shortToString');
 MQL4.prototype.shortArrayToString = notYetImplemented('shortArrayToString');
 MQL4.prototype.stringToCharArray = notYetImplemented('stringToCharArray');

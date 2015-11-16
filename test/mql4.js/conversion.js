@@ -15,6 +15,14 @@ describe('MQL4.js supports', function () {
       expect(mql4.doubleToString(0.005, -1)).toBe("5.0e-3");
     });
 
+    it('integerToString', function () {
+      expect(mql4.integerToString(1000)).toBe("1000");
+      expect(mql4.integerToString(1000), 1).toBe("1000");
+      expect(mql4.integerToString(1000, 5)).toBe(" 1000");
+      expect(mql4.integerToString(1000, 6, ">")).toBe(">>1000");
+      expect(mql4.integerToString(1000, 6, 84)).toBe("TT1000");
+    });
+
 
   });
 });
