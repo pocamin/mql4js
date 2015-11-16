@@ -37,6 +37,7 @@
     "karma-jasmine": "~0.3.6",
     "karma-chrome-launcher": "~0.2.1",
     "gulp-template": "~3.1.0",
-    "fs": "0.0.2"
+    "fs": "0.0.2",
+    "gulp-replace": "~0.5.4"
   }
 }

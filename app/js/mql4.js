@@ -140,8 +140,7 @@ MQL4.prototype.timeToString = function (date, mode) {
   return toReturn.join(" ");
 };
 
-MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
-
+MQL4.prototype.stringFormat =  sprintf; // Thx Alexandru Mărășteanu
 
 // array
 MQL4.prototype.arrayBsearch = notYetImplemented('arrayBsearch');

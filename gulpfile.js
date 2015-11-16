@@ -10,7 +10,8 @@ var gulp = require('gulp'),
   shell = require('gulp-shell'),
   seq = require('gulp-sequence'),
   KarmaServer = require('karma').Server,
-  fs = require('fs');
+  fs = require('fs'),
+  replace = require('gulp-replace');
 
 gulp.task('default', seq('clean', 'build', 'serve'));
 gulp.task('build', seq(['html', 'copy-gen-resources', 'copy-resources', 'copy-mql4']));
@@ -43,7 +44,7 @@ gulp.task('copy-gen-resources', ['antlr4'], function () {
 
 // JS files not loaded with require.js
 gulp.task('copy-resources', function () {
-  return gulp.src(['js_dependencies/**/*.js', 'app/bower_components/jquery/dist/jquery.min.map'])
+  return gulp.src(['js_dependencies/**/*.js'])
     // .pipe(uglify()) //TODO
     .pipe(gulp.dest('dist'))
     .pipe(browserSync.stream());
@@ -82,6 +83,8 @@ gulp.task('html', ['bower'], function () {
   return gulp.src('app/*.html')
     .pipe(template({samples: fs.readdirSync("app/mql4/samples")}))
     .pipe(useref())
+    .pipe(replace(/sourceMappingURL/g, ''))
+
     /*.pipe(gulpif('js/*.js', uglify()))*/
     .pipe(gulpif('*.css', minifyCss()))
     .pipe(gulp.dest('dist'))
