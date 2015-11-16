@@ -52,7 +52,17 @@ MQL4.prototype.charArrayToString = function (array, start, count) {
 };
 
 
-MQL4.prototype.doubleToString = notYetImplemented('doubleToString');
+MQL4.prototype.doubleToString = function (value, digits) {
+  switch (arguments.length) {
+    case 1:
+      digits = 8;
+  }
+
+  return digits > 0 ? value.toFixed(digits) : value.toExponential(-digits);
+
+};
+
+
 MQL4.prototype.integerToString = notYetImplemented('integerToString');
 MQL4.prototype.shortToString = notYetImplemented('shortToString');
 MQL4.prototype.shortArrayToString = notYetImplemented('shortArrayToString');
