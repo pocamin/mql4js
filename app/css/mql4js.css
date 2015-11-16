@@ -10,7 +10,7 @@ span.log {
     color: white;
 }
 
-pre #log {
+pre {
     background: black;
     height: 500px;
     overflow: scroll;

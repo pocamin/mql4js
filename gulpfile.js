@@ -4,21 +4,25 @@ var gulp = require('gulp'),
   useref = require('gulp-useref'),
   gulpif = require('gulp-if'),
   uglify = require('gulp-uglify'),
+  template = require('gulp-template'),
   minifyCss = require('gulp-minify-css'),
   del = require('del'),
   shell = require('gulp-shell'),
   seq = require('gulp-sequence'),
-  KarmaServer = require('karma').Server;
+  KarmaServer = require('karma').Server,
+  fs = require('fs');
 
-gulp.task('default', seq('clean', ['html', 'copy-gen-resources', 'copy-resources', 'copy-mql4']));
+gulp.task('default', seq('clean', 'build', 'serve'));
+gulp.task('build', seq(['html', 'copy-gen-resources', 'copy-resources', 'copy-mql4']));
 
 
 gulp.task('test', function (done) {
   new KarmaServer({
     configFile: __dirname + '/karma.conf.js',
-    singleRun: true,
+    singleRun: true
   }, done).start();
 });
+
 
 // ANTLR4 tasks
 gulp.task('antlr4', function () {
@@ -65,7 +69,6 @@ gulp.task('browserSync', function () {
 // watcher
 gulp.task('serve', ['browserSync'], function () {
   gulp.watch('grammar/*.g4', ['copy-gen-resources']);
-  gulp.watch('app/js/lib/**/*.js', ['copy-resources']);
   gulp.watch('app/mql4/**/*.*', ['copy-mql4']);
   gulp.watch(['app/*.html', 'app/js/*.js', 'app/css/*.css'], ['html']);
 });
@@ -77,6 +80,7 @@ gulp.task('bower', function () {
 
 gulp.task('html', ['bower'], function () {
   return gulp.src('app/*.html')
+    .pipe(template({samples: fs.readdirSync("app/mql4/samples")}))
     .pipe(useref())
     /*.pipe(gulpif('js/*.js', uglify()))*/
     .pipe(gulpif('*.css', minifyCss()))
