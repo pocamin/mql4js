@@ -23,10 +23,31 @@ describe('MQL4.js supports', function () {
       expect(mql4.integerToString(1000, 6, 84)).toBe("TT1000");
     });
 
-    it('shortToString', function(){
+    it('shortToString', function () {
       expect(mql4.shortToString(12371)).toBe("こ");
     });
 
+    it('shortToString', function () {
+      expect(mql4.shortArrayToString([12371, 12435, 12395, 12385, 12399])).toBe("こんにちは");
+      expect(mql4.shortArrayToString([12371, 12435, 12395, 12385, 12399], 1)).toBe("んにちは");
+      expect(mql4.shortArrayToString([12371, 12435, 12395, 12385, 12399], 1, 2)).toBe("んに");
+      expect(mql4.shortArrayToString([12371, 12435, 12395, 12385, 12399], 0, 2)).toBe("こん");
+    });
+
+    it("stringToCharArray", function () {
+      expect(mql4.stringToCharArray('Test')).toEqual([84, 101, 115, 116]);
+      expect(mql4.stringToCharArray('Test', 1)).toEqual([101, 115, 116]);
+      expect(mql4.stringToCharArray('Test', 1, 2)).toEqual([101, 115]);
+      expect(mql4.stringToCharArray('Test', 0, 2)).toEqual([84, 101]);
+    });
+
+
+    it("stringToShortArray", function () {
+      expect(mql4.stringToShortArray("こんにちは")).toEqual([12371, 12435, 12395, 12385, 12399]);
+      expect(mql4.stringToShortArray("こんにちは", 1)).toEqual([12435, 12395, 12385, 12399]);
+      expect(mql4.stringToShortArray("こんにちは", 1, 2)).toEqual([12435, 12395]);
+      expect(mql4.stringToShortArray("こんにちは", 0, 2)).toEqual([12371, 12435]);
+    });
 
   });
 });

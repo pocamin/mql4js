@@ -84,10 +84,26 @@ MQL4.prototype.shortToString = function (unicode) {
   return String.fromCharCode(unicode);
 };
 
+MQL4.prototype.shortArrayToString = MQL4.prototype.charArrayToString;
 
-MQL4.prototype.shortArrayToString = notYetImplemented('shortArrayToString');
-MQL4.prototype.stringToCharArray = notYetImplemented('stringToCharArray');
-MQL4.prototype.stringToShortArray = notYetImplemented('stringToShortArray');
+MQL4.prototype.stringToCharArray = function (text_string, start, count) {
+  switch (arguments.length) {
+    case 1:
+      start = 0;
+    case 2:
+      count = -1;
+  }
+
+  var toConvert = text_string.substring(start, count == -1 ? text_string.length : (start + count));
+
+  return toConvert.split('').map(function (c) {
+    return c.charCodeAt(0)
+  })
+
+};
+
+
+MQL4.prototype.stringToShortArray = MQL4.prototype.stringToCharArray;
 MQL4.prototype.stringToTime = notYetImplemented('stringToTime');
 MQL4.prototype.stringFormat = notYetImplemented('stringFormat');
 MQL4.prototype.timeToString = notYetImplemented('timeToString');
