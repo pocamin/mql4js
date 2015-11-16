@@ -1,0 +1,40 @@
+{
+  "name": "mql4-to-js",
+  "version": "0.1.0",
+  "description": "MQL4 to javascript transpiler and executor",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pocamin/mql4js.git"
+  },
+  "keywords": [
+    "mql4",
+    "js",
+    "algo",
+    "trading",
+    "forex"
+  ],
+  "author": "Benjamin LEROUX",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/pocamin/mql4js/issues"
+  },
+  "devDependencies": {
+    "gulp": "~3.9.0",
+    "browser-sync": "~2.10.0",
+    "gulp-bower": "0.0.10",
+    "gulp-uglify": "~1.5.1",
+    "gulp-useref": "~3.0.0",
+    "gulp-if": "~2.0.0",
+    "gulp-minify-css": "~1.2.1",
+    "del": "~2.0.2",
+    "gulp-shell": "~0.5.1",
+    "gulp-sequence": "~0.4.1",
+    "karma": "~0.13.15",
+    "jasmine-core": "~2.3.4",
+    "karma-jasmine": "~0.3.6",
+    "karma-chrome-launcher": "~0.2.1",
+  }
+}

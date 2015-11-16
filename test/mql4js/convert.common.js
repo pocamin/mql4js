@@ -1,6 +1,6 @@
 var antlr4 = require('antlr4/index');
-var mql4Lexer = require('./antlr4-gen/MQL4Lexer');
-var mql4Parser = require('./antlr4-gen/MQL4Parser');
+var mql4Lexer = require('./js/MQL4Lexer');
+var mql4Parser = require('./js/MQL4Parser');
 
 // parse
 var mqlParser = function () {

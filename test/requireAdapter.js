@@ -1,0 +1,1 @@
+var Smoothie = {'requirePath': ['/base/dist/']};
