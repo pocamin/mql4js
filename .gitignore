@@ -15,5 +15,6 @@ hs_err_pid*
 # dist files
 dist
 .idea
-app/bower_components/*
-app/generated/*
+app/bower_components
+app/generated
+node_modules
