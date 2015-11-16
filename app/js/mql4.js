@@ -80,7 +80,11 @@ MQL4.prototype.integerToString = function (number, str_len, fill_symbol) {
   return value;
 };
 
-MQL4.prototype.shortToString = notYetImplemented('shortToString');
+MQL4.prototype.shortToString = function (unicode) {
+  return String.fromCharCode(unicode);
+};
+
+
 MQL4.prototype.shortArrayToString = notYetImplemented('shortArrayToString');
 MQL4.prototype.stringToCharArray = notYetImplemented('stringToCharArray');
 MQL4.prototype.stringToShortArray = notYetImplemented('stringToShortArray');

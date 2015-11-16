@@ -23,6 +23,10 @@ describe('MQL4.js supports', function () {
       expect(mql4.integerToString(1000, 6, 84)).toBe("TT1000");
     });
 
+    it('shortToString', function(){
+      expect(mql4.shortToString(12371)).toBe("こ");
+    });
+
 
   });
 });
