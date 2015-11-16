@@ -34,7 +34,24 @@ MQL4.prototype.toNumber = function (str) {
 };
 
 //Conversion
-MQL4.prototype.charArrayToString = notYetImplemented('charArrayToString');
+MQL4.prototype.charArrayToString = function (array, start, count) {
+  switch (arguments.length) {
+    case 1:
+      start = 0;
+    case 2:
+      count = -1;
+  }
+
+  var toReturn = "";
+  var end = (count == -1) ? array.length : (start + count);
+  for (var i = start; i < end; i++) {
+    toReturn += String.fromCharCode(array[i]);
+  }
+
+  return toReturn;
+};
+
+
 MQL4.prototype.doubleToString = notYetImplemented('doubleToString');
 MQL4.prototype.integerToString = notYetImplemented('integerToString');
 MQL4.prototype.shortToString = notYetImplemented('shortToString');

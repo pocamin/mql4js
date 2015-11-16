@@ -8,7 +8,7 @@ module.exports = function (config) {
     files: [
       'test/requireAdapter.js',
       'dist/js/require.js',
-      'dist/js/mql4-min.js',
+      'app/js/mql4.js',
       'dist/js/mql4-to-js.js',
       'dist/bower_dep.js',
       'test/mql4js/convert.common.js',
