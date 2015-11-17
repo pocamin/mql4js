@@ -172,7 +172,7 @@ PredictionMode.LL_EXACT_AMBIG_DETECTION = 2;
 // <p><strong>PREDICATES IN SLL+LL PARSING</strong></p>
 //
 // <p>SLL decisions don't evaluate predicates until after they reach DFA stop
-// states because they need to create the DFA cache that works in all
+// states because they need to create the DFA histoCache that works in all
 // semantic situations. In contrast, full LL evaluates predicates collected
 // during start state computation so it can ignore predicates thereafter.
 // This means that SLL termination detection can totally ignore semantic

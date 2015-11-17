@@ -130,9 +130,9 @@ ATNConfigSet.prototype.add = function(config, mergeCache) {
 	// a previous (s,i,pi,_), merge with it and save result
 	var rootIsWildcard = !this.fullCtx;
 	var merged = merge(existing.context, config.context, rootIsWildcard, mergeCache);
-	// no need to check for existing.context, config.context in cache
+	// no need to check for existing.context, config.context in histoCache
 	// since only way to create new graphs is "call rule" and here. We
-	// cache at both places.
+	// histoCache at both places.
 	existing.reachesIntoOuterContext = Math.max( existing.reachesIntoOuterContext, config.reachesIntoOuterContext);
 	// make sure to preserve the precedence filter suppression during the merge
 	if (config.precedenceFilterSuppressed) {
@@ -256,7 +256,7 @@ ATNConfigSet.prototype.clear = function() {
 ATNConfigSet.prototype.setReadonly = function(readonly) {
 	this.readonly = readonly;
 	if (readonly) {
-		this.configLookup = null; // can't mod, no need for lookup cache
+		this.configLookup = null; // can't mod, no need for lookup histoCache
 	}
 };
 

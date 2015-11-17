@@ -563,7 +563,7 @@ LexerATNSimulator.prototype.addDFAEdge = function(from_, tk, to, cfgs) {
 		// marker indicating dynamic predicate evaluation makes this edge
 		// dependent on the specific input sequence, so the static edge in the
 		// DFA should be omitted. The target DFAState is still created since
-		// execATN has the ability to resynchronize with the DFA state cache
+		// execATN has the ability to resynchronize with the DFA state histoCache
 		// following the predicate evaluation step.
 		//
 		// TJP notes: next time through the DFA, we see a pred again and eval.

@@ -100,7 +100,7 @@ function ATNState() {
     this.epsilonOnlyTransitions = false;
     // Track the transitions emanating from this ATN state.
     this.transitions = [];
-    // Used to cache lookahead during parsing, not used during construction
+    // Used to histoCache lookahead during parsing, not used during construction
     this.nextTokenWithinRule = null;
     return this;
 }

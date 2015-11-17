@@ -95,38 +95,38 @@ function calculateEmptyHashString() {
 	return "";
 }
 
-// Used to cache {@link PredictionContext} objects. Its used for the shared
-// context cash associated with contexts in DFA states. This cache
+// Used to histoCache {@link PredictionContext} objects. Its used for the shared
+// context cash associated with contexts in DFA states. This histoCache
 // can be used for both lexers and parsers.
 
 function PredictionContextCache() {
-	this.cache = {};
+	this.histoCache = {};
 	return this;
 }
 
-// Add a context to the cache and return it. If the context already exists,
-// return that one instead and do not add a new context to the cache.
-// Protect shared cache from unsafe thread access.
+// Add a context to the histoCache and return it. If the context already exists,
+// return that one instead and do not add a new context to the histoCache.
+// Protect shared histoCache from unsafe thread access.
 //
 PredictionContextCache.prototype.add = function(ctx) {
 	if (ctx === PredictionContext.EMPTY) {
 		return PredictionContext.EMPTY;
 	}
-	var existing = this.cache[ctx] || null;
+	var existing = this.histoCache[ctx] || null;
 	if (existing !== null) {
 		return existing;
 	}
-	this.cache[ctx] = ctx;
+	this.histoCache[ctx] = ctx;
 	return ctx;
 };
 
 PredictionContextCache.prototype.get = function(ctx) {
-	return this.cache[ctx] || null;
+	return this.histoCache[ctx] || null;
 };
 
 Object.defineProperty(PredictionContextCache.prototype, "length", {
 	get : function() {
-		return this.cache.length;
+		return this.histoCache.length;
 	}
 });
 

@@ -40,7 +40,7 @@
 
         var readMql4 = function () {
             jQuery.ajax({
-                cache: false,
+                histoCache: false,
                 url: "mql4/" + $("#sourceFile").val(),
                 success: function (data) {
                     $("#source").val(data);

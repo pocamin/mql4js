@@ -4,6 +4,10 @@ var mockAdapter = {};
 describe('agentExecutionEngine.js', function () {
   /*const*/
   var DATE_TO = new Date(2015, 10, 17, 9, 29, 30);
+
+  var dateFromInterval = function(interval){
+    return [interval.start, interval.end];
+  };
   it('getInterval supports minute\'s intervals', function () {
     expect(new AgentExecutionEngine().getInterval("M1")).toEqual({periodicity: 1, periodicityUnit: 'minute'});
     expect(new AgentExecutionEngine().getInterval("M30")).toEqual({periodicity: 30, periodicityUnit: 'minute'});
@@ -16,58 +20,29 @@ describe('agentExecutionEngine.js', function () {
   });
   it('getIntervalAsTime supports date minute\'s intervals', function () {
     var aee = new AgentExecutionEngine();
-    aee.maxValuesInCache = 2; // reduce cache to have verifiable tests
-    expect(aee.getIntervalAsTime("M1", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 17, 9, 27),
-        end: new Date(2015, 10, 17, 9, 28),
-        periodicity: 1,
-        periodicityUnit: 'minute'
-      });
-    expect(aee.getIntervalAsTime("M30", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 17, 8, 30),
-        end: new Date(2015, 10, 17, 9, 0),
-        periodicity: 30,
-        periodicityUnit: 'minute'
-      });
-    expect(aee.getIntervalAsTime("M15", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 17, 9, 0),
-        end: new Date(2015, 10, 17, 9, 15),
-        periodicity: 15,
-        periodicityUnit: 'minute'
-      });
+    aee.maxHistoByRequest = 2; // reduce histoCache to have verifiable tests
+    expect(dateFromInterval(aee.getIntervalAsTime("M1", DATE_TO)))
+      .toEqual([new Date(2015, 10, 17, 9, 27),new Date(2015, 10, 17, 9, 28)]);
+    expect(dateFromInterval(aee.getIntervalAsTime("M30", DATE_TO)))
+      .toEqual([new Date(2015, 10, 17, 8, 30),new Date(2015, 10, 17, 9, 0)]);
+    expect(dateFromInterval(aee.getIntervalAsTime("M15", DATE_TO)))
+      .toEqual([new Date(2015, 10, 17, 9, 0),new Date(2015, 10, 17, 9, 15)]);
   });
   it('getIntervalAsTime supports date hour\'s intervals', function () {
     var aee = new AgentExecutionEngine();
-    aee.maxValuesInCache = 2; // reduce cache to have verifiable tests
-    expect(aee.getIntervalAsTime("H1", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 17, 7),
-        end: new Date(2015, 10, 17, 8),
-        periodicity: 1,
-        periodicityUnit: 'hour'
-      });
-    expect(aee.getIntervalAsTime("H4", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 17, 4),
-        end: new Date(2015, 10, 17, 8),
-        periodicity: 4,
-        periodicityUnit: 'hour'
-      });
+    aee.maxHistoByRequest = 2; // reduce histoCache to have verifiable tests
+    expect(dateFromInterval(aee.getIntervalAsTime("H1", DATE_TO)))
+      .toEqual([new Date(2015, 10, 17, 7),new Date(2015, 10, 17, 8)]);
+    expect(dateFromInterval(aee.getIntervalAsTime("H4", DATE_TO)))
+      .toEqual([new Date(2015, 10, 17, 4),new Date(2015, 10, 17, 8)]);
+
   });
 
   it('getIntervalAsTime supports date day\'s intervals', function () {
     var aee = new AgentExecutionEngine();
-    aee.maxValuesInCache = 2; // reduce cache to have verifiable tests
-    expect(aee.getIntervalAsTime("D1", DATE_TO))
-      .toEqual({
-        start: new Date(2015, 10, 15),
-        end: new Date(2015, 10, 16),
-        periodicity: 1,
-        periodicityUnit: 'day'
-      });
+    aee.maxHistoByRequest = 2; // reduce histoCache to have verifiable tests
+    expect(dateFromInterval(aee.getIntervalAsTime("D1", DATE_TO)))
+      .toEqual([new Date(2015, 10, 15),new Date(2015, 10, 16)]);
   });
 
   it('getHistoricalData with no adapter', function () {
@@ -77,9 +52,10 @@ describe('agentExecutionEngine.js', function () {
     }).toThrow(new Error("There is no adapter defined"));
   });
 
+
   it('getHistoricalData with mock adapter', function () {
     var aee = new AgentExecutionEngine(mockAdapter);
-    aee.maxValuesInCache = 2; // reduce cache to have verifiable tests
+    aee.maxHistoByRequest = 2; // reduce histoCache to have verifiable tests
     aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
       expect(data).toEqual([
         {date: new Date(2015, 10, 14), close: 8, high: 8, open: 8, low: 8},

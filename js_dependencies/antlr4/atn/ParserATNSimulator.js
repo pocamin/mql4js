@@ -72,10 +72,10 @@
 // <strong>CACHING FULL CONTEXT PREDICTIONS</strong></p>
 //
 // <p>
-// We could cache results from full context to predicted alternative easily and
+// We could histoCache results from full context to predicted alternative easily and
 // that saves a lot of time but doesn't work in presence of predicates. The set
 // of visible predicates from the ATN start state changes depending on the
-// context, because closure can fall off the end of a rule. I tried to cache
+// context, because closure can fall off the end of a rule. I tried to histoCache
 // tuples (stack context, semantic context, predicted alt) but it was slower
 // than interpreting and much more complicated. Also required a huge amount of
 // memory. The goal is not to create the world's fastest parser anyway. I'd like
@@ -84,15 +84,15 @@
 //
 // <p>
 // There is no strict ordering between the amount of input used by SLL vs LL,
-// which makes it really hard to build a cache for full context. Let's say that
+// which makes it really hard to build a histoCache for full context. Let's say that
 // we have input A B C that leads to an SLL conflict with full context X. That
 // implies that using X we might only use A B but we could also use A B C D to
 // resolve conflict. Input A B C D could predict alternative 1 in one position
 // in the input and A B C E could predict alternative 2 in another position in
 // input. The conflicting SLL configurations could still be non-unique in the
 // full context prediction, which would lead us to requiring more input than the
-// original A B C.	To make a	prediction cache work, we have to track	the exact
-// input	used during the previous prediction. That amounts to a cache that maps
+// original A B C.	To make a	prediction histoCache work, we have to track	the exact
+// input	used during the previous prediction. That amounts to a histoCache that maps
 // X to a specific DFA for that context.</p>
 //
 // <p>
@@ -143,7 +143,7 @@
 // Predicates are always evaluated if present in either SLL or LL both. SLL and
 // LL simulation deals with predicates differently. SLL collects predicates as
 // it performs closure operations like ANTLR v3 did. It delays predicate
-// evaluation until it reaches and accept state. This allows us to cache the SLL
+// evaluation until it reaches and accept state. This allows us to histoCache the SLL
 // ATN simulation whereas, if we had evaluated predicates on-the-fly during
 // closure, the DFA state configuration sets would be different and we couldn't
 // build up a suitable DFA.</p>
@@ -192,7 +192,7 @@
 // are equivalent result in the same shared DFA object. This is because lots of
 // threads will be trying to update the DFA at once. The
 // {@link //addDFAState} method also locks inside the DFA lock
-// but this time on the shared context cache when it rebuilds the
+// but this time on the shared context histoCache when it rebuilds the
 // configurations' {@link PredictionContext} objects using cached
 // subgraphs/nodes. No other locking occurs, even during DFA simulation. This is
 // safe as long as we can guarantee that all threads referencing
@@ -298,13 +298,13 @@ function ParserATNSimulator(parser, atn, decisionToDFA, sharedContextCache) {
     this._startIndex = 0;
     this._outerContext = null;
     this._dfa = null;
-    // Each prediction operation uses a cache for merge of prediction contexts.
+    // Each prediction operation uses a histoCache for merge of prediction contexts.
     //  Don't keep around as it wastes huge amounts of memory. DoubleKeyMap
     //  isn't synchronized but we're ok since two threads shouldn't reuse same
     //  parser/atnsim object because it can only handle one input at a time.
     //  This maps graphs a and b to merged result c. (a,b)&rarr;c. We can avoid
     //  the merge if we ever see a and b again.  Note that (b,a)&rarr;c should
-    //  also be examined during cache lookup.
+    //  also be examined during histoCache lookup.
     //
     this.mergeCache = null;
     return this;
@@ -394,13 +394,13 @@ ParserATNSimulator.prototype.adaptivePredict = function(input, decision, outerCo
         return alt;
     } finally {
         this._dfa = null;
-        this.mergeCache = null; // wack cache after each prediction
+        this.mergeCache = null; // wack histoCache after each prediction
         input.seek(index);
         input.release(m);
     }
 };
 // Performs ATN simulation to compute a predicted alternative based
-//  upon the remaining input, but also updates the DFA cache to avoid
+//  upon the remaining input, but also updates the DFA histoCache to avoid
 //  having to traverse the ATN again for the same input sequence.
 
 // There are some key conditions we're looking for after computing a new

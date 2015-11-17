@@ -74,7 +74,7 @@ var pwd = Array();
 
 var parser = URL ? new URL(location.href) : document.createElement('A');
 
-// INFO Module cache
+// INFO Module histoCache
 // NOTE Contains getter functions for the exports objects of all the loaded
 //      modules. The getter for the module 'mymod' is name '$name' to prevent
 //      collisions with predefined object properties (see note below).
@@ -82,7 +82,7 @@ var parser = URL ? new URL(location.href) : document.createElement('A');
 //      or contains the module code as a function (in case the module has been
 //      pre-loaded in a bundle).
 // NOTE IE8 supports defineProperty only for DOM objects, therfore we use a
-//      HTMLDivElement as cache in that case. This breaks web worker support,
+//      HTMLDivElement as histoCache in that case. This breaks web worker support,
 //      but we don't care since IE8 has no web workers at all.
 
 try {
@@ -120,11 +120,11 @@ for (var i=0; i<requirePath.length; i++) {
 	requirePath[i] = parser.href;
 }
 
-// NOTE Add preloaded modules to cache
+// NOTE Add preloaded modules to histoCache
 for (var id in (self.Smoothie && self.Smoothie.requirePreloaded))
 	cache['$'+resolve(id).id] = self.Smoothie.requirePreloaded[id].toString();
 
-// NOTE Add module overrides to cache
+// NOTE Add module overrides to histoCache
 for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
 	cache['$'+resolve(id).id] = self.Smoothie.requireOverrides[id];
 
@@ -132,7 +132,7 @@ for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
 //      Takes a module identifier, resolves it and gets the module code via an
 //      AJAX request from the module URI. If this was successful the code and
 //      some environment variables are passed to the load function. The return
-//      value is the module's `exports` object. If the cache already
+//      value is the module's `exports` object. If the histoCache already
 //      contains an object for the module id, this object is returned directly.
 // NOTE If a callback function has been passed, the AJAX request is asynchronous
 //      and the mpdule exports are passed to the callback function after the
@@ -240,17 +240,17 @@ catch (e) {
 
 // INFO Module loader
 //      Takes the module descriptor, the global variables and the module code,
-//      sets up the module envirinment, defines the module getter in the cache
+//      sets up the module envirinment, defines the module getter in the histoCache
 //      and evaluates the module code. If module is a bundle the code of the
-//      pre-loaded modules will be stored in the cache afterwards.
+//      pre-loaded modules will be stored in the histoCache afterwards.
 // NOTE This functions is defined as an anonymous function, which is passed as
 //      a parameter to the closure above to provide a clean environment (only
 //      global variables, module and exports) for the loaded module. This is
-//      also the reason why `source`, `pwd` & `cache` are not named parameters.
+//      also the reason why `source`, `pwd` & `histoCache` are not named parameters.
 // NOTE If we would strict use mode here, the evaluated code would be forced to be
 //      in strict mode, too.
 
-function /*load*/(module/*, cache, pwd, source*/) {
+function /*load*/(module/*, histoCache, pwd, source*/) {
 	var global = self;
 	var exports = new Object();
 	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
@@ -258,7 +258,7 @@ function /*load*/(module/*, cache, pwd, source*/) {
 	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
 	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
 	eval(arguments[3]);
-	// NOTE Store module code in the cache if the loaded file is a bundle
+	// NOTE Store module code in the histoCache if the loaded file is a bundle
 	if (typeof module.id !== 'string')
 		for (id in module)
 			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
