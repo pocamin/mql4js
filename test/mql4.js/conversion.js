@@ -62,7 +62,7 @@ describe('MQL4.js supports', function () {
     });
 
     it("stringFormat", function () {
-      expect(mql4.stringFormat("%d %.2e %+.2f%%", 10.5, 11.5, 789.4) ).toEqual("Polly wants a cracker");
+      expect(mql4.stringFormat("%d %.2e %+.2f%%", 10.5, 11.5, 789.4) ).toEqual("10 1.15e+1 +789.40%");
 
     });
 

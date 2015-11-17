@@ -8,6 +8,7 @@ module.exports = function (config) {
     files: [
       'test/requireAdapter.js',
       'dist/js/require.js',
+      'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
       'dist/js/mql4-to-js.js',
       'dist/bower_dep.js',
@@ -18,7 +19,13 @@ module.exports = function (config) {
       {pattern: 'dist/js/MQL4Lexer.js', included: false, served: true, nocache: true},
       {pattern: 'dist/js/MQL4Parser.js', included: false, served: true, nocache: true}
 
-    ]
+    ],
+
+    preprocessors: {
+      'app/js/mql4.adaptor.js': ['coverage'],
+      'app/js/mql4.js': ['coverage'],
+      'app/js/mql4-to-js.js': ['coverage']
+    }
 
   })
 };
