@@ -53,7 +53,7 @@ describe('agentExecutionEngine.js', function () {
   });
 
 
-  fdescribe('getHistoricalData with mock adapter', function () {
+  describe('getHistoricalData with mock adapter', function () {
     var aee;
     var nop = function () {
     };

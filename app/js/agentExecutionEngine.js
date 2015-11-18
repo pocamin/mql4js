@@ -73,7 +73,6 @@ AgentExecutionEngine.prototype.getHistoricalData = function (symbol, intervalAsS
     return filtered;
   };
 
-
   var missingData = [];
   interval.forEach(function (date) {
     if (!currentData[date]) {

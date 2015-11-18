@@ -8,6 +8,8 @@ module.exports = function (config) {
     files: [
       'test/requireAdapter.js',
       'dist/js/require.js',
+      'app/js/commonAgent.js',
+      'app/js/technicalIndicators/*.js',
       'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
       'dist/js/mql4-to-js.js',
