@@ -40,11 +40,11 @@ AgentExecutionEngine.prototype.getIntervalAsTime = function (intervalAsString, d
     end: endMoment.toDate(),
     periodicity: interval.periodicity,
     periodicityUnit: interval.periodicityUnit,
-    each: function (callback) {
+    forEach: function (callback) {
       for (var start = moment(startMoment);
            start.unix() <= endMoment.unix();
            start = start.add(interval.periodicity, interval.periodicityUnit)) {
-        callback(start.toDate);
+        callback(moment(start).toDate());
       }
     }
   };
@@ -54,7 +54,7 @@ AgentExecutionEngine.prototype.getCachedData = function (symbol, intervalAsStrin
   if (!this.histoCache[symbol]) {
     this.histoCache[symbol] = [];
   }
-  return (this.histoCache[symbol][intervalAsString] || (this.histoCache[symbol][intervalAsString] = []));
+  return (this.histoCache[symbol][intervalAsString] || (this.histoCache[symbol][intervalAsString] = {}));
 };
 
 
@@ -63,28 +63,39 @@ AgentExecutionEngine.prototype.getHistoricalData = function (symbol, intervalAsS
   var interval = this.getIntervalAsTime(intervalAsString, dateTo);
   var currentData = this.getCachedData(symbol, intervalAsString);
 
+  var getDataForInterval = function (currentData, interval) {
+    var filtered = [];
+    interval.forEach(function (date) {
+      if (currentData[date]) {
+        filtered.push(currentData[date]);
+      }
+    });
+    return filtered;
+  };
+
 
   var missingData = [];
-  interval.each(function (date) {
-    if (!currentData(date)) {
+  interval.forEach(function (date) {
+    if (!currentData[date]) {
       missingData.push(date);
     }
   });
 
+
   if (missingData.length > 0) {
-    var minDate = _.max(interval.start, missingData[0]);
-    var maxDate = _.min(interval.end, missingData[missingData.length]);
-    this.agentExecutionEngineAdapter.requestHistoricalData(symbol, intervalAsString, interval.start, interval.end, function (data) {
-      data.each(function (value) {
+    var minDate = (interval.start > missingData[0]) ? interval.start : missingData[0];
+    var maxDate = (interval.end < missingData[missingData.length - 1]) ? interval.end : missingData[missingData.length - 1];
+    this.agentExecutionEngineAdapter.requestHistoricalData(symbol, intervalAsString, minDate, maxDate, function (data) {
+      data.forEach(function (value) {
         currentData[value.date] = value;
       });
 
-      callBack(currentData);
+      callBack(getDataForInterval(currentData, interval));
     });
 
   }
 
-  callBack(currentData);
+  callBack(getDataForInterval(currentData, interval));
 };
 
 
