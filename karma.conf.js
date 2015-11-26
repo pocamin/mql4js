@@ -6,10 +6,11 @@ module.exports = function (config) {
 
     frameworks: ['jasmine'],
     files: [
-      'test/requireAdapter.js',
+      'test/utils.js',
       'dist/js/require.js',
       'app/js/commonAgent.js',
       'app/js/technicalIndicators/*.js',
+      'app/js/agentExecutionAdapter/RandomWalkAdapter.js',
       'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
       'dist/js/mql4-to-js.js',

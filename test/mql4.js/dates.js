@@ -41,18 +41,15 @@ describe('MQL4.js supports', function () {
     });
 
     it('timeGMT function', function () {
-      console.log("timeGMT=" + mql4.timeGMT());
       expect(new Date() - mql4.timeGMT()).toBeLessThan(24 * 3600 * 1000);
     });
 
 
     it('timeGMTOffset function', function () {
-      console.log("timeGMTOffset=" + mql4.timeGMTOffset());
       expect(mql4.timeGMTOffset()).toBeLessThan(24 * 3600);
     });
 
     it('timeDaylightSavings function', function () {
-      console.log("timeDaylightSavings=" + mql4.timeDaylightSavings());
       expect(mql4.timeGMTOffset()).toBeLessThan(3600);
     });
 

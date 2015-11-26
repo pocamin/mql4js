@@ -1,9 +1,9 @@
-describe('movingAverage.js', function () {
+describe('MovingAverage.js', function () {
   var round2 = function (array) {
     return array.map(function (value) {
       return Math.round(value * 100) / 100
     })
-  }
+  };
   it('can compute standard moving average', function () {
     expect(MOVING_AVERAGE.compute([2, 3, 4, 5, 3, 4, 2, 3, 4, 5], 3, MOVING_AVERAGE_METHOD.SMA))
       .toEqual([3, 4, 4, 4, 3, 3, 3, 4]);

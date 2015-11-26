@@ -9,14 +9,14 @@ describe('agentExecutionEngine.js', function () {
     return [interval.start, interval.end];
   };
   it('getInterval supports minute\'s intervals', function () {
-    expect(new AgentExecutionEngine().getInterval("M1")).toEqual({periodicity: 1, periodicityUnit: 'minute'});
-    expect(new AgentExecutionEngine().getInterval("M30")).toEqual({periodicity: 30, periodicityUnit: 'minute'});
+    expect(getInterval("M1")).toEqual({periodicity: 1, periodicityUnit: 'minute'});
+    expect(getInterval("M30")).toEqual({periodicity: 30, periodicityUnit: 'minute'});
   });
   it('getInterval supports hour\'s intervals', function () {
-    expect(new AgentExecutionEngine().getInterval("H1")).toEqual({periodicity: 1, periodicityUnit: 'hour'});
+    expect(getInterval("H1")).toEqual({periodicity: 1, periodicityUnit: 'hour'});
   });
   it('getInterval supports day\'s intervals', function () {
-    expect(new AgentExecutionEngine().getInterval("D1")).toEqual({periodicity: 1, periodicityUnit: 'day'});
+    expect(getInterval("D1")).toEqual({periodicity: 1, periodicityUnit: 'day'});
   });
   it('getIntervalAsTime supports date minute\'s intervals', function () {
     var aee = new AgentExecutionEngine();
@@ -57,11 +57,7 @@ describe('agentExecutionEngine.js', function () {
     var aee;
     var nop = function () {
     };
-    var simplify = function (data) {
-      return data.map(function (value) {
-        return [moment(value.date).format("YYYYMMDD"), value.close]
-      })
-    };
+
     beforeEach(function () {
       aee = new AgentExecutionEngine(mockAdapter);
       aee.maxHistoByRequest = 2; // reduce histoCache to have verifiable tests
@@ -70,14 +66,14 @@ describe('agentExecutionEngine.js', function () {
 
     it('call without initial data for instrument', function () {
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([["20151114", 8], ["20151115", 9]]);
+        expect(simplifyTimeSeries(data)).toEqual([["20151114", 8], ["20151115", 9]]);
       });
     });
 
     it('call with initial data for instrument but for different Period', function () {
       aee.getHistoricalData("EUR/CHF", "M1", new Date(2015, 10, 16), nop);
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([["20151114", 8], ["20151115", 9]]);
+        expect(simplifyTimeSeries(data)).toEqual([["20151114", 8], ["20151115", 9]]);
       });
     });
 
@@ -86,7 +82,7 @@ describe('agentExecutionEngine.js', function () {
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), nop);
       mockAdapter.requests = [];
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([["20151114", 8], ["20151115", 9]]);
+        expect(simplifyTimeSeries(data)).toEqual([["20151114", 8], ["20151115", 9]]);
       });
       expect(mockAdapter.requests).toEqual([]);
     });
@@ -95,7 +91,7 @@ describe('agentExecutionEngine.js', function () {
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 15), nop);
       mockAdapter.requests = [];
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([["20151114", 8], ["20151115", 9]]);
+        expect(simplifyTimeSeries(data)).toEqual([["20151114", 8], ["20151115", 9]]);
       });
       expect(mockAdapter.requests).toEqual([{symbol: 'EUR/CHF', interval: 'D1', from: new Date(2015, 10, 15), to: new Date(2015, 10, 15)}]);
     });
@@ -104,7 +100,7 @@ describe('agentExecutionEngine.js', function () {
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 17), nop);
       mockAdapter.requests = [];
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([["20151114", 8], ["20151115", 9]]);
+        expect(simplifyTimeSeries(data)).toEqual([["20151114", 8], ["20151115", 9]]);
       });
       expect(mockAdapter.requests).toEqual([{symbol: 'EUR/CHF', interval: 'D1', from: new Date(2015, 10, 14), to: new Date(2015, 10, 14)}]);
     });
@@ -117,7 +113,7 @@ describe('agentExecutionEngine.js', function () {
       aee.maxHistoByRequest = 7;
       mockAdapter.requests = [];
       aee.getHistoricalData("EUR/CHF", "D1", new Date(2015, 10, 16), function (data) {
-        expect(simplify(data)).toEqual([
+        expect(simplifyTimeSeries(data)).toEqual([
           ['20151109', 3],
           ['20151110', 4],
           ['20151111', 5],

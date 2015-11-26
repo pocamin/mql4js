@@ -45,3 +45,26 @@ APPLIED_PRICE[APPLIED_PRICE.PRICE_WEIGHTED] = function (data) {
   return (data.high + data.low + 2 * data.close) / 4
 };
 
+
+var getInterval = function (intervalAsString) {
+  return {
+    periodicity: parseInt(intervalAsString.substring(1)),
+    periodicityUnit: {M: 'minute', H: 'hour', D: 'day'}[intervalAsString.charAt(0)],
+    floor: function (date) {
+      var dateFloor = moment(date).startOf(this.periodicityUnit);
+      while (dateFloor.get(this.periodicityUnit) % this.periodicity !== 0) {
+        dateFloor.subtract(1, this.periodicityUnit);
+      }
+      return dateFloor;
+    },
+    ceil: function (date) {
+      var dateCeil = moment(date).startOf(this.periodicityUnit);
+      dateCeil = dateCeil.isSame(date) ? dateCeil : dateCeil.add(1, this.periodicityUnit);
+      while (dateCeil.get(this.periodicityUnit) % this.periodicity !== 0) {
+        dateCeil.add(1, this.periodicityUnit);
+      }
+      return dateCeil;
+    }
+
+  };
+};

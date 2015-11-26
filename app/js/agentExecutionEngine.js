@@ -13,15 +13,10 @@ var AgentExecutionEngine = function (agentExecutionEngineAdapter) {
   return this;
 };
 
-AgentExecutionEngine.prototype.getInterval = function (intervalAsString) {
-  return {
-    periodicity: parseInt(intervalAsString.substring(1)),
-    periodicityUnit: {M: 'minute', H: 'hour', D: 'day'}[intervalAsString.charAt(0)]
-  };
-};
+
 
 AgentExecutionEngine.prototype.getIntervalAsTime = function (intervalAsString, dateTo) {
-  var interval = this.getInterval(intervalAsString);
+  var interval = getInterval(intervalAsString);
   if (!dateTo) {
     dateTo = new Date();
   }
@@ -59,7 +54,6 @@ AgentExecutionEngine.prototype.getCachedData = function (symbol, intervalAsStrin
 
 
 AgentExecutionEngine.prototype.getHistoricalData = function (symbol, intervalAsString, dateTo, callBack) {
-  var that = this;
   var interval = this.getIntervalAsTime(intervalAsString, dateTo);
   var currentData = this.getCachedData(symbol, intervalAsString);
 

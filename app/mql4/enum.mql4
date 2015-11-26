@@ -10,5 +10,5 @@ enum intervals
 
 
 void init(){
-  console.log(intervals.month);
+  Print(intervals.month);
 }
