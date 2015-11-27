@@ -5,7 +5,7 @@ var AgentExecutionEngine = function (agentExecutionEngineAdapter) {
     this.agentExecutionEngineAdapter = agentExecutionEngineAdapter;
   } else {
     this.agentExecutionEngineAdapter = {
-      requestHistoricalData: function () {
+      getBars: function () {
         throw new Error("There is no adapter defined");
       }
     };
@@ -78,7 +78,7 @@ AgentExecutionEngine.prototype.getHistoricalData = function (symbol, intervalAsS
   if (missingData.length > 0) {
     var minDate = (interval.start > missingData[0]) ? interval.start : missingData[0];
     var maxDate = (interval.end < missingData[missingData.length - 1]) ? interval.end : missingData[missingData.length - 1];
-    this.agentExecutionEngineAdapter.requestHistoricalData(symbol, intervalAsString, minDate, maxDate, function (data) {
+    this.agentExecutionEngineAdapter.getBars(symbol, intervalAsString, minDate, maxDate, function (data) {
       data.forEach(function (value) {
         currentData[value.date] = value;
       });

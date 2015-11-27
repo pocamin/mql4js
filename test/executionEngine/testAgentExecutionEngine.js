@@ -8,15 +8,20 @@ describe('agentExecutionEngine.js', function () {
   var dateFromInterval = function (interval) {
     return [interval.start, interval.end];
   };
+
+  function expectInterval(interval) {
+    return expect(interval.periodicity + " " + interval.periodicityUnit);
+  }
+
   it('getInterval supports minute\'s intervals', function () {
-    expect(getInterval("M1")).toEqual({periodicity: 1, periodicityUnit: 'minute'});
-    expect(getInterval("M30")).toEqual({periodicity: 30, periodicityUnit: 'minute'});
+    expectInterval(getInterval("M1")).toEqual('1 minute');
+    expectInterval(getInterval("M30")).toEqual('30 minute');
   });
   it('getInterval supports hour\'s intervals', function () {
-    expect(getInterval("H1")).toEqual({periodicity: 1, periodicityUnit: 'hour'});
+    expectInterval(getInterval("H1")).toEqual('1 hour');
   });
   it('getInterval supports day\'s intervals', function () {
-    expect(getInterval("D1")).toEqual({periodicity: 1, periodicityUnit: 'day'});
+    expectInterval(getInterval("D1")).toEqual('1 day');
   });
   it('getIntervalAsTime supports date minute\'s intervals', function () {
     var aee = new AgentExecutionEngine();
@@ -136,7 +141,7 @@ describe('agentExecutionEngine.js', function () {
 });
 
 
-mockAdapter.requestHistoricalData = function (symbol, intervalAsString, from, to, callBack) {
+mockAdapter.getBars = function (symbol, intervalAsString, from, to, callBack) {
   this.requests.push({symbol: symbol, interval: intervalAsString, from: from, to: to});
 
   var interval = AgentExecutionEngine.prototype.getInterval(intervalAsString);

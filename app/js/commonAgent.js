@@ -7,7 +7,7 @@ var MOVING_AVERAGE_METHOD = {
 };
 
 
-getPriceFromHistoData = function (histoData, appliedPrice) {
+var getPriceFromHistoData = function (histoData, appliedPrice) {
   return histoData.map(APPLIED_PRICE[appliedPrice]);
 };
 
@@ -46,10 +46,10 @@ APPLIED_PRICE[APPLIED_PRICE.PRICE_WEIGHTED] = function (data) {
 };
 
 
-var getInterval = function (intervalAsString) {
+var getInterval = function (intervalName) {
   return {
-    periodicity: parseInt(intervalAsString.substring(1)),
-    periodicityUnit: {M: 'minute', H: 'hour', D: 'day'}[intervalAsString.charAt(0)],
+    periodicity: parseInt(intervalName.substring(1)),
+    periodicityUnit: {M: 'minute', H: 'hour', D: 'day'}[intervalName.charAt(0)],
     floor: function (date) {
       var dateFloor = moment(date).startOf(this.periodicityUnit);
       while (dateFloor.get(this.periodicityUnit) % this.periodicity !== 0) {
@@ -68,3 +68,9 @@ var getInterval = function (intervalAsString) {
 
   };
 };
+
+
+var random = function (seed, iteration) {
+  var x = Math.sin(seed + iteration) * 10000;
+  return x - Math.floor(x);
+}

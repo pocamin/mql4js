@@ -10,12 +10,11 @@ module.exports = function (config) {
       'dist/js/require.js',
       'app/js/commonAgent.js',
       'app/js/technicalIndicators/*.js',
-      'app/js/agentExecutionAdapter/RandomWalkAdapter.js',
+      'app/js/agentExecutionAdapter/*.js',
       'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
       'dist/js/mql4-to-js.js',
       'dist/bower_dep.js',
-      'test/mql4js/convert.common.js',
       'test/mql4js/convert.common.js',
       'test/**/*.js',
       {pattern: 'dist/antlr4/**/*.js', included: false, served: true, nocache: true},
@@ -29,6 +28,7 @@ module.exports = function (config) {
       'app/js/mql4.js': ['coverage'],
       'app/js/mql4-to-js.js': ['coverage']
     }
+
 
   })
 };

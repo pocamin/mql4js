@@ -39,6 +39,8 @@
     "gulp-template": "~3.1.0",
     "fs": "0.0.2",
     "gulp-replace": "~0.5.4",
-    "karma-coverage": "~0.5.3"
+    "karma-coverage": "~0.5.3",
+    "karma-babel-preprocessor": "~6.0.1",
+    "babel-preset-es2015": "~6.1.18"
   }
 }
