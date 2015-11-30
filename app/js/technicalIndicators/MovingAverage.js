@@ -1,89 +1,127 @@
-var MOVING_AVERAGE = {};
+"use strict";
+var MovingAverageIndicator = function (barAdapter, method, periods, basedOn) {
+  this._basedOn = basedOn || "close";
+  this._maxSize = 500;
+  this._periods = periods;
+  this._method = method;
+  this.values = this._computeAll(barAdapter.bars);
+  barAdapter.addListener(this);
+};
 
-MOVING_AVERAGE.compute = function (data, periods, method) {
-  switch (method) {
+
+MovingAverageIndicator.prototype.onBar = function (bar) {
+  var newValue = this._computeOne(bar);
+  if (newValue) {
+    this.values.push(newValue);
+    if (this.values.length > this._maxSize) {
+      this.values.splice(0, this.values.length - this._maxSize);
+    }
+  }
+};
+
+
+MovingAverageIndicator.prototype._computeAll = function (bars) {
+  var that = this;
+
+  return bars
+    .map(function (bar) {
+      return that._computeOne(bar)
+    })
+    .filter(function (bar) {
+      return !!bar
+    });
+};
+
+MovingAverageIndicator.prototype._computeOne = function (bar) {
+  var that = this;
+  switch (that._method) {
     case MOVING_AVERAGE_METHOD.SMA :
-      return MOVING_AVERAGE.computeSMA(data, periods);
+      return that._computeSMA(bar);
     case MOVING_AVERAGE_METHOD.EMA :
-      return MOVING_AVERAGE.computeEMA(data, periods);
+      return that._computeEMA(bar);
     case MOVING_AVERAGE_METHOD.SMMA :
-      return MOVING_AVERAGE.computeSMMA(data, periods);
+      return that._computeSMMA(bar);
     case MOVING_AVERAGE_METHOD.LWMA :
-      return MOVING_AVERAGE.computeLMMA(data, periods);
+      return that._computeLWMA(bar);
   }
 };
 
-MOVING_AVERAGE.computeLMMA = function (data, periods) {
-  var toReturn = [];
-  var subArray = [];
-  for (var i = 0; i < data.length; i++) {
-    subArray.push(data[i]);
-    if (subArray.length > periods) {
-      subArray.splice(0, 1);
-    }
-    if (subArray.length == periods) {
-      var sum = subArray.map(function (value, idx) {
-        return (idx + 1) * value
-      }).reduce(function (acc, value) {
-        return acc + value
-      });
-      toReturn.push(2 * sum / (periods * (periods + 1)));
-    }
+MovingAverageIndicator.prototype._addToPeriodData = function (bar) {
+  this._periodData = this._periodData || [];
+  this._periodData.push({date: bar.date, value: bar[this._basedOn]});
+  if (this._periodData.length > this._periods) {
+    this._periodData.splice(0, this._periodData.length - this._periods)
   }
-  return toReturn;
+  return this._periodData.length == this._periods;
 };
 
 
-MOVING_AVERAGE.computeEMA = function (data, periods) {
-  var toReturn = [];
-  var multiplier = (2 / (periods + 1));
-  var ema = 0;
-  for (var i = 0; i < data.length; i++) {
-    if (i < periods - 1) {
-      ema += data[i];
-    } else {
-      if (i == periods - 1) {
-        ema = (ema + data[i]) / periods;
-      } else {
-        ema += (data[i] - ema) * multiplier;
-      }
-      toReturn.push(ema);
-    }
+MovingAverageIndicator.prototype._computeSMA = function (bar) {
+  if (!this._addToPeriodData(bar)) {
+    return null;
   }
-  return toReturn;
-};
 
-MOVING_AVERAGE.computeSMA = function (data, periods) {
-  var toReturn = [];
-  var sum = 0;
-  for (var i = 0; i < data.length; i++) {
-    sum += data[i];
-    if (i >= periods) {
-      sum -= data[i - periods];
-    }
-
-    if (i >= periods - 1) {
-      toReturn.push(sum / periods)
-    }
-  }
-  return toReturn;
+  return {
+    value: this._periodData.reduce(function (acc, v) {
+      return acc + v.value
+    }, 0) / this._periods,
+    date: bar.date
+  };
 };
 
 
-MOVING_AVERAGE.computeSMMA = function (data, periods) {
-  var toReturn = [];
-  var sum = 0;
-  for (var i = 0; i < data.length; i++) {
-    if (i < periods - 1) {
-      sum += data[i];
-    } else {
-      if (i == periods - 1) {
-        sum = sum + data[i];
-      } else {
-        sum = data[i] + sum - sum / periods;
-      }
-      toReturn.push(sum / periods);
-    }
+MovingAverageIndicator.prototype._computeEMA = function (bar) {
+  var value = bar[this._basedOn];
+  this._nbBarsSeen = (this._nbBarsSeen || 0) + 1;
+  if (this._nbBarsSeen < this._periods) {
+    this._ema = (this._ema || 0) + value;
+    return null;
+  } else if (this._nbBarsSeen == this._periods) {
+    this._ema = (this._ema + value) / this._periods;
+  } else {
+    this._ema += (value - this._ema) * 2 / (this._periods + 1);
   }
-  return toReturn;
+
+  return {
+    value: this._ema,
+    date: bar.date
+  };
 };
+
+
+MovingAverageIndicator.prototype._computeLWMA = function (bar) {
+  if (!this._addToPeriodData(bar)) {
+    return null;
+  }
+
+  return {
+    value: this._periodData.map(function (v, idx) {
+      return (idx + 1) * v.value
+    }).reduce(function (acc, value) {
+      return acc + value
+    }) * 2 / (this._periods * (this._periods + 1)),
+    date: bar.date
+  };
+};
+
+
+MovingAverageIndicator.prototype._computeSMMA = function (bar) {
+  var value = bar[this._basedOn];
+  this._nbBarsSeen = (this._nbBarsSeen || 0) + 1;
+
+  if (this._nbBarsSeen < this._periods) {
+    this._sum = (this._sum || 0) + value;
+    return null;
+  } else if (this._nbBarsSeen == this._periods) {
+    this._sum += value;
+  } else {
+    this._sum += value - this._sum / this._periods;
+  }
+
+  return {
+    value: this._sum / this._periods,
+    date: bar.date
+  };
+
+};
+

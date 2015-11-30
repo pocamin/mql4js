@@ -42,13 +42,24 @@
 
 <!-- build:js indicators.js -->
 <script src="js/commonAgent.js"></script>
-<script src="js/agentExecutionAdapter/RandomWalkAdapter2.js"></script>
+<script src="js/agentExecutionAdapter/TickAdapter.js"></script>
+<script src="js/agentExecutionAdapter/BarAdapters.js"></script>
 <script src="js/technicalIndicators/MovingAverage.js"></script>
 <script src="js/agentExecutionEngine.js"></script>
-
 <!-- build:js indicators.js -->
 
 <script>
+    // Init flow
+    var startDate = new Date(2015, 1, 1);
+    var initialLinesToDisplay = 50;
+    var rta = new RandomTickAdapter("eur_usd", startDate, {tickPeriodInMs: 3600 * 10000, speed: 3600 * 10000});
+    var rba = new RandomBarAdapter("eur_usd", "D1", startDate);
+
+
+    rba.init();
+    rta.addListener(rba);
+    rta.start();
+
 
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
             width = 960 - margin.left - margin.right,
@@ -121,66 +132,21 @@
     svg.append("g")
             .attr("class", "volume axis");
 
-    var createIndicator = function (id, color, generator) {
+    var createIndicator = function (id, color, indicator) {
         return {
-            generator: generator,
+            indicator: indicator,
             id: id,
             color: color,
-            graph: techan.plot.sma().xScale(x).yScale(y),
-            calculator: function (data) {
-                return this.generator(data).map(function (val, idx, array) {
-                    return {
-                        date: data[data.length - array.length + idx].date,
-                        value: val
-                    };
-                });
-            }
+            graph: techan.plot.sma().xScale(x).yScale(y)
         };
     };
 
+
     var indicators = [];
-
-
-    indicators.push(createIndicator("ema10", "green", function (data) {
-                        return MOVING_AVERAGE.compute(data.map(function (d) {
-                            return d.close
-                        }), 10, MOVING_AVERAGE_METHOD.EMA);
-                    }
-            )
-    );
-
-    indicators.push(createIndicator("ema50", "yellow", function (data) {
-                        return MOVING_AVERAGE.compute(data.map(function (d) {
-                            return d.close
-                        }), 50, MOVING_AVERAGE_METHOD.EMA);
-                    }
-            )
-    );
-
-    indicators.push(createIndicator("sma10", "red", function (data) {
-                        return MOVING_AVERAGE.compute(data.map(function (d) {
-                            return d.close
-                        }), 10, MOVING_AVERAGE_METHOD.SMA);
-                    }
-            )
-    );
-
-    indicators.push(createIndicator("lwma10", "blue", function (data) {
-                        return MOVING_AVERAGE.compute(data.map(function (d) {
-                            return d.close
-                        }), 10, MOVING_AVERAGE_METHOD.LWMA);
-                    }
-            )
-    );
-
-    indicators.push(createIndicator("smma30", "#404087", function (data) {
-                        return MOVING_AVERAGE.compute(data.map(function (d) {
-                            return d.close
-                        }), 30, MOVING_AVERAGE_METHOD.SMMA);
-                    }
-            )
-    );
-
+    indicators.push(createIndicator("sma50", "green", new MovingAverageIndicator(rba, MOVING_AVERAGE_METHOD.SMA, 50)));
+    indicators.push(createIndicator("ema10", "blue", new MovingAverageIndicator(rba, MOVING_AVERAGE_METHOD.EMA, 10)));
+    indicators.push(createIndicator("LWMA5", "red", new MovingAverageIndicator(rba, MOVING_AVERAGE_METHOD.LWMA, 5)));
+    indicators.push(createIndicator("smma15", "yellow", new MovingAverageIndicator(rba, MOVING_AVERAGE_METHOD.SMMA, 15)));
 
     // add indicator graphs
     indicators.forEach(function (indicator, idx) {
@@ -202,47 +168,73 @@
     });
 
 
-    var ra = new RandomWalkAdapter();
-    ra.getBars("EUR_USD", "D1", new Date(2015, 8, 1), null, function (data) {
+    var redraw = function () {
+        var data = rba.bars;
+
+        var accessor = ohlc.accessor(),
+                timestart = data[data.length - 1].date;
 
 
-                console.log(data);
+        data = data.slice(data.length > initialLinesToDisplay ? data.length - initialLinesToDisplay : 0);
 
 
-                var accessor = ohlc.accessor(),
-                        timestart = data[data.length - 1].date;
+//        data = data.sort(function (a, b) {
+//            return d3.ascending(accessor.d(a), accessor.d(b));
+//        });
 
-                data = data.sort(function (a, b) {
-                    return d3.ascending(accessor.d(a), accessor.d(b));
-                });
+        x.domain(data.map(accessor.d));
 
-                x.domain(data.map(accessor.d));
-
-                y.domain(techan.scale.plot.ohlc(data, accessor).domain());
+        y.domain(techan.scale.plot.ohlc(data, accessor).domain());
 
 
-                svg.select("g.candlestick").datum(data);
+        svg.select("g.candlestick").datum(data);
 
 
-                x.domain(data.map(accessor.d));
+        x.domain(data.map(accessor.d));
 
-                y.domain(techan.scale.plot.ohlc(data).domain());
-                svg.select('g.x.axis').call(xAxis);
-                svg.select('g.y.axis').call(yAxis);
-                svg.select("g.candlestick").call(ohlc);
-
-
-                // update indicator graphs
-                indicators.forEach(function (indicator) {
-                    svg.select("#" + indicator.id).datum(indicator.calculator(data));
-                    svg.select("#" + indicator.id).call(indicator.graph);
-                });
-
-                svg.append("div").style({"width": "50px", "background-color": "red"})
+        y.domain(techan.scale.plot.ohlc(data).domain());
+        svg.select('g.x.axis').call(xAxis);
+        svg.select('g.y.axis').call(yAxis);
+        svg.select("g.candlestick").call(ohlc);
 
 
-            }
-    );
+        // update indicator graphs
+        indicators.forEach(function (indicator) {
+
+            var indicatorData = indicator.indicator.values;
+            var selection = svg.select("#" + indicator.id);
+            selection.datum(indicatorData);
+
+            refreshIndicator(selection,
+                    indicator.graph,
+                    indicatorData
+            );
+        });
+
+
+    };
+
+
+    function refreshIndicator(selection, indicator, data) {
+        var datum = selection.datum();
+        // Some trickery to remove old and insert new without changing array reference,
+        // so no need to update __data__ in the DOM
+        datum.splice.apply(datum, [0, datum.length].concat(data));
+        selection.call(indicator);
+    }
+
+    redraw();
+
+
+    rba.addListener({
+        onBar: function () {
+            initialLinesToDisplay++;
+            redraw();
+        }
+    });
+
+
+    svg.append("div").style({"width": "50px", "background-color": "red"})
 
 
 </script>

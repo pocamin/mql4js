@@ -4,24 +4,165 @@ describe('MovingAverage.js', function () {
       return Math.round(value * 100) / 100
     })
   };
-  it('can compute standard moving average', function () {
-    expect(MOVING_AVERAGE.compute([2, 3, 4, 5, 3, 4, 2, 3, 4, 5], 3, MOVING_AVERAGE_METHOD.SMA))
-      .toEqual([3, 4, 4, 4, 3, 3, 3, 4]);
+
+
+  describe('standard moving average', function () {
+    var mockBarAdapter = {
+      bars: [
+        {date: new Date(2015, 1, 1), close: 2},
+        {date: new Date(2015, 1, 2), close: 3},
+        {date: new Date(2015, 1, 3), close: 4},
+        {date: new Date(2015, 1, 4), close: 5}
+      ],
+      addListener: function () {
+      }
+    };
+
+
+    var mai = new MovingAverageIndicator(mockBarAdapter, MOVING_AVERAGE_METHOD.SMA, 3);
+
+
+    it("can compute", function () {
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 3},
+          {date: new Date(2015, 1, 4), value: 4}
+        ]
+      );
+    });
+
+    it("can update", function () {
+      mai.onBar({date: new Date(2015, 1, 5), close: 6});
+
+      expect(mai.values)
+        .toEqual([
+          {date: new Date(2015, 1, 3), value: 3},
+          {date: new Date(2015, 1, 4), value: 4},
+          {date: new Date(2015, 1, 5), value: 5}]
+      );
+    });
+
   });
 
-  it('can compute exponential moving average', function () {
-    expect(MOVING_AVERAGE.compute([2, 3, 4, 5, 3, 4, 2, 3, 4, 5], 3, MOVING_AVERAGE_METHOD.EMA))
-      .toEqual([3, 4, 3.5, 3.75, 2.875, 2.9375, 3.46875, 4.234375]);
+  describe('exponential moving average', function () {
+    var mockBarAdapter = {
+      bars: [
+        {date: new Date(2015, 1, 1), close: 2},
+        {date: new Date(2015, 1, 2), close: 3},
+        {date: new Date(2015, 1, 3), close: 4},
+        {date: new Date(2015, 1, 4), close: 5},
+        {date: new Date(2015, 1, 5), close: 3}
+      ],
+      addListener: function () {
+      }
+    };
+    var mai = new MovingAverageIndicator(mockBarAdapter, MOVING_AVERAGE_METHOD.EMA, 3);
+    it("can compute", function () {
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 3},
+          {date: new Date(2015, 1, 4), value: 4},
+          {date: new Date(2015, 1, 5), value: 3.5}
+        ]
+      );
+    });
+
+
+    it("can update", function () {
+      mai.onBar({date: new Date(2015, 1, 6), close: 4});
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 3},
+          {date: new Date(2015, 1, 4), value: 4},
+          {date: new Date(2015, 1, 5), value: 3.5},
+          {date: new Date(2015, 1, 6), value: 3.75}
+        ]
+      );
+    });
   });
 
-  it('can compute Smoothed Moving Average', function () {
-    expect(round2(MOVING_AVERAGE.compute([2, 3, 4, 5, 3, 4, 2, 3, 4, 5], 3, MOVING_AVERAGE_METHOD.SMMA)))
-      .toEqual([3, 3.67, 3.44, 3.63, 3.09, 3.06, 3.37, 3.91]);
+
+  describe('Smoothed Moving Average', function () {
+    var mockBarAdapter = {
+      bars: [
+        {date: new Date(2015, 1, 1), close: 2},
+        {date: new Date(2015, 1, 2), close: 3},
+        {date: new Date(2015, 1, 3), close: 4},
+        {date: new Date(2015, 1, 4), close: 5},
+        {date: new Date(2015, 1, 5), close: 3}
+      ],
+      addListener: function () {
+      }
+    };
+    var mai = new MovingAverageIndicator(mockBarAdapter, MOVING_AVERAGE_METHOD.SMMA, 3);
+    it("can compute", function () {
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: (2 + 3 + 4) / 3},
+          {date: new Date(2015, 1, 4), value: 22 / 6},
+          {date: new Date(2015, 1, 5), value: 31 / 9}
+        ]
+      );
+    });
+
+
+    it("can update", function () {
+      mai.onBar({date: new Date(2015, 1, 6), close: 4});
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 9 / 3},
+          {date: new Date(2015, 1, 4), value: 22 / 6},
+          {date: new Date(2015, 1, 5), value: 31 / 9},
+          {date: new Date(2015, 1, 6), value: 98 / 27}
+        ]
+      );
+    });
   });
 
-  it('can compute Linear weighted  Moving Average', function () {
-    expect(MOVING_AVERAGE.compute([3, 3, 6, 6, 3, 3, 6, 3, 9, 5], 3, MOVING_AVERAGE_METHOD.LWMA))
-      .toEqual([4.5, 5.5, 4.5, 3.5, 4.5, 4, 6.5, 6]);
+
+  describe('Linear weighted Moving Average', function () {
+    var mockBarAdapter = {
+      bars: [
+        {date: new Date(2015, 1, 1), close: 3},
+        {date: new Date(2015, 1, 2), close: 3},
+        {date: new Date(2015, 1, 3), close: 6},
+        {date: new Date(2015, 1, 4), close: 6},
+        {date: new Date(2015, 1, 5), close: 3}
+      ],
+      addListener: function () {
+      }
+    };
+    var mai = new MovingAverageIndicator(mockBarAdapter, MOVING_AVERAGE_METHOD.LWMA, 3);
+    it("can compute", function () {
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 4.5},
+          {date: new Date(2015, 1, 4), value: 5.5},
+          {date: new Date(2015, 1, 5), value: 4.5}
+        ]
+      );
+    });
+
+
+    it("can update", function () {
+      mai.onBar({date: new Date(2015, 1, 6), close: 3});
+      expect(mai.values)
+        .toEqual(
+        [
+          {date: new Date(2015, 1, 3), value: 4.5},
+          {date: new Date(2015, 1, 4), value: 5.5},
+          {date: new Date(2015, 1, 5), value: 4.5},
+          {date: new Date(2015, 1, 6), value: 3.5}
+        ]
+      );
+    });
   });
+
 
 });

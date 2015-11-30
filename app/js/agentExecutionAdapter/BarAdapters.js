@@ -1,21 +1,19 @@
-"use strict";
-
 var BarAdapter = function (symbol, intervalName, currentDate) {
-  this.symbol = symbol;
-  this.intervalName = intervalName;
-  this.interval = getInterval(intervalName);
+  this._symbol = symbol;
+  this._intervalName = intervalName;
+  this._interval = getInterval(intervalName);
   this._listeners = [];
   this.bars = [];
-  this._maxSixe = 500;
-  this.maxDate = this.interval.floor(currentDate);
+  this._maxSize = 500;
+  this._maxDate = this._interval.floor(currentDate);
 };
 
 
 BarAdapter.prototype.addListener = function (listener) {
-  this._listeners.add(listener);
+  this._listeners.push(listener);
 };
 
-BarAdapter.prototype.newBar = function (bar) {
+BarAdapter.prototype._newBar = function (bar) {
   this._listeners.forEach(function (listener) {
     return listener.onBar(bar)
   });
@@ -32,13 +30,13 @@ BarAdapter.prototype.init = function () {
 var RandomBarAdapter = function (symbol, period, currentDate, option) {
   BarAdapter.call(this, symbol, period, currentDate);
   option = option || {};
-  this.seed = option.seed || 1;
-  this.nbInitialTicksByPeriod = option.nbInitialTicksByPeriod || 10;
-  this.initialValue = option.initialValue || 1;
-  this.maxVolumeByTick = option.maxVolumeByTick || 10000;
-  this.deltaByTick = option.deltaByTick || 0.001;
-  this.roundTo = Math.round(Math.pow(10, -Math.log(option.roundTo || 0.0001) / Math.log(10)));
-  this.pendingTicks = [];
+  this._seed = option.seed || 1;
+  this._nbInitialTicksByPeriod = option.nbInitialTicksByPeriod || 10;
+  this._initialValue = option.initialValue || 1;
+  this._maxVolumeByTick = option.maxVolumeByTick || 10000;
+  this._deltaByTick = option.deltaByTick || 0.001;
+  this._roundTo = Math.round(Math.pow(10, -Math.log(option.roundTo || 0.0001) / Math.log(10)));
+  this._pendingTicks = [];
 };
 
 RandomBarAdapter.prototype = Object.create(BarAdapter.prototype);
@@ -46,65 +44,78 @@ RandomBarAdapter.prototype.constructor = BarAdapter;
 
 
 RandomBarAdapter.prototype.onTick = function (tick) {
-  if (this.maxDate.isBefore(tick.date)) {
-    var values = this.pendingTicks.map(function (t) {
+  var nextPeriodMaxDate = moment(this._maxDate).add(this._interval.periodicity, this._interval.periodicityUnit);
+
+
+  if (nextPeriodMaxDate.isBefore(tick.date)) {
+    var prices = this._pendingTicks.map(function (t) {
       return (t.bid + t.ask) / 2
     });
-    var volumes = this.pendingTicks.map(function (t) {
+    var volumes = this._pendingTicks.map(function (t) {
       return t.volume
     });
 
-    this.pendingTicks = [];
+    var bar = this._addBar(this._maxDate, prices, volumes);
+    this._pendingTicks = [tick];
+    this._maxDate = nextPeriodMaxDate;
+    this._newBar(bar);
   } else {
-
+    this._pendingTicks.push(tick);
   }
 };
 
-RandomBarAdapter.prototype.addBar = function (barDate, values, volumes) {
-  var close = values[0],
-    open = values[this.nbInitialTicksByPeriod - 1],
-    low = values[0],
-    high = values[0],
-    volume = 0;
+RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverted) {
+  var close = prices[prices.length - 1],
+    open = prices[0],
+    low = prices[0],
+    high = prices[0],
+    volume = volumes[0];
 
-  for (var k = 1; k < this.nbInitialTicksByPeriod; k++) {
+  for (var k = 1; k < prices.length; k++) {
     volume += volumes[k];
-    if (values[k] < low) {
-      low = values[k];
+    if (prices[k] < low) {
+      low = prices[k];
     }
-    if (values[k] > high) {
-      high = values[k];
+    if (prices[k] > high) {
+      high = prices[k];
     }
   }
 
 
-  this.bars.push({open: open, low: low, high: high, close: close, volume: volume, date: moment(barDate).toDate()});
-  if (this.bars.length > this._maxSixe) {
-    this.bars.splice(0, this._maxSixe - this.bars.length);
+  var bar = {open: open, low: low, high: high, close: close, volume: volume, date: moment(barDate).toDate()};
+  if (inverted) {
+    this.bars.splice(0, 0, bar);
+  } else {
+    this.bars.push(bar);
   }
+
+  if (this.bars.length > this._maxSize) {
+    this.bars.splice(0, this.bars.length - this._maxSize);
+  }
+  return bar;
 };
 
 
 RandomBarAdapter.prototype.init = function () {
-  var barDate = moment(this.maxDate);
-  var value = this.initialValue;
+  var barDate = moment(this._maxDate);
+  var value = this._initialValue;
 
-  for (var i = 0; i < this._maxSixe; i++) {
-    barDate.subtract(this.interval.periodicity, this.interval.periodicityUnit);
+  for (var i = 0; i < this._maxSize; i++) {
+    barDate.subtract(this._interval.periodicity, this._interval.periodicityUnit);
 
     var values = [];
     var volumes = [];
 
-    for (var j = 0; j < this.nbInitialTicksByPeriod; j++) {
-      var tickIndex = i * this.nbInitialTicksByPeriod + j;
-      value += random(this.seed + tickIndex) > 0.5 ? -this.deltaByTick : this.deltaByTick;
-      value = Math.round(value * this.roundTo) / this.roundTo;
-      values.push(value);
-      volumes.push(random(this.seed + tickIndex) * this.maxVolumeByTick)
+    for (var j = 0; j < this._nbInitialTicksByPeriod; j++) {
+      var tickIndex = i * this._nbInitialTicksByPeriod + j;
+      value += random(this._seed, tickIndex) > 0.5 ? -this._deltaByTick : this._deltaByTick;
+      value = Math.round(value * this._roundTo) / this._roundTo;
+      values.splice(0, 0, value);
+      volumes.splice(0, 0, Math.round(random(this._seed, tickIndex) * this._maxVolumeByTick))
     }
 
 
-    this.addBar(barDate, values, volumes);
+    this._addBar(barDate, values, volumes, true);
   }
 
   var that = this;
