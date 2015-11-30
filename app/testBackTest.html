@@ -53,7 +53,7 @@
     var startDate = new Date(2015, 1, 1);
     var initialLinesToDisplay = 50;
     var rta = new RandomTickAdapter("eur_usd", startDate, {tickPeriodInMs: 3600 * 10000, speed: 3600 * 10000});
-    var rba = new RandomBarAdapter("eur_usd", "D1", startDate);
+    var rba = new RandomBarAdapter("eur_usd", "D50", startDate);
 
 
     rba.init();
@@ -127,7 +127,7 @@
             .attr("y", 6)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
-            .text("Price ($)");
+            .text(rta._symbol);
 
     svg.append("g")
             .attr("class", "volume axis");
