@@ -1,0 +1,40 @@
+#events .order.not-executed {
+    color: orange;
+}
+
+#events .order.executed {
+    color: green;
+    font-weight: bold;
+}
+
+#events .order.sent {
+    color: white;
+}
+
+#events .order.cancelled {
+    color: red;
+    font-weight: bold;
+}
+
+#events {
+    height: 300px;
+    overflow-y: scroll;
+    background: black;
+}
+
+#currentPL {
+    font: 50px sans-serif;
+}
+
+#nbOrder {
+    font: 30px sans-serif;
+}
+
+#currentPL .positive {
+    color: green;
+}
+
+#currentPL .negative {
+    color: red;
+}
+

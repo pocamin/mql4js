@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- build:css backtest.css -->
+    <link href="css/backtest-chart.css" rel="stylesheet">
+    <link href="css/backtest-events.css" rel="stylesheet">
+    <!-- build:css backtest.css -->
+
+
+    <!-- build:js backtest-dependencies.js -->
+    <script src="bower_components/moment/min/moment.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/moment/min/moment.min.js"></script>
+    <script src="bower_components/d3/d3.min.js"></script>
+    <script src="bower_components/TechanJS/dist/techan.min.js"></script>
+    <!-- build:js backtest-dependencies.js -->
+
+
+    <!-- build:js backtest.js -->
+    <script src="js/commonAgent.js"></script>
+    <script src="js/agentExecutionAdapter/TickAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BarAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BacktestAccountAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BacktestMarketAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BackTestWithRandomEnv.js"></script>
+    <script src="js/technicalIndicators/MovingAverage.js"></script>
+    <!-- build:js backtest.js -->
+
+
+    <!-- build:js backtest.chart.js -->
+    <script src="js/backtest.chart.js"></script>
+    <!-- build:js backtest.chart.js -->
+
+
+    <script>
+
+
+        var script = {
+            init: function () {
+                this.nbTickSup = 0;
+                this.lastOrderId = -1;
+            },
+
+            subscribeIndicators: function () {
+                this.sma10 = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
+            },
+
+
+            onTick: function (tick) {
+                if (tick.bid > this.sma10.getFromLast(0)) {
+                    this.nbTickSup++;
+                } else {
+                    this.nbTickSup = 0;
+                }
+                if (this.nbTickSup >= 5) {
+                    if (this.env.marketAdapter.isPending(this.lastOrderId)) {
+                        this.env.marketAdapter.cancelOrder(this.lastOrderId);
+                        this.lastOrderId = this.env.marketAdapter.addOrder({symbol: "EUR_USD", amount: 1000, type: "market"});
+                        this.nbTickSup = 0;
+                    } else {
+                        this.lastOrderId = this.env.marketAdapter.addOrder({symbol: "EUR_USD", amount: 1000, type: "limit", limit: tick.bid});
+                        this.nbTickSup = 0;
+                    }
+                }
+            }
+        };
+
+
+        // AEE responsibilities
+        // TODO decide where to put what
+
+        var startDate = new Date(2015, 1, 1);
+        var env = BackTestWithRandomEnv(3600 * 1000, 100000);
+        env.mainTickAdapter = env.getTickAdapter("EUR_USD", startDate);
+        env.mainBarAdapter = env.getBarAdapter("EUR_USD", "D1", env.mainTickAdapter, startDate);
+        env.mainTickAdapter.addListener(script);
+
+
+        script.env = env;
+        script.subscribeIndicators();
+        script.init();
+
+
+        $(function () {
+                    env.mainTickAdapter.start();
+
+                    var chart = backtestChart();
+
+                    chart.addToIndicators("sma10", "red", script.sma10);
+                    var i = 0;
+                    env.mainBarAdapter.addListener({
+                        onBar: function () {
+                            if (i++ % 10 == 0) {
+                                chart.redraw(env.mainBarAdapter.bars, 10)
+                            }
+
+                            var pl = Math.round(env.accountAdapter.getTotalPL());
+
+
+                            $("#currentPL .value")
+                                    .removeClass("negative", "positive")
+                                    .addClass(pl > 0 ? "positive" : "negative")
+                                    .text(pl)
+                        }
+                    });
+
+
+                    env.marketAdapter.addListener(
+                            {
+                                location: $("#events"),
+                                ordersExecuted: 0,
+
+                                orderNotExecuted: function (order, tick) {
+                                    $("<div>").addClass("order not-executed")
+                                            .text("Order " + order.id + " not executed with bid=" + tick.bid + " ask=" + tick.ask)
+                                            .prependTo(this.location);
+                                },
+                                orderExecuted: function (order, tick) {
+                                    $("#nbOrder").text("Orders :" + ++this.ordersExecuted);
+                                    $("<div>").addClass("order executed")
+                                            .text("Order " + order.id + " has been executed with bid=" + tick.bid + " ask=" + tick.ask)
+                                            .prependTo(this.location);
+                                },
+                                newOrderSent: function (order) {
+                                    $("<div>").addClass("order sent")
+                                            .text("Order has been sent " + JSON.stringify(order))
+                                            .prependTo(this.location);
+                                },
+                                orderCancelled: function (orderId) {
+                                    $("<div>").addClass("order cancelled")
+                                            .text("Order has been cancelled " + orderId)
+                                            .prependTo(this.location);
+                                }
+
+                            }
+                    );
+
+                }
+        );
+
+
+    </script>
+</head>
+<body>
+<div id="graph">
+
+</div>
+<div id="events"></div>
+
+
+</body>
+<div id="currentPL">
+    Current PL :
+    <span class="value"></span>
+</div>
+<div id="nbOrder">
+    Orders :
+    <span class="value"></span>
+</div>

@@ -25,6 +25,14 @@ describe('Backtest Market Adapter', function () {
   });
 
 
+  it("can cancel an order ", function () {
+    var orderId = marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "limit", limit: 10});
+    expect(marketAdapter.isPending(orderId)).toBeTruthy();
+    marketAdapter.cancelOrder(orderId);
+    expect(marketAdapter.isPending(orderId)).toBeFalsy();
+  });
+
+
   it('accepts market order', function () {
     marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "market"});
     tick(0.5, 0.6, "EUR_USD");

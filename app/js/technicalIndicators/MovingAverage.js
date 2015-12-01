@@ -8,6 +8,10 @@ var MovingAverageIndicator = function (barAdapter, method, periods, basedOn) {
   barAdapter.addListener(this);
 };
 
+MovingAverageIndicator.prototype.getFromLast = function (index) {
+  return this.values[this.values.length - 1 - (index || 0)].value;
+};
+
 
 MovingAverageIndicator.prototype.onBar = function (bar) {
   var newValue = this._computeOne(bar);
