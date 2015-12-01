@@ -82,7 +82,7 @@ RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverte
   }
 
 
-  var bar = {open: open, low: low, high: high, close: close, volume: volume, date: moment(barDate).toDate()};
+  var bar = {open: open, low: low, high: high, close: close, volume: volume, date: moment(barDate).toDate(), symbol: this._symbol};
   if (inverted) {
     this.bars.splice(0, 0, bar);
   } else {

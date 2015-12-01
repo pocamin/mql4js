@@ -9,8 +9,9 @@ TickAdapter.prototype.addListener = function (listener) {
 };
 
 TickAdapter.prototype.newTick = function (ask, bid, volume, date) {
+  var that = this;
   this._listeners.forEach(function (listener) {
-    listener.onTick({ask: ask, bid: bid, volume: volume, date: date});
+    listener.onTick({ask: ask, bid: bid, volume: volume, date: date, symbol:  that._symbol});
   });
 };
 
