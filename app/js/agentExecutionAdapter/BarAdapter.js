@@ -27,16 +27,17 @@ BarAdapter.prototype.init = function () {
 };
 
 
-var RandomBarAdapter = function (symbol, period, currentDate, option) {
+var RandomBarAdapter = function (symbol, period, currentDate, options) {
   BarAdapter.call(this, symbol, period, currentDate);
-  option = option || {};
-  this._seed = option.seed || 1;
-  this._nbInitialTicksByPeriod = option.nbInitialTicksByPeriod || 10;
-  this._initialValue = option.initialValue || 1;
-  this._maxVolumeByTick = option.maxVolumeByTick || 10000;
-  this._deltaByTick = option.deltaByTick || 0.001;
-  this._roundTo = Math.round(Math.pow(10, -Math.log(option.roundTo || 0.0001) / Math.log(10)));
+  options = options || {};
+  this._seed = options.seed || 1;
+  this._nbInitialTicksByPeriod = options.nbInitialTicksByPeriod || 10;
+  this._initialValue = options.initialValue || 1;
+  this._maxVolumeByTick = options.maxVolumeByTick || 10000;
+  this._deltaByTick = options.deltaByTick || 0.001;
+  this._roundTo = Math.round(Math.pow(10, -Math.log(options.roundTo || 0.0001) / Math.log(10)));
   this._pendingTicks = [];
+  this._arithmeticWalk = !!options.arithmeticWalk
 };
 
 RandomBarAdapter.prototype = Object.create(BarAdapter.prototype);
@@ -108,7 +109,13 @@ RandomBarAdapter.prototype.init = function () {
 
     for (var j = 0; j < this._nbInitialTicksByPeriod; j++) {
       var tickIndex = i * this._nbInitialTicksByPeriod + j;
-      value += random(this._seed, tickIndex) > 0.5 ? -this._deltaByTick : this._deltaByTick;
+
+      if (this._arithmeticWalk) {
+        value += random(this._seed, tickIndex) > 0.5 ? -this._deltaByTick : this._deltaByTick;
+      } else {
+        value *= 1 + (random(this._seed, tickIndex) > 0.5 ? -this._deltaByTick : this._deltaByTick);
+      }
+
       value = Math.round(value * this._roundTo) / this._roundTo;
       values.splice(0, 0, value);
       volumes.splice(0, 0, Math.round(random(this._seed, tickIndex) * this._maxVolumeByTick))

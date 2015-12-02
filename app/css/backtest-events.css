@@ -16,11 +16,6 @@
     font-weight: bold;
 }
 
-#events {
-    height: 300px;
-    overflow-y: scroll;
-    background: black;
-}
 
 #currentPL {
     font: 50px sans-serif;
@@ -38,3 +33,6 @@
     color: red;
 }
 
+#nbOrder .value {
+    color: #003500;
+}

@@ -1,0 +1,78 @@
+.component h1 {
+    color: #bf3668;
+    background-color: #CCCCCC;
+    margin: 0;
+    padding: 5px;
+}
+
+.component .component_content {
+    padding: 5px;
+
+}
+
+#graph, #script {
+    width: 1000px;
+}
+
+#code {
+    width: 968px;
+    height: 500px;
+    padding: 10px;
+
+}
+
+#code {
+    background-color: #f8dff8;
+    color: black;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-right: 10px;
+    height: 30px;
+    float: left;
+
+}
+
+.component {
+    float: left;
+    padding: 0;
+    border: 1px solid #CCCCCC;
+    margin: 5px;
+    border-radius: 5px;
+    background: #f5F5F5;
+}
+
+#parameters, #statistics, #events {
+    width: 500px;
+}
+
+.clearfix {
+    clear: both;
+}
+
+input[type=text] {
+    width: 70px;
+}
+
+input[type=number] {
+    width: 50px;
+}
+
+#events {
+    height: 500px;
+    overflow-y: scroll;
+    background: black;
+}
+
+input[name=stop] {
+    display: none;
+    background: red;
+    color: white;
+}
+
+#graph, #events, #statistics {
+    display: none;
+}
+

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<!--suppress HtmlFormInputWithoutLabel -->
+<html lang="en">
+<head>
+    <!-- build:css backtest.css -->
+    <link href="css/backtest.css" rel="stylesheet">
+    <link href="css/backtest-chart.css" rel="stylesheet">
+    <link href="css/backtest-events.css" rel="stylesheet">
+    <!-- build:css backtest.css -->
+
+
+    <!-- build:js backtest-dependencies.js -->
+    <script src="bower_components/moment/min/moment.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/moment/min/moment.min.js"></script>
+    <script src="bower_components/d3/d3.min.js"></script>
+    <script src="bower_components/TechanJS/dist/techan.min.js"></script>
+    <!-- build:js backtest-dependencies.js -->
+
+
+    <!-- build:js backtest.js -->
+    <script src="js/commonAgent.js"></script>
+    <script src="js/agentExecutionAdapter/TickAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BarAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BacktestAccountAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BacktestMarketAdapter.js"></script>
+    <script src="js/agentExecutionAdapter/BackTestWithRandomEnv.js"></script>
+    <script src="js/technicalIndicators/MovingAverage.js"></script>
+    <!-- build:js backtest.js -->
+
+
+    <!-- build:js backtest.chart.js -->
+    <script src="js/backtest.chart.js"></script>
+    <!-- build:js backtest.chart.js -->
+
+
+    <script>
+        var INDICATOR_COLORS = ["blue", "orange", "purple", "black"];
+        var env;
+
+
+        var stopScript = function () {
+            env.stop();
+        };
+
+        var runScript = function () {
+
+            $("#graph, #events").empty();
+            $("#graph, #events, #statistics, input[name=stop]").fadeIn(1000);
+            if (env && env.isRunning) {
+                env.stop();
+            }
+
+            env = BackTestWithRandomEnv(
+                    $("input[name=symbol]").val(),
+                    $("select[name=interval]").val(),
+                    moment($("input[name=startDate]").val() + " " + $("input[name=startTime]"), "YYYY-MM-DD HH:mm").toDate(),
+                    {
+                        initialPrice: +$("input[name=initialPrice]").val(),
+                        seed: +$("input[name=seed]").val(),
+                        precision: +$("input[name=precision]").val(),
+                        deltaByTick: +$("input[name=deltaByTick]").val(),
+                        bidAskDelta: +$("input[name=bidAskDelta]").val(),
+                        maxVolumeByTick: +$("input[name=maxVolumeByTick]").val(),
+                        nbTicksByPeriod: +$("input[name=nbTicksByPeriod]").val(),
+                        arithmeticWalk: $("select[name=arithmeticWalk]").val() == "true",
+                        speed: +$("select[name=speed]").val()
+                    }
+            );
+
+            var indicators = {};
+            var scriptAsText = "(function(env,indicators){\n" +
+                    $("#code").val() + "\n" +
+                    "return {init:init, onTick:onTick};\n" +
+                    "})(env, indicators)";
+            var script = eval(scriptAsText);
+            env.start(script);
+
+
+            var chart = backtestChart();
+
+
+            Object.keys(indicators).forEach(function (indicatorName, idx) {
+                chart.addToIndicators(indicatorName, INDICATOR_COLORS[idx % INDICATOR_COLORS.length], indicators[indicatorName]);
+            });
+
+
+            var barsIteration = 0;
+            env.mainBarAdapter.addListener({
+                onBar: function () {
+                    if (barsIteration++ % +$("select[name=refreshRate]").val() == 0) {
+                        chart.redraw(env.mainBarAdapter.bars, 10)
+                    }
+
+                    var pl = Math.round(env.accountAdapter.getTotalPL());
+
+                    $("#currentPL").find(".value")
+                            .removeClass("negative", "positive")
+                            .addClass(pl > 0 ? "positive" : "negative")
+                            .text(pl)
+                }
+            });
+
+            env.marketAdapter.addListener(
+                    {
+                        location: $("#events"),
+                        ordersExecuted: 0,
+                        ordersOpened: 0,
+                        ordersCancelled: 0,
+                        logExecuted: $("input[name=executed]").prop("checked"),
+                        logCancelled: $("input[name=cancelled]").prop("checked"),
+                        logSent: $("input[name=sent]").prop("checked"),
+                        logNoExecuted: $("input[name=not_executed]").prop("checked"),
+
+                        orderNotExecuted: function (order, tick) {
+                            if (this.logNoExecuted) {
+                                $("<div>").addClass("order not-executed")
+                                        .text("Order " + order.id + " not executed with bid=" + tick.bid + " ask=" + tick.ask)
+                                        .prependTo(this.location);
+
+                            }
+                        },
+                        orderExecuted: function (order, tick) {
+                            $("#nbOrder").find(".executed.value").text(++this.ordersExecuted);
+                            if (this.logExecuted) {
+                                $("<div>").addClass("order executed")
+                                        .text("Order " + order.id + " has been executed with bid=" + tick.bid + " ask=" + tick.ask)
+                                        .prependTo(this.location);
+                            }
+                        },
+                        newOrderSent: function (order) {
+                            $("#nbOrder").find(".opened.value").text(++this.ordersOpened);
+                            if (this.logSent) {
+                                $("<div>").addClass("order sent")
+                                        .text("Order has been sent " + JSON.stringify(order))
+                                        .prependTo(this.location);
+                            }
+                        },
+                        orderCancelled: function (orderId) {
+                            $("#nbOrder").find(".cancelled.value").text(++this.ordersCancelled);
+                            if (this.logCancelled) {
+                                $("<div>").addClass("order cancelled")
+                                        .text("Order has been cancelled " + orderId)
+                                        .prependTo(this.location);
+                            }
+                        }
+
+                    }
+            );
+
+        };
+
+
+    </script>
+</head>
+<body>
+<div id="script" class="component">
+    <h1>Agent code</h1>
+
+    <div class="component_content">
+    <textarea id="code">
+var nbTickSup = 0;
+var lastOrderId = -1;
+
+var init = function(){
+    indicators["sma10"] = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
+};
+
+var onTick = function(tick){
+    if (tick.bid > indicators["sma10"].getFromLast(0)) {
+        nbTickSup++;
+    } else {
+        nbTickSup = 0;
+    }
+    if (nbTickSup >= 5) {
+        if (env.marketAdapter.isPending(lastOrderId)) {
+            env.marketAdapter.cancelOrder(lastOrderId);
+            lastOrderId = env.marketAdapter.addOrder({symbol: env.symbol, amount: 1000, type: "market"});
+            nbTickSup = 0;
+        } else {
+            lastOrderId = env.marketAdapter.addOrder({symbol: env.symbol, amount: 1000, type: "limit", limit: tick.bid});
+            nbTickSup = 0;
+        }
+    }
+}
+    </textarea>
+
+    </div>
+</div>
+
+
+<div id="parameters" class="component">
+    <h1>Agent execution parameters</h1>
+
+    <div class="component_content">
+        <label>
+            symbol
+            <input type="text" name="symbol" value="EUD_USD"/>
+
+        </label>
+        <label>
+            Interval
+            <select name="interval">
+                <option>M1</option>
+                <option>M15</option>
+                <option>M30</option>
+                <option>H1</option>
+                <option>H4</option>
+                <option>M8</option>
+                <option selected>D1</option>
+            </select>
+        </label>
+        <label>
+            Starting date
+            <input name="startDate" type="date" value="2015-01-01">
+            <input name="startTime" type="time" value="00:00">
+        </label>
+
+    </div>
+
+    <h1 class="clearfix">Random generators</h1>
+
+    <div class="component_content">
+        <label>
+            Initial Price
+            <input type="number" name="initialPrice" value="10">
+        </label>
+        <label>
+            Seed
+            <input type="number" name="seed" value="1"/>
+        </label>
+        <label>
+            Precision
+            <input type="text" name="precision" value="0.0001"/>
+        </label>
+        <label>
+            Delta by tick
+            <input type="text" name="deltaByTick" value="0.001"/>
+        </label>
+        <label>
+            Average spread
+            <input type="text" name="bidAskDelta" value="0.001"/>
+        </label>
+        <label>
+            Max volume by tick
+            <input type="number" name="maxVolumeByTick" value="1000"/>
+        </label>
+
+        <label>
+            Ticks by period
+            <input type="number" name="nbTicksByPeriod" value="4"/>
+        </label>
+
+
+        <label>
+            Type of walk
+            <select name="arithmeticWalk">
+                <option value="true">arithmetic</option>
+                <option value="false" selected>geometric</option>
+            </select>
+        </label>
+
+
+        <label>
+            Speed
+            <select name="speed">
+                <option value="0">Unlimited (backtest)</option>
+                <option value="100">on tick by 100ms</option>
+                <option value="1000">on tick by second</option>
+                <option value="10000">on tick by 10s</option>
+                <option value="60000">on tick by minute</option>
+            </select>
+        </label>
+    </div>
+
+
+    <h1 class="clearfix">Logging</h1>
+
+    <div class="component_content">
+        Display every
+        <select name="refreshRate">
+            <option selected>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>5</option>
+            <option>8</option>
+            <option>13</option>
+            <option>21</option>
+        </select>
+        bar(s)
+    </div>
+
+
+    <div class="component_content">
+        <label>
+            <input type="checkbox" name="sent" checked/>
+            order sent
+        </label>
+        <label>
+            <input type="checkbox" name="executed" checked/>
+            order executed
+        </label>
+        <label>
+            <input type="checkbox" name="cancelled" checked/>
+            order cancel
+        </label>
+        <label>
+            <input type="checkbox" name="not_executed"/>
+            order not executed
+        </label>
+    </div>
+
+    <h1 class="clearfix">Execute</h1>
+
+    <div class="component_content">
+        <input type="button" value="execute" onclick="runScript()">
+        <input type="button" name="stop" value="stop" onclick="stopScript()" style="display: none">
+    </div>
+</div>
+<div id="statistics" class="component">
+    <h1>Backtest stats</h1>
+
+    <div id="currentPL">
+        Current PL :
+        <span class="value"></span>
+    </div>
+    <div id="nbOrder">
+        Orders opened : <span class="opened value"></span><br>
+
+        Orders executed : <span class="executed value"></span><br>
+
+        Orders cancelled :<span class="cancelled value"></span>
+    </div>
+</div>
+
+<div id="graph" class="component">
+
+</div>
+
+<div id="events" class="component"></div>
+
+
+</body>
+
