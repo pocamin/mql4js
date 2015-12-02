@@ -1,5 +1,5 @@
 describe('RandomBarAdapter', function () {
-   fit("can create histo data for testing", function () {
+   it("can create histo data for testing", function () {
     var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1), {arithmeticWalk: true});
     rba._maxSize = 2;
     rba.init();
