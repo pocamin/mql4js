@@ -1,3 +1,36 @@
+var ORDER_STATUS = {
+  SENT: "SENT", // not used in MT4 or backtest mode
+  PENDING: "PENDING",
+  OPENED: "OPENED",
+  CLOSE_SENT: "CLOSE_SENT", // not used in MT4 or backtest mode
+  CLOSING: "CLOSING", // not used in MT4 mode
+  CLOSED: "CLOSED",
+  CANCEL_SENT: "CANCEL_SENT", // not used in MT4 or backtest mode
+  CANCELLED: "CANCELLED",
+  UNKNOWN: "UNKNOWN"
+};
+
+var ORDER_EVENT = {
+  SENT: "SENT",
+  RECEIVED: "RECEIVED",
+  OPENED: "OPENED",
+  CLOSE_SENT: "CLOSE_SENT",
+  CLOSE_RECEIVED: "CLOSE_RECEIVED",
+  PARTIALLY_CLOSED: "PARTIALLY_CLOSED",
+  CLOSED: "CLOSED",
+  CANCEL_SENT: "CANCEL_SENT",
+  CANCELLED: "CANCELLED",
+  NOT_OPENED_ON_TICK: "NOT_OPENED_ON_TICK",
+  NOT_CLOSED_ON_TICK: "NOT_CLOSED_ON_TICK"
+
+};
+
+var ORDER_SIDE = {
+  BUY: 'buy',
+  SELL: 'sell'
+};
+
+
 // moving average method
 var MOVING_AVERAGE_METHOD = {
   SMA: 0,

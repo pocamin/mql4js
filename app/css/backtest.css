@@ -5,12 +5,20 @@
     padding: 5px;
 }
 
+.component h2 {
+    color: #bf3668;
+    background-color: #DDDDDD;
+    margin: 0;
+    padding: 5px;
+    font-size: 12px;
+}
+
 .component .component_content {
     padding: 5px;
 
 }
 
-#graph, #script {
+#graph, #script, #eventBox {
     width: 1000px;
 }
 
@@ -18,12 +26,20 @@
     width: 968px;
     height: 500px;
     padding: 10px;
-
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 
 #code {
     background-color: #f8dff8;
     color: black;
+}
+
+#events {
+    max-height: 500px;
+    overflow-y: scroll;
+    background: black;
+    padding: 5px
 }
 
 label {
@@ -35,8 +51,21 @@ label {
 
 }
 
-.component {
+#left, #right {
     float: left;
+    margin: 5px;
+}
+
+#left {
+    width: 1000px;
+}
+
+#right {
+    width: calc(100% - 1200px);
+}
+
+.component {
+
     padding: 0;
     border: 1px solid #CCCCCC;
     margin: 5px;
@@ -44,8 +73,30 @@ label {
     background: #f5F5F5;
 }
 
-#parameters, #statistics, #events {
-    width: 500px;
+#console pre {
+    max-height: 295px;
+    overflow-y: scroll;
+    overflow-x: auto;
+}
+
+#orders .component_content {
+    max-height: 457px;
+    overflow-y: scroll;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%
+}
+
+table td, table th {
+    padding: 2px;
+    border: 1px solid black;
+}
+
+thead {
+    background: black;
+    color: white;
 }
 
 .clearfix {
@@ -60,19 +111,76 @@ input[type=number] {
     width: 50px;
 }
 
-#events {
-    height: 500px;
-    overflow-y: scroll;
-    background: black;
-}
-
 input[name=stop] {
-    display: none;
     background: red;
     color: white;
 }
 
-#graph, #events, #statistics {
+.display-on-backtest {
     display: none;
 }
 
+#currentPL {
+    font: 30px sans-serif;
+}
+
+#nbOrder {
+    font: 20px sans-serif;
+}
+
+.positive {
+    color: green;
+}
+
+.negative {
+    color: red;
+}
+
+#nbOrder .value {
+    color: #003500;
+}
+
+#events .SENT {
+    color: greenyellow;
+}
+
+#events .RECEIVED {
+    color: greenyellow;
+}
+
+#events .OPENED {
+    color: green;
+}
+
+#events .CLOSE_SENT {
+    color: cornflowerblue;
+}
+
+#events .CLOSE_RECEIVED {
+    color: cornflowerblue;
+}
+
+#events .PARTIALLY_CLOSED {
+    color: blue;
+    text-decoration: underline;
+}
+
+#events .CLOSED {
+    color: blue;
+}
+
+#events .CANCEL_SENT {
+    color: red;
+}
+
+#events .CANCELLED {
+    color: darkred;
+}
+
+#events .NOT_OPENED_ON_TICK {
+    color: orange;
+}
+
+#events .NOT_CLOSED_ON_TICK {
+    color: orange;
+}

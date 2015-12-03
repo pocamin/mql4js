@@ -28,6 +28,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, options) {
         });
 
       tickAdapter.addListener(env.marketAdapter);
+      tickAdapter.addListener(env.accountAdapter);
       env._processToStart.push(tickAdapter);
       env._processToStop.push(tickAdapter);
       return tickAdapter;

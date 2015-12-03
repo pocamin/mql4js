@@ -98,7 +98,7 @@ var backtestChart = function () {
     var accessor = ohlc.accessor();
 
     data = data.slice(data.length > initialLinesToDisplay ? data.length - initialLinesToDisplay : 0);
-    initialLinesToDisplay+= newTicksSinceLastTime;
+    initialLinesToDisplay += newTicksSinceLastTime;
     svg.select("g.candlestick").datum(data);
     x.domain(data.map(accessor.d));
     y.domain(techan.scale.plot.ohlc(data).domain());

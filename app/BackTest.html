@@ -35,6 +35,13 @@
 
 
     <script>
+        var loggedEvents = {};
+        var updateLoggedEvents = function () {
+            $(".loggedEvents input[type=checkbox]").each(function () {
+                var $this = $(this);
+                loggedEvents[$this.attr("name")] = $this.prop("checked")
+            });
+        };
         var INDICATOR_COLORS = ["blue", "orange", "purple", "black"];
         var env;
 
@@ -44,13 +51,24 @@
         };
 
         var runScript = function () {
-
-            $("#graph, #events").empty();
-            $("#graph, #events, #statistics, input[name=stop]").fadeIn(1000);
+            // Cleaning
+            $("#graph, #events, .orders_table tbody").empty();
+            $(".display-on-backtest").fadeIn(1000);
             if (env && env.isRunning) {
                 env.stop();
             }
 
+
+            // Configuring
+            var consoleBlock = $("#console").find("code");
+            var newConsole = {
+                error: function (msg) {
+                    consoleBlock.append("<span class='error'>" + msg + "</span>\n");
+                },
+                log: function (msg) {
+                    consoleBlock.append("<span class='error'>" + msg + "</span>\n");
+                }
+            };
             env = BackTestWithRandomEnv(
                     $("input[name=symbol]").val(),
                     $("select[name=interval]").val(),
@@ -68,83 +86,105 @@
                     }
             );
 
+
+            // Running
             var indicators = {};
-            var scriptAsText = "(function(env,indicators){\n" +
+            var scriptAsText = "(function(env,indicators, console){\n" +
                     $("#code").val() + "\n" +
                     "return {init:init, onTick:onTick};\n" +
-                    "})(env, indicators)";
+                    "})(env, indicators, newConsole)";
             var script = eval(scriptAsText);
             env.start(script);
 
 
-            var chart = backtestChart();
+            // DISPLAY
+            var chart = backtestChart(indicators);
+            var loggedEventsToFlush = [];
+            var eventCounts = {};
+            Object.keys(ORDER_EVENT).forEach(function (eventName) {
+                eventCounts[eventName] = 0;
+            });
+            eventCounts["ticks"] = 0;
 
 
             Object.keys(indicators).forEach(function (indicatorName, idx) {
                 chart.addToIndicators(indicatorName, INDICATOR_COLORS[idx % INDICATOR_COLORS.length], indicators[indicatorName]);
             });
 
-
             var barsIteration = 0;
-            env.mainBarAdapter.addListener({
-                onBar: function () {
-                    if (barsIteration++ % +$("select[name=refreshRate]").val() == 0) {
-                        chart.redraw(env.mainBarAdapter.bars, 10)
-                    }
-
-                    var pl = Math.round(env.accountAdapter.getTotalPL());
-
-                    $("#currentPL").find(".value")
-                            .removeClass("negative", "positive")
-                            .addClass(pl > 0 ? "positive" : "negative")
-                            .text(pl)
+            env.mainTickAdapter.addListener({
+                onTick: function () {
+                    eventCounts["ticks"]++;
                 }
             });
 
-            env.marketAdapter.addListener(
-                    {
-                        location: $("#events"),
-                        ordersExecuted: 0,
-                        ordersOpened: 0,
-                        ordersCancelled: 0,
-                        logExecuted: $("input[name=executed]").prop("checked"),
-                        logCancelled: $("input[name=cancelled]").prop("checked"),
-                        logSent: $("input[name=sent]").prop("checked"),
-                        logNoExecuted: $("input[name=not_executed]").prop("checked"),
+            env.mainBarAdapter.addListener({
+                onBar: function () {
+                    var refreshRate = +$("select[name=refreshRate]").val();
+                    if (barsIteration++ % refreshRate == 0) {
+                        chart.redraw(env.mainBarAdapter.bars, refreshRate);
+                        $("#events").append(loggedEventsToFlush);
+                        loggedEventsToFlush = [];
+                        Object.keys(eventCounts).forEach(function (eventName) {
+                            $("#nbOrder ." + eventName).text(eventCounts[eventName]);
+                        });
 
-                        orderNotExecuted: function (order, tick) {
-                            if (this.logNoExecuted) {
-                                $("<div>").addClass("order not-executed")
-                                        .text("Order " + order.id + " not executed with bid=" + tick.bid + " ask=" + tick.ask)
-                                        .prependTo(this.location);
 
+                        var $orders = $(".orders_table tbody").empty();
+                        var orders = env.marketAdapter.getOrders();
+                        for (var i = orders.length - 1; i >= 0; i--) {
+                            var pnl = "";
+                            if (orders[i].status == "CLOSED") {
+                                pnl = Math.round((orders[i].closePrice - orders[i].openPrice) * orders[i].initialAmount);
+                                if (orders[i].side == "sell") {
+                                    pnl = -pnl;
+                                }
                             }
-                        },
-                        orderExecuted: function (order, tick) {
-                            $("#nbOrder").find(".executed.value").text(++this.ordersExecuted);
-                            if (this.logExecuted) {
-                                $("<div>").addClass("order executed")
-                                        .text("Order " + order.id + " has been executed with bid=" + tick.bid + " ask=" + tick.ask)
-                                        .prependTo(this.location);
-                            }
-                        },
-                        newOrderSent: function (order) {
-                            $("#nbOrder").find(".opened.value").text(++this.ordersOpened);
-                            if (this.logSent) {
-                                $("<div>").addClass("order sent")
-                                        .text("Order has been sent " + JSON.stringify(order))
-                                        .prependTo(this.location);
-                            }
-                        },
-                        orderCancelled: function (orderId) {
-                            $("#nbOrder").find(".cancelled.value").text(++this.ordersCancelled);
-                            if (this.logCancelled) {
-                                $("<div>").addClass("order cancelled")
-                                        .text("Order has been cancelled " + orderId)
-                                        .prependTo(this.location);
-                            }
+                            $orders.append(
+                                    "<tr>" +
+                                    "<td>" + orders[i].id + "</td>" +
+                                    "<td>" + orders[i].symbol + "</td>" +
+                                    "<td>" + orders[i].side + "</td>" +
+                                    "<td>" + orders[i].amount + "</td>" +
+                                    "<td>" + orders[i].status + "</td>" +
+                                    "<td>" + (orders[i].limit || "") + "</td>" +
+                                    "<td>" + (orders[i].openPrice || "") + "</td>" +
+                                    "<td>" + (orders[i].closePrice || "") + "</td>" +
+                                    '<td class="' + ((pnl && pnl > 0) ? 'positive' : 'negative') + '">' + pnl + "</td>" +
+                                    "</tr>"
+                            );
                         }
 
+                        var pl = Math.round(env.accountAdapter.getTotalPL());
+                        $("#currentPL").find(".value")
+                                .removeClass("negative", "positive")
+                                .addClass(pl > 0 ? "positive" : "negative")
+                                .text(pl)
+
+
+                    }
+
+
+                }
+            });
+
+
+            // LOG
+            updateLoggedEvents();
+
+
+            env.marketAdapter.addListener(
+                    {
+                        onOrderEvent: function (orderEvent, order) {
+                            // update statistics
+                            eventCounts[orderEvent] = (eventCounts[orderEvent] || 0) + 1;
+
+                            // log event
+                            if (loggedEvents[orderEvent]) {
+                                loggedEventsToFlush.push($("<div>").addClass("order " + orderEvent)
+                                        .text(order.id + ":" + orderEvent + ":" + JSON.stringify(order)));
+                            }
+                        }
                     }
             );
 
@@ -154,190 +194,290 @@
     </script>
 </head>
 <body>
-<div id="script" class="component">
-    <h1>Agent code</h1>
+<div id="left">
 
-    <div class="component_content">
+    <div id="script" class="component">
+        <h1>Agent code</h1>
+
+        <div class="component_content">
     <textarea id="code">
 var nbTickSup = 0;
-var lastOrderId = -1;
-
-var init = function(){
-    indicators["sma10"] = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
+var orderId = -1;
+var percent = 3;
+var nbPeriod = 5;
+var amount = 1000;
+var init = function () {
+  console.log("-------------------------------------------------");
+  console.log("buy " + amount + " if bid > sma10 for " + nbPeriod + " and sell if +-" + percent + "%");
+  console.log("-------------------------------------------------");
+  indicators["sma10"] = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
 };
 
-var onTick = function(tick){
-    if (tick.bid > indicators["sma10"].getFromLast(0)) {
-        nbTickSup++;
-    } else {
-        nbTickSup = 0;
-    }
-    if (nbTickSup >= 5) {
-        if (env.marketAdapter.isPending(lastOrderId)) {
-            env.marketAdapter.cancelOrder(lastOrderId);
-            lastOrderId = env.marketAdapter.addOrder({symbol: env.symbol, amount: 1000, type: "market"});
-            nbTickSup = 0;
-        } else {
-            lastOrderId = env.marketAdapter.addOrder({symbol: env.symbol, amount: 1000, type: "limit", limit: tick.bid});
-            nbTickSup = 0;
-        }
-    }
-}
+var onTick = function (tick) {
+  if (tick.bid > indicators["sma10"].getFromLast(0)) {
+    nbTickSup++;
+  } else {
+    nbTickSup = 0;
+  }
+
+
+  switch (env.marketAdapter.orderStatus(orderId)) {
+    case ORDER_STATUS.UNKNOWN :
+    case ORDER_STATUS.CLOSED :
+      if (nbTickSup >= nbPeriod) {
+        orderId = env.marketAdapter.sendOrder({
+            symbol: env.symbol,
+            amount: 1000,
+            type: "limit",
+            limit: tick.bid,
+            side: ORDER_SIDE.BUY
+          },
+          tick);
+      }
+      break;
+
+    case ORDER_STATUS.OPENED :
+      var openPrice = env.marketAdapter.getOrder(orderId).openPrice;
+      var currentPercent = 100 * Math.abs(openPrice - tick.bid) / openPrice;
+
+      if (currentPercent > percent) {
+        env.marketAdapter.closeOrder(orderId, tick.bid, 1000, tick);
+      }
+  }
+};
+
+
     </textarea>
 
+        </div>
+    </div>
+
+
+    <div id="graph" class="component display-on-backtest">
+
+    </div>
+
+    <div id="eventBox" class="component display-on-backtest">
+        <h1>Events</h1>
+
+        <div id="events">
+        </div>
+
     </div>
 </div>
+<div id="right">
+    <div id="parameters" class="component">
+        <h1>Agent execution parameters</h1>
+
+        <div class="component_content">
+            <label>
+                symbol
+                <input type="text" name="symbol" value="EUD_USD"/>
+
+            </label>
+            <label>
+                Interval
+                <select name="interval">
+                    <option>M1</option>
+                    <option>M15</option>
+                    <option>M30</option>
+                    <option>H1</option>
+                    <option>H4</option>
+                    <option>M8</option>
+                    <option selected>D1</option>
+                </select>
+            </label>
+            <label>
+                Starting date
+                <input name="startDate" type="date" value="2015-01-01">
+                <input name="startTime" type="time" value="00:00">
+            </label>
+
+        </div>
+
+        <h1 class="clearfix">Random generators</h1>
+
+        <div class="component_content">
+            <label>
+                Initial Price
+                <input type="number" name="initialPrice" value="10">
+            </label>
+            <label>
+                Seed
+                <input type="number" name="seed" value="1"/>
+            </label>
+            <label>
+                Precision
+                <input type="text" name="precision" value="0.0001"/>
+            </label>
+            <label>
+                Delta by tick
+                <input type="text" name="deltaByTick" value="0.001"/>
+            </label>
+            <label>
+                Average spread
+                <input type="text" name="bidAskDelta" value="0.001"/>
+            </label>
+            <label>
+                Max volume by tick
+                <input type="number" name="maxVolumeByTick" value="1000"/>
+            </label>
+
+            <label>
+                Ticks by period
+                <input type="number" name="nbTicksByPeriod" value="4"/>
+            </label>
 
 
-<div id="parameters" class="component">
-    <h1>Agent execution parameters</h1>
+            <label>
+                Type of walk
+                <select name="arithmeticWalk">
+                    <option value="true">arithmetic</option>
+                    <option value="false" selected>geometric</option>
+                </select>
+            </label>
 
-    <div class="component_content">
-        <label>
-            symbol
-            <input type="text" name="symbol" value="EUD_USD"/>
 
-        </label>
-        <label>
-            Interval
-            <select name="interval">
-                <option>M1</option>
-                <option>M15</option>
-                <option>M30</option>
-                <option>H1</option>
-                <option>H4</option>
-                <option>M8</option>
-                <option selected>D1</option>
+            <label>
+                Speed
+                <select name="speed">
+                    <option value="0">Unlimited (backtest)</option>
+                    <option value="100">on tick by 100ms</option>
+                    <option value="1000">on tick by second</option>
+                    <option value="10000">on tick by 10s</option>
+                    <option value="60000">on tick by minute</option>
+                </select>
+            </label>
+        </div>
+
+
+        <h1 class="clearfix">Logging</h1>
+
+        <div class="component_content">
+            Display every
+            <select name="refreshRate">
+                <option selected>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>5</option>
+                <option>8</option>
+                <option>13</option>
+                <option>21</option>
             </select>
-        </label>
-        <label>
-            Starting date
-            <input name="startDate" type="date" value="2015-01-01">
-            <input name="startTime" type="time" value="00:00">
-        </label>
+            bar(s)
+        </div>
+        <h2>Shown events</h2>
 
-    </div>
+        <div class="component_content loggedEvents">
+            <label>
+                <input type="checkbox" name="SENT" checked onclick="updateLoggedEvents()"/>
+                order sent
+            </label>
+            <label>
+                <input type="checkbox" name="OPENED" checked onclick="updateLoggedEvents()"/>
+                position opened
+            </label>
+            <label>
+                <input type="checkbox" name="CLOSE_SENT" checked onclick="updateLoggedEvents()"/>
+                close sent
+            </label>
+            <label>
+                <input type="checkbox" name="PARTIALLY_CLOSED" checked onclick="updateLoggedEvents()"/>
+                Position partially closed
+            </label>
+            <label>
+                <input type="checkbox" name="CLOSED" checked onclick="updateLoggedEvents()"/>
+                Position closed
+            </label>
 
-    <h1 class="clearfix">Random generators</h1>
+            <label>
+                <input type="checkbox" name="CANCEL_SENT" checked onclick="updateLoggedEvents()"/>
+                Cancel sent
+            </label>
 
-    <div class="component_content">
-        <label>
-            Initial Price
-            <input type="number" name="initialPrice" value="10">
-        </label>
-        <label>
-            Seed
-            <input type="number" name="seed" value="1"/>
-        </label>
-        <label>
-            Precision
-            <input type="text" name="precision" value="0.0001"/>
-        </label>
-        <label>
-            Delta by tick
-            <input type="text" name="deltaByTick" value="0.001"/>
-        </label>
-        <label>
-            Average spread
-            <input type="text" name="bidAskDelta" value="0.001"/>
-        </label>
-        <label>
-            Max volume by tick
-            <input type="number" name="maxVolumeByTick" value="1000"/>
-        </label>
+            <label>
+                <input type="checkbox" name="NOT_OPENED_ON_TICK" onclick="updateLoggedEvents()"/>
+                Order still pending
+            </label>
+            <label>
+                <input type="checkbox" name="NOT_CLOSED_ON_TICK" onclick="updateLoggedEvents()"/>
+                Close still pending
+            </label>
 
-        <label>
-            Ticks by period
-            <input type="number" name="nbTicksByPeriod" value="4"/>
-        </label>
+            <div class="clearfix"> Not relevant for backtest</div>
 
+            <label>
+                <input type="checkbox" name="CANCELLED" onclick="updateLoggedEvents()"/>
+                order cancelled
+            </label>
 
-        <label>
-            Type of walk
-            <select name="arithmeticWalk">
-                <option value="true">arithmetic</option>
-                <option value="false" selected>geometric</option>
-            </select>
-        </label>
+            <label>
+                <input type="checkbox" name="RECEIVED" onclick="updateLoggedEvents()"/>
+                order received
+            </label>
+            <label>
+                <input type="checkbox" name="CLOSE_RECEIVED" onclick="updateLoggedEvents()"/>
+                close received
+            </label>
+        </div>
 
+        <h1 class="clearfix">Execute</h1>
 
-        <label>
-            Speed
-            <select name="speed">
-                <option value="0">Unlimited (backtest)</option>
-                <option value="100">on tick by 100ms</option>
-                <option value="1000">on tick by second</option>
-                <option value="10000">on tick by 10s</option>
-                <option value="60000">on tick by minute</option>
-            </select>
-        </label>
-    </div>
-
-
-    <h1 class="clearfix">Logging</h1>
-
-    <div class="component_content">
-        Display every
-        <select name="refreshRate">
-            <option selected>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>5</option>
-            <option>8</option>
-            <option>13</option>
-            <option>21</option>
-        </select>
-        bar(s)
+        <div class="component_content">
+            <input type="button" value="execute" onclick="runScript()">
+            <input type="button" name="stop" value="stop" onclick="stopScript()" class="display-on-backtest">
+        </div>
     </div>
 
 
-    <div class="component_content">
-        <label>
-            <input type="checkbox" name="sent" checked/>
-            order sent
-        </label>
-        <label>
-            <input type="checkbox" name="executed" checked/>
-            order executed
-        </label>
-        <label>
-            <input type="checkbox" name="cancelled" checked/>
-            order cancel
-        </label>
-        <label>
-            <input type="checkbox" name="not_executed"/>
-            order not executed
-        </label>
+    <div id="orders" class="component  display-on-backtest">
+        <h1>Orders</h1>
+
+        <div class="component_content">
+            <table class="orders_table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>symbol</th>
+                    <th>side</th>
+                    <th>amount</th>
+                    <th>status</th>
+                    <th>limit</th>
+                    <th>open price</th>
+                    <th>close price</th>
+                    <th>PNL</th>
+                </tr>
+                </thead>
+                <tbody>
+
+
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <h1 class="clearfix">Execute</h1>
 
-    <div class="component_content">
-        <input type="button" value="execute" onclick="runScript()">
-        <input type="button" name="stop" value="stop" onclick="stopScript()" style="display: none">
+    <div id="statistics" class="component  display-on-backtest">
+        <h1>Backtest stats</h1>
+
+        <div id="currentPL">
+            Current PL :
+            <span class="value"></span>
+        </div>
+        <div id="nbOrder">
+            Ticks proceed : <span class="ticks value"></span><br>
+            Orders sent : <span class="SENT value"></span><br>
+            Orders opened : <span class="OPENED value"></span><br>
+            Orders closed : <span class="CLOSED value"></span><br>
+            Orders cancelled : <span class="CANCELLED value"></span><br>
+        </div>
     </div>
-</div>
-<div id="statistics" class="component">
-    <h1>Backtest stats</h1>
 
-    <div id="currentPL">
-        Current PL :
-        <span class="value"></span>
-    </div>
-    <div id="nbOrder">
-        Orders opened : <span class="opened value"></span><br>
-
-        Orders executed : <span class="executed value"></span><br>
-
-        Orders cancelled :<span class="cancelled value"></span>
+    <div id="console" class="component  display-on-backtest">
+        <h1>Console</h1>
+        <pre><code></code></pre>
     </div>
 </div>
-
-<div id="graph" class="component">
-
-</div>
-
-<div id="events" class="component"></div>
 
 
 </body>

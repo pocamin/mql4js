@@ -16,58 +16,158 @@ describe('Backtest Market Adapter', function () {
   };
 
 
-  it("doesn't change if not concerned", function () {
-    expect(accountAdapter.getTotalPL()).toEqual(0);
-    marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "market"});
-    expect(accountAdapter.getTotalPL()).toEqual(0);
-    tick(0.5, 0.6, "EUR_JPY"); // Other currency
-    expect(accountAdapter.getTotalPL()).toEqual(0);
+  it("Market buy order are instantly executed at bid price", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'market', side: 'buy', id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.6}
+    )
   });
 
 
-  it("can cancel an order ", function () {
-    var orderId = marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "limit", limit: 10});
+  it("Market sell order are instantly executed at ask price", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'sell'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'market', side: 'sell', id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.5}
+    )
+  });
+
+
+  it("Limit buy order are instantly executed at bid price if limit reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'buy', limit: 0.6},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'buy', limit: 0.6, id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.6}
+    )
+  });
+
+
+  it("Limit sell order are instantly executed at ask price if limit reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'sell', limit: 0.5},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'sell', limit: 0.5, id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.5}
+    )
+  });
+
+
+  it("Limit buy order are not executed if limit not reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'buy', limit: 0.5},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'buy', limit: 0.5, id: 1, status: 'PENDING', initialAmount: 1000}
+    )
+  });
+
+
+  it("Limit sell order are not executed if limit not reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'sell', limit: 0.6},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'sell', limit: 0.6, id: 1, status: 'PENDING', initialAmount: 1000}
+    )
+  });
+
+
+  it("Limit buy order are executed afterward if limit is reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'buy', limit: 0.5}, {
+      bid: 0.5, ask: 0.6, symbol: "EUR_JPY"
+    });
+    tick(0.4, 0.5, "EUR_JPY");
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'buy', limit: 0.5, id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.5}
+    )
+  });
+
+
+  it("Limit sell order are executed afterward if limit is reached", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'sell', limit: 0.6}, {
+      bid: 0.5, ask: 0.6, symbol: "EUR_JPY"
+    });
+    tick(0.6, 0.7, "EUR_JPY");
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {amount: 1000, symbol: 'EUR_USD', type: 'limit', side: 'sell', limit: 0.6, id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.6}
+    )
+  });
+
+
+  it("can cancel an order", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "limit", side: 'sell', limit: 0.6},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
     expect(marketAdapter.isPending(orderId)).toBeTruthy();
     marketAdapter.cancelOrder(orderId);
     expect(marketAdapter.isPending(orderId)).toBeFalsy();
   });
 
 
-  it('accepts market order', function () {
-    marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "market"});
-    tick(0.5, 0.6, "EUR_USD");
-    expect(accountAdapter.getTotalPL()).toEqual(-100);
-    tick(0.5, 0.6, "EUR_USD");
-    expect(accountAdapter.getTotalPL()).toEqual(-100);
-    tick(0.6, 0.7, "EUR_USD");
-    expect(accountAdapter.getTotalPL()).toEqual(0);
-    tick(0.7, 0.8, "EUR_USD");
-    expect(accountAdapter.getTotalPL()).toEqual(100);
+  it("completely closes a buy order if price reached limit", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    marketAdapter.closeOrder(orderId, 0.5, 1000, {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    expect(marketAdapter.getOrder(orderId)).toEqual({
+        amount: 0, symbol: 'EUR_USD', type: 'market', side: 'buy', id: 1, status: 'CLOSED',
+        initialAmount: 1000, openPrice: 0.6, closingPrice: 0.5, closingAmount: 1000, closePrice: 0.5
+      }
+    )
   });
 
-  describe('accepts limit order', function () {
+  it("completely closes a sell order if price reached limit", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'sell'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
 
-    it("with long position", function () {
-      marketAdapter.addOrder({amount: 1000, symbol: "EUR_USD", type: "limit", limit: 0.4});
-      tick(0.5, 0.6, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(0);
-      tick(0.4, 0.5, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(0);
-      tick(0.3, 0.4, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(-100);
-    });
+    marketAdapter.closeOrder(orderId, 0.6, 1000, {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
 
-    it("with short position", function () {
-      marketAdapter.addOrder({amount: -1000, symbol: "EUR_USD", type: "limit", limit: 0.7});
-      tick(0.5, 0.6, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(0);
-      tick(0.6, 0.7, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(0);
-      tick(0.7, 0.8, "EUR_USD");
-      expect(accountAdapter.getTotalPL()).toEqual(-100);
-    });
-
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {
+        amount: 0, symbol: 'EUR_USD', type: 'market', side: 'sell', id: 1, status: 'CLOSED',
+        initialAmount: 1000, openPrice: 0.5, closingPrice: 0.6, closingAmount: 1000, closePrice: 0.6
+      }
+    )
   });
 
+
+  it("doesn't close a buy order if price didn't reach limit", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    marketAdapter.closeOrder(orderId, 0.6, 1000, {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    expect(marketAdapter.getOrder(orderId)).toEqual({
+        amount: 1000, symbol: 'EUR_USD', type: 'market', side: 'buy', id: 1,
+        status: 'CLOSING', initialAmount: 1000, openPrice: 0.6, closingPrice: 0.6, closingAmount: 1000
+      }
+    )
+  });
+
+  it("doesn't close a sell order if price didn't reach limit", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'sell'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    marketAdapter.closeOrder(orderId, 0.5, 1000, {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    expect(marketAdapter.getOrder(orderId)).toEqual(
+      {
+        amount: 1000, symbol: 'EUR_USD', type: 'market', side: 'sell', id: 1, status: 'CLOSING',
+        initialAmount: 1000, openPrice: 0.5, closingPrice: 0.5, closingAmount: 1000
+      }
+    )
+  });
+
+
+  it("supports partial close", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
+      {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    marketAdapter.closeOrder(orderId, 0.5, 200, {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
+
+    expect(marketAdapter.getOrder(orderId)).toEqual({
+        amount: 800, symbol: 'EUR_USD', type: 'market', side: 'buy', id: 1, status: 'OPENED',
+        initialAmount: 1000, openPrice: 0.6, closingPrice: 0.5, closingAmount: 200, closePrice: 0.5
+      }
+    )
+  });
 
 });
