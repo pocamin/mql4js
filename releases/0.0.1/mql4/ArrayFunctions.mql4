@@ -1,0 +1,21 @@
+void test(){
+    ArrayBsearch(daytimes,Time[shift],WHOLE_ARRAY,0,MODE_DESCEND);
+    ArrayCopy(dst_data,src_data,0,0,WHOLE_ARRAY);
+    ArrayCompare(array1,array2);
+    ArrayFree(a);
+    ArrayGetAsSeries(a);
+    ArrayInitialize(a, 102);
+    ArrayFill(a,0,5,123);
+    ArrayIsDynamic(a);
+    ArrayIsSeries(a);
+    int maxValueIdx=ArrayMaximum(num_array,WHOLE_ARRAY,0);
+    int minValueIdx=ArrayMinimum(num_array,WHOLE_ARRAY,0);
+    temp=ArrayRange(array,i);
+    ArrayResize(slow,100000,100000);
+    ArraySetAsSeries(NumerationBuffer,true);
+    ArraySize(a);
+    ArraySort(num_array,WHOLE_ARRAY,0,MODE_DESCEND);
+    ArrayCopyRates(double_array,NULL,0);
+    ArrayCopySeries(daytimes,MODE_TIME,Symbol(),PERIOD_D1);
+    int dim_size=ArrayDimension(num_array);
+}

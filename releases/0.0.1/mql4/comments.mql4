@@ -1,0 +1,10 @@
+//--- Single-line comment
+/*  Multi-
+    line         // Nested single-line comment
+    comment
+*/
+void test(){
+// a + 5
+    test(); // e+1
+    return 7;
+}

@@ -1,0 +1,17 @@
+extern string testExternalDeclaration="EURUSD";
+string testDeclWithoutAssign;
+string testString="EURUSD";
+int testInteger=5;
+float testFloat=504.45;
+float testExponentialExpression1=5e+2;
+float testExponentialExpression2=5.3e-2;
+Boolean testEqualExpression = "assignment" == "assignment";
+String testIdentifierExpression = ident;
+String testIdentifierExpressionWithIndex = ident[3];
+float testMinusExpression=-5;
+Boolean testNotExpression = ! true;
+Boolean visitAddExpression = 5 + 2;
+Boolean visitSubtractExpression = 5 - 2;
+Boolean visitMultiplyExpression = 5 * 2;
+Boolean visitDivideExpression = 5 / 2;
+Boolean visitModulusExpression = 5 % 2;

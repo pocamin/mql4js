@@ -1,0 +1,28 @@
+int func(){
+	datetime t = TimeCurrent();
+	TimeCurrent(t);
+	datetime t = TimeLocal();
+	TimeLocal(t);
+	datetime t = TimeGMT();
+	TimeGMT(t);
+	TimeDaylightSavings();
+	TimeGMTOffset();
+	TimeToStruct(t, structTime);
+	t = StructToTime(structTime);
+	Day();
+	DayOfWeek();
+	DayOfYear();
+	Hour();
+	Minute();
+	Month();
+	Seconds();
+	Year();
+	TimeDay(t);
+	TimeDayOfWeek(t);
+	TimeHour(t);
+	TimeMinute(t);
+	TimeMonth(t);
+	TimeSeconds(t);
+	TimeYear(t);
+	TimeDayOfYear(t);
+}

@@ -1,0 +1,27 @@
+datetime NY=D'2015.01.01 00:00';     // Time of beginning of year 2015
+datetime d1=D'1980.07.19 12:30:27';  // Year Month Day Hours Minutes Seconds
+datetime d2=D'19.07.1980 12:30:27';  // Equal to D'1980.07.19 12:30:27';
+datetime d3=D'19.07.1980 12';        // Equal to D'1980.07.19 12:00:00'
+datetime d4=D'01.01.2004';           // Equal to D'01.01.2004 00:00:00'
+datetime compilation_date=__DATE__;             // Compilation date
+datetime compilation_date_time=__DATETIME__;    // Compilation date and time
+datetime compilation_time=__DATETIME__-__DATE__;// Compilation time
+//--- Examples of declarations after which compiler warnings will be returned
+datetime warning1=D'12:30:27';       // Equal to D'[date of compilation] 12:30:27'
+datetime warning2=D'';               // Equal to __DATETIME__
+
+
+void OnStart()
+  {
+
+   datetime date1=D'2008.03.01';
+   datetime date2=D'2009.03.01';
+
+   MqlDateTime str1,str2;
+   TimeToStruct(date1,str1);
+   TimeToStruct(date2,str2);
+   printf("%02d.%02d.%4d, day of year = %d",str1.day,str1.mon,
+          str1.year,str1.day_of_year);
+   printf("%02d.%02d.%4d, day of year = %d",str2.day,str2.mon,
+          str2.year,str2.day_of_year);
+  }

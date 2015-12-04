@@ -1,0 +1,10 @@
+extern string name = "world";
+
+int test(){
+   Print("hello " + name);
+}
+
+int test2(){
+   test();
+   Print(("test" == "toto") + " " + (M_PI) );
+}

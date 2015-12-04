@@ -1,0 +1,21 @@
+void test(){
+	HideTestIndicators();
+	IndicatorSetDouble();
+	IndicatorSetInteger();
+	IndicatorSetString();
+	SetIndexBuffer();
+	IndicatorBuffers();
+	IndicatorCounted();
+	IndicatorDigits();
+	IndicatorShortName();
+	SetIndexArrow();
+	SetIndexDrawBegin();
+	SetIndexEmptyValue();
+	SetIndexLabel();
+	SetIndexShift();
+	SetIndexStyle();
+	SetLevelStyle();
+	SetLevelValue();
+}
+
+

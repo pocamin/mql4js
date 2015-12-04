@@ -1,0 +1,22 @@
+int func(){
+ long t = SeriesInfoInteger("EURUSD",0,SERIES_BARS_COUNT);
+ SeriesInfoInteger("EURUSD",0,SERIES_BARS_COUNT,t);
+ RefreshRates();
+ CopyRates("EURUSD",0,0,100,rates);
+ CopyTime("EURUSD",0,0,100,times);
+ CopyOpen("EURUSD",0,0,100,opens);
+ CopyHigh("EURUSD",0,0,100,highs);
+ CopyLow("EURUSD",0,0,100,lows);
+ CopyClose("EURUSD",0,0,100,closes);
+ CopyTickVolume("EURUSD",0,0,100,volumes);
+ Bars("EURUSD",PERIOD_M1);
+ iBars("EURUSD",PERIOD_M1);
+ int shift=iBarShift("EURUSD",PERIOD_M1,some_time);
+ int time = iTime("USDCHF",PERIOD_H1,0);
+ int open = iOpen("USDCHF",PERIOD_H1,0);
+ int high = iHigh("USDCHF",PERIOD_H1,0);
+ int low = iLow("USDCHF",PERIOD_H1,0);
+ int close = iClose("USDCHF",PERIOD_H1,0);
+ int volume = iVolume("USDCHF",PERIOD_H1,0);
+
+}

@@ -1,0 +1,27 @@
+int func(){
+	bool status = OrderClose(order_id,1,Ask,3,Red);
+	status = OrderClose(order_id,1,Ask,3);
+	OrderCloseBy(order_id,opposite_id);
+	OrderClosePrice();
+	OrderCloseTime();
+	OrderComment();
+	OrderCommission();
+	OrderDelete(order_ticket, Blue);
+	OrderExpiration();
+	OrderLots();
+	OrderMagicNumber();
+	OrderModify(OrderTicket(),OrderOpenPrice(),NormalizeDouble(Bid-Point*TrailingStop,Digits),OrderTakeProfit(),0,Blue);
+	OrderOpenPrice();
+	OrderOpenTime();
+	OrderProfit();
+	OrderSelect(12470, SELECT_BY_TICKET, MODE_TRADES);
+	OrderSend(Symbol(),OP_BUY,1,price,3,stoploss,takeprofit,"My order",16384,0,clrGreen);
+	OrdersHistoryTotal();
+	OrderStopLoss();
+	OrdersTotal();
+	OrderSwap();
+	OrderSymbol();
+	OrderTakeProfit();
+	OrderTicket();
+	OrderType();
+}

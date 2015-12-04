@@ -1,0 +1,14 @@
+enum intervals
+   {
+   // Interval of one month
+    month=1,
+    // Three months - quarter
+    quarter,
+    // Year - 12 months
+    year=12,
+   };
+
+
+void init(){
+  Print(intervals.month);
+}

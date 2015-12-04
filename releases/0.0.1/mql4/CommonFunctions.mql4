@@ -1,0 +1,30 @@
+void test(){
+    Alert("this is", "a test");
+    CryptEncode(CRYPT_DES,src,key,dst);
+    CryptDecode(CRYPT_DES,dst,key,src);
+    Comment("test");
+    DebugBreak();
+    ExpertRemove();
+    GetPointer(items);
+    GetTickCount();
+    GetMicrosecondCount();
+    PeriodSeconds();
+    PlaySound();
+    Print("1. c1 =",3);
+    printFormat("In a decimal form: symbol_0 = %d,  symbol_9 = %d",symbol_0,symbol_9);
+    printf("In a decimal form: symbol_0 = %d,  symbol_9 = %d",symbol_0,symbol_9);
+    ResetLastError();
+    ResourceCreate();
+    ResourceFree();
+    ResourceReadImage("test.jpg");
+    ResourceSave();
+    SetUserError(1);
+    SendFTP("test.txt","ftp://127.0.0.1");
+    SendNotification("asdad");
+    SendMail("test", "test content");
+    Sleep(1000);
+    TerminalClose(5);
+    TesterStatistics(STAT_MAX_CONWINS);
+    WebRequest();
+    ZeroMemory();
+}

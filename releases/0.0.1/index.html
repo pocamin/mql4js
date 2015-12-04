@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MQL4 to Javascript</title>
+    <link rel="stylesheet" href="css/combined.css">
+
+    <script src="js/require.js"></script>
+
+    <script src="js/mql4-to-js.js"></script>
+
+    <script src="bower_dep.js"></script>
+
+
+    <script src="js/mql4-min.js"></script>
+
+
+    <script language="JavaScript">
+        var antlr4 = require('antlr4/index');
+        var mql4Lexer = require('./js/MQL4Lexer');
+        var mql4Parser = require('./js/MQL4Parser');
+
+        var readMql4 = function () {
+            jQuery.ajax({
+                histoCache: false,
+                url: "mql4/" + $("#sourceFile").val(),
+                success: function (data) {
+                    $("#source").val(data);
+                }
+            })
+        };
+
+        function runScript(functionName, mql4ToJs) {
+            var logBlock = $("#log");
+            var parametersJs = $("#external_parameters")
+                    .find("input")
+                    .toArray()
+                    .map(function (input) {
+                        return $(input).attr("name") + "=" + $(input).val() + ";\n";
+                    })
+                    .join("");
+
+            var safeJs = "(function(){ " + mql4ToJs.js + "\n" + parametersJs + functionName + "})()";
+
+
+            console.log(safeJs);
+
+
+            var _log = console.log;
+            var _error = console.error;
+            console.error = function (msg) {
+                logBlock.append("<span class='error'>" + msg + "</span>\n");
+            };
+            console.log = function (msg) {
+                logBlock.append("<span class='log'>" + msg + "</span>\n");
+            };
+            console.error("------");
+            console.error("running " + functionName + " on " + new Date());
+            console.error("------");
+            try {
+                eval(safeJs);
+            } finally {
+                console.log = _log;
+                console.error = _error;
+            }
+        }
+
+
+        var parseAndShow = function () {
+            var result = mqlParser.parse($("#source").val(), $("#keep-types").prop("checked"), $("#keep-original").prop("checked"), $("#keep-comments").prop("checked"));
+
+
+            $("#functionToExecute").html(
+                    result.mql4ToJs.callableFunctions.map(function (functionName) {
+                        return "<option value='" + functionName + "()'>" + functionName + "</option>";
+                    }).join("")
+            );
+
+            $("#executeBtn")
+                    .unbind("click")
+                    .bind("click", function () {
+                        runScript($("#functionToExecute").val(), result.mql4ToJs);
+                    });
+
+
+            $("#AST").val(result.tree.toStringTree(null, result.parser));
+            $("#external_parameters").empty();
+            $.each(result.mql4ToJs.externalParameters, function (index, value) {
+                $("#external_parameters").append(
+                        "<tr><td>" + value.name + "</td>" +
+                        "<td>" + value.type + "</td>" +
+                        "<td><input type='text' name='" + value.name + "' value='" + value.defaultValue + "' /> </td></tr>")
+            });
+            $("#js").text(js_beautify(result.mql4ToJs.js)).each(function (i, block) {
+                Prism.highlightAll();
+            });
+
+        };
+
+
+        // parse
+        var mqlParser = function () {
+            var parse = function (input, keepType, keepOriginal, keepComment) {
+                var chars = new antlr4.InputStream(input);
+                var lexer = new mql4Lexer.MQL4Lexer(chars);
+                var tokens = new antlr4.CommonTokenStream(lexer);
+                var parser = new mql4Parser.MQL4Parser(tokens);
+
+
+                parser.buildParseTrees = true;
+
+                var tree = parser.root();
+
+                var result = new MQL4ToJsVisitor(keepType, keepOriginal, tokens, keepComment).visit(tree);
+                return {parser: parser, tree: tree, mql4ToJs: result};
+            };
+
+            return {parse: parse}
+        }();
+
+
+        $(function () {
+            readMql4();
+        });
+
+
+    </script>
+
+
+</head>
+<body>
+<div class="row">
+    <h1>Source file</h1>
+
+    <div class="warning">
+        <p>
+            Your source file must be a valid MQL4 script.
+            Providing invalid mql4 script may results to generate invalid JS file without any warning
+        </p>
+
+        Limitations :
+        <ul>
+            <li>Classes are not supported</li>
+            <li>Direct memory operations are not supported (sizeof)</li>
+            <li>Pointers are not supported</li>
+            <li>Preprocessor are not supported</li>
+        </ul>
+
+    </div>
+    <select id="sourceFile" onchange="readMql4()">
+        <optgroup label="personal tests">
+            <option value="test.mql4" selected>test.mql4</option>
+        </optgroup>
+        <optgroup label="mql4 lang">
+            <option value="declaration.mql4">Declarations</option>
+            <option value="Arrays.mql4">Arrays</option>
+            <option value="enum.mql4">Enums</option>
+            <option value="comments.mql4">Comments</option>
+            <option value="structure.mql4">Structures</option>
+            <option value="FunctionDeclarations.mql4">Function Declaration</option>
+            <option value="ControlStructures.mql4">Control structures</option>
+            <option value="date.mql4">Date</option>
+            <option value="preprocessors.mql4">Preprocessors</option>
+        </optGroup>
+
+        <optgroup label="mql4 standard api">
+            <option value="CommonFunctions.mql4">Common Functions</option>
+            <option value="ArrayFunctions.mql4">Array Functions</option>
+            <option value="ConversionFunctions.mql4">Conversion Functions</option>
+            <option value="MathFunction.mql4">Math Function</option>
+            <option value="StringFunction.mql4">String Function</option>
+            <option value="DateFunctions.mql4">Date and Time</option>
+            <option value="AccountFunctions.mql4">Account Information</option>
+            <option value="StateChecking.mql4">Checkup</option>
+            <option value="marketInfo.mql4">Market Info</option>
+            <option value="TimeSeriesFunctions.mql4">Timeseries and Indicators Access</option>
+            <option value="ChartFunctions.mql4">Chart Operations</option>
+            <option value="TradeFunctions.mql4">Trade Functions</option>
+            <option value="SignalFunctions.mql4">Trade Signals</option>
+            <option value="GlobalVariableFunctions.mql4">Global Variables of the Terminal</option>
+            <option value="FileFunctions.mql4">File Functions</option>
+            <option value="CustomIndicatorsFunction.mql4">Custom Indicators</option>
+            <option value="ObjectFunctions.mql4">Object Functions</option>
+            <option value="TechnicalIndicatorsFunctions.mql4">Technical Indicators</option>
+            <option value="EventFunctions.mql4">Working with Events</option>
+        </optGroup>
+
+        <optgroup label="mql4 EA">
+            
+            <option value='samples/0-RenkoLiveChart_v3_3-Labels.mq4'>0-RenkoLiveChart_v3_3-Labels.mq4</option>
+            
+            <option value='samples/0Graal-CROSSmuvingi.mq4'>0Graal-CROSSmuvingi.mq4</option>
+            
+            <option value='samples/1-2-3_forCodeBase_v01.mq4'>1-2-3_forCodeBase_v01.mq4</option>
+            
+            <option value='samples/10_points_3.mq4'>10_points_3.mq4</option>
+            
+            <option value='samples/10p3v003.mq4'>10p3v003.mq4</option>
+            
+            <option value='samples/10p3v004.mq4'>10p3v004.mq4</option>
+            
+            <option value='samples/10p3v005.mq4'>10p3v005.mq4</option>
+            
+            <option value='samples/10pips.mq4'>10pips.mq4</option>
+            
+            <option value='samples/10pipsOnceADayOppositeLastNHourTrend.mq4'>10pipsOnceADayOppositeLastNHourTrend.mq4</option>
+            
+            <option value='samples/120224_1420_T-foREX_Photos_v02_Orders.mq4'>120224_1420_T-foREX_Photos_v02_Orders.mq4</option>
+            
+            <option value='samples/120224_1420_T-foREX_Photos_v03_No_Print.mq4'>120224_1420_T-foREX_Photos_v03_No_Print.mq4</option>
+            
+            <option value='samples/16_ZigAndZag_trade_V2.mq4'>16_ZigAndZag_trade_V2.mq4</option>
+            
+            <option value='samples/1h-4h-1d.mq4'>1h-4h-1d.mq4</option>
+            
+            <option value='samples/204060_program_V0_02.mq4'>204060_program_V0_02.mq4</option>
+            
+            <option value='samples/204060_program_v0_02.mq4'>204060_program_v0_02.mq4</option>
+            
+            <option value='samples/20_200_expert_v4_2_AntS.mq4'>20_200_expert_v4_2_AntS.mq4</option>
+            
+            <option value='samples/20_pips.mq4'>20_pips.mq4</option>
+            
+            <option value='samples/20pipsOnceADayOppositeLastNHourTrend.mq4'>20pipsOnceADayOppositeLastNHourTrend.mq4</option>
+            
+            <option value='samples/21hour.mq4'>21hour.mq4</option>
+            
+            <option value='samples/2_Otkat_Sys_v1_1.mq4'>2_Otkat_Sys_v1_1.mq4</option>
+            
+            <option value='samples/3MaCross_EA.mq4'>3MaCross_EA.mq4</option>
+            
+            <option value='samples/3_lccfpgubwykd__www_forex-instruments_info.mq4'>3_lccfpgubwykd__www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/3ma01exp_www_forex-instruments_info.mq4'>3ma01exp_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/3sma_www_forex-instruments_info.mq4'>3sma_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/4_SMA.mq4'>4_SMA.mq4</option>
+            
+            <option value='samples/55_MA_med_FIN.mq4'>55_MA_med_FIN.mq4</option>
+            
+            <option value='samples/5_8macrossv2.mq4'>5_8macrossv2.mq4</option>
+            
+            <option value='samples/5matf.mq4'>5matf.mq4</option>
+            
+            <option value='samples/5min_rsi_qual_01a_www_forex-instruments_info.mq4'>5min_rsi_qual_01a_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/6xIndics_M.mq4'>6xIndics_M.mq4</option>
+            
+            <option value='samples/9eagbolltrade_ron_mt4_v03c_www_forex-instruments_info.mq4'>9eagbolltrade_ron_mt4_v03c_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/ADX_MA.mq4'>ADX_MA.mq4</option>
+            
+            <option value='samples/ADX_Simple.mq4'>ADX_Simple.mq4</option>
+            
+            <option value='samples/ADX_System.mq4'>ADX_System.mq4</option>
+            
+            <option value='samples/AMA.mq4'>AMA.mq4</option>
+            
+            <option value='samples/AMA_TRADER_v2_1.mq4'>AMA_TRADER_v2_1.mq4</option>
+            
+            <option value='samples/ARD_ORDER_MANAGEMENT_.mq4'>ARD_ORDER_MANAGEMENT_.mq4</option>
+            
+            <option value='samples/ARD_ORDER_MANAGEMENT_EA-BETA_1.mq4'>ARD_ORDER_MANAGEMENT_EA-BETA_1.mq4</option>
+            
+            <option value='samples/ARD_ORDER_MANAGEMENT__v1_5.mq4'>ARD_ORDER_MANAGEMENT__v1_5.mq4</option>
+            
+            <option value='samples/ASChq.mq4'>ASChq.mq4</option>
+            
+            <option value='samples/ATFX_Breakout_Robot___Ver_1_Build_05.mq4'>ATFX_Breakout_Robot___Ver_1_Build_05.mq4</option>
+            
+            <option value='samples/Abovebelowma_www_forex-instruments_info.mq4'>Abovebelowma_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Adeleteme_www_forex-instruments_info.mq4'>Adeleteme_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/AeronRobot_EURUSD-r9_06.mq4'>AeronRobot_EURUSD-r9_06.mq4</option>
+            
+            <option value='samples/Alert_MACD_Slow.mq4'>Alert_MACD_Slow.mq4</option>
+            
+            <option value='samples/Alexav_d1_profit_gbpusd.mq4'>Alexav_d1_profit_gbpusd.mq4</option>
+            
+            <option value='samples/Alexav_speedup_m1.mq4'>Alexav_speedup_m1.mq4</option>
+            
+            <option value='samples/AltariusRSIxampnSTOH.mq4'>AltariusRSIxampnSTOH.mq4</option>
+            
+            <option value='samples/AntiFragile_EA_v1_0.mq4'>AntiFragile_EA_v1_0.mq4</option>
+            
+            <option value='samples/Anubis_www_forex-instruments_info.mq4'>Anubis_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Aocci.mq4'>Aocci.mq4</option>
+            
+            <option value='samples/ArtificialIntelligence.mq4'>ArtificialIntelligence.mq4</option>
+            
+            <option value='samples/Arttrader_v1_5.mq4'>Arttrader_v1_5.mq4</option>
+            
+            <option value='samples/AutoMagiCal.mq4'>AutoMagiCal.mq4</option>
+            
+            <option value='samples/AutoMagiCal_v2a.mq4'>AutoMagiCal_v2a.mq4</option>
+            
+            <option value='samples/AutoNewsTraderEA.mq4'>AutoNewsTraderEA.mq4</option>
+            
+            <option value='samples/Auto_RXD_V1_67.mq4'>Auto_RXD_V1_67.mq4</option>
+            
+            <option value='samples/Autostop.mq4'>Autostop.mq4</option>
+            
+            <option value='samples/Autostop2.mq4'>Autostop2.mq4</option>
+            
+            <option value='samples/AutostopCyriac.mq4'>AutostopCyriac.mq4</option>
+            
+            <option value='samples/Aver12345.mq4'>Aver12345.mq4</option>
+            
+            <option value='samples/Aver4StoqPostzigzag.mq4'>Aver4StoqPostzigzag.mq4</option>
+            
+            <option value='samples/Avpb.mq4'>Avpb.mq4</option>
+            
+            <option value='samples/AwesomeFxTradera.mq4'>AwesomeFxTradera.mq4</option>
+            
+            <option value='samples/BAT.mq4'>BAT.mq4</option>
+            
+            <option value='samples/BT_v4.mq4'>BT_v4.mq4</option>
+            
+            <option value='samples/Backbone.mq4'>Backbone.mq4</option>
+            
+            <option value='samples/Badorders.mq4'>Badorders.mq4</option>
+            
+            <option value='samples/Bago_ea.mq4'>Bago_ea.mq4</option>
+            
+            <option value='samples/Batman-EA.mq4'>Batman-EA.mq4</option>
+            
+            <option value='samples/Bb_0_1.mq4'>Bb_0_1.mq4</option>
+            
+            <option value='samples/Breadandbutter2.mq4'>Breadandbutter2.mq4</option>
+            
+            <option value='samples/Break_the_Range_Bound.mq4'>Break_the_Range_Bound.mq4</option>
+            
+            <option value='samples/BreakdownLevelDay.mq4'>BreakdownLevelDay.mq4</option>
+            
+            <option value='samples/Breakout-04.mq4'>Breakout-04.mq4</option>
+            
+            <option value='samples/Breakout15.mq4'>Breakout15.mq4</option>
+            
+            <option value='samples/Bronzew_pan.mq4'>Bronzew_pan.mq4</option>
+            
+            <option value='samples/Bruno_v1.mq4'>Bruno_v1.mq4</option>
+            
+            <option value='samples/Bull_vs_Medved.mq4'>Bull_vs_Medved.mq4</option>
+            
+            <option value='samples/Bullish_Reversal.mq4'>Bullish_Reversal.mq4</option>
+            
+            <option value='samples/Burg_Extrapolator.mq4'>Burg_Extrapolator.mq4</option>
+            
+            <option value='samples/CCFp.mq4'>CCFp.mq4</option>
+            
+            <option value='samples/CCFpcadvisor1.mq4'>CCFpcadvisor1.mq4</option>
+            
+            <option value='samples/CCICOMA.mq4'>CCICOMA.mq4</option>
+            
+            <option value='samples/CCI_MA_v1_5.mq4'>CCI_MA_v1_5.mq4</option>
+            
+            <option value='samples/CHO.mq4'>CHO.mq4</option>
+            
+            <option value='samples/CSTV04.mq4'>CSTV04.mq4</option>
+            
+            <option value='samples/CSTV05.mq4'>CSTV05.mq4</option>
+            
+            <option value='samples/C_Factor_HLH4_buy_only.mq4'>C_Factor_HLH4_buy_only.mq4</option>
+            
+            <option value='samples/Candle_trader.mq4'>Candle_trader.mq4</option>
+            
+            <option value='samples/CashMachine.mq4'>CashMachine.mq4</option>
+            
+            <option value='samples/CashMachine_5min.mq4'>CashMachine_5min.mq4</option>
+            
+            <option value='samples/Casino111.mq4'>Casino111.mq4</option>
+            
+            <option value='samples/Catcher_Profit_1_0.mq4'>Catcher_Profit_1_0.mq4</option>
+            
+            <option value='samples/Channel_scalper.mq4'>Channel_scalper.mq4</option>
+            
+            <option value='samples/Channels.mq4'>Channels.mq4</option>
+            
+            <option value='samples/Charels1_3_9.mq4'>Charels1_3_9.mq4</option>
+            
+            <option value='samples/Charels1_4_0.mq4'>Charels1_4_0.mq4</option>
+            
+            <option value='samples/Charles1_3_3.mq4'>Charles1_3_3.mq4</option>
+            
+            <option value='samples/Charles1_3_5.mq4'>Charles1_3_5.mq4</option>
+            
+            <option value='samples/Charles1_3_7.mq4'>Charles1_3_7.mq4</option>
+            
+            <option value='samples/Charles1_3_8.mq4'>Charles1_3_8.mq4</option>
+            
+            <option value='samples/Charles2_0_3.mq4'>Charles2_0_3.mq4</option>
+            
+            <option value='samples/Charles2_1_5.mq4'>Charles2_1_5.mq4</option>
+            
+            <option value='samples/Charles2_1_8a.mq4'>Charles2_1_8a.mq4</option>
+            
+            <option value='samples/CheckMyArbitrage.mq4'>CheckMyArbitrage.mq4</option>
+            
+            <option value='samples/CloseAtProfit.mq4'>CloseAtProfit.mq4</option>
+            
+            <option value='samples/Close_Orders_V0_02.mq4'>Close_Orders_V0_02.mq4</option>
+            
+            <option value='samples/Colibri.mq4'>Colibri.mq4</option>
+            
+            <option value='samples/ComFracti.mq4'>ComFracti.mq4</option>
+            
+            <option value='samples/ComFracti_final.mq4'>ComFracti_final.mq4</option>
+            
+            <option value='samples/ComFracti_v2_1.mq4'>ComFracti_v2_1.mq4</option>
+            
+            <option value='samples/Combo_EA4FSFrUpdated5.mq4'>Combo_EA4FSFrUpdated5.mq4</option>
+            
+            <option value='samples/Combo_Right.mq4'>Combo_Right.mq4</option>
+            
+            <option value='samples/Contrarian_trade_MA.mq4'>Contrarian_trade_MA.mq4</option>
+            
+            <option value='samples/Contrarian_trade_ma.mq4'>Contrarian_trade_ma.mq4</option>
+            
+            <option value='samples/CrossMA.mq4'>CrossMA.mq4</option>
+            
+            <option value='samples/Currency_Loader.mq4'>Currency_Loader.mq4</option>
+            
+            <option value='samples/Currencyprofits_01_1.mq4'>Currencyprofits_01_1.mq4</option>
+            
+            <option value='samples/CyberiaTrader.mq4'>CyberiaTrader.mq4</option>
+            
+            <option value='samples/CycleIdentifier.mq4'>CycleIdentifier.mq4</option>
+            
+            <option value='samples/Cyclops_v_1_2.mq4'>Cyclops_v_1_2.mq4</option>
+            
+            <option value='samples/DANCA_NEWS.mq4'>DANCA_NEWS.mq4</option>
+            
+            <option value='samples/DVD_100-50_cent.mq4'>DVD_100-50_cent.mq4</option>
+            
+            <option value='samples/Daily_Opening_EA_v2.mq4'>Daily_Opening_EA_v2.mq4</option>
+            
+            <option value='samples/Daily_STP_Entry_Frame_V1.mq4'>Daily_STP_Entry_Frame_V1.mq4</option>
+            
+            <option value='samples/DayTrading.mq4'>DayTrading.mq4</option>
+            
+            <option value='samples/Daydream01.mq4'>Daydream01.mq4</option>
+            
+            <option value='samples/DeMark_lines.mq4'>DeMark_lines.mq4</option>
+            
+            <option value='samples/DemarkLinesEA.mq4'>DemarkLinesEA.mq4</option>
+            
+            <option value='samples/Divergence_Trader.mq4'>Divergence_Trader.mq4</option>
+            
+            <option value='samples/Dlmv1a10_4-mql4contest.mq4'>Dlmv1a10_4-mql4contest.mq4</option>
+            
+            <option value='samples/Doji_arrows_expert1.mq4'>Doji_arrows_expert1.mq4</option>
+            
+            <option value='samples/Dojitraderg23sep05k.mq4'>Dojitraderg23sep05k.mq4</option>
+            
+            <option value='samples/Donchain_counter-channel_system.mq4'>Donchain_counter-channel_system.mq4</option>
+            
+            <option value='samples/DoubleUp.mq4'>DoubleUp.mq4</option>
+            
+            <option value='samples/DoubleUp2.mq4'>DoubleUp2.mq4</option>
+            
+            <option value='samples/Doublema_breakout_ea.mq4'>Doublema_breakout_ea.mq4</option>
+            
+            <option value='samples/DragSLTP.mq4'>DragSLTP.mq4</option>
+            
+            <option value='samples/Dt-rsi-exp1.mq4'>Dt-rsi-exp1.mq4</option>
+            
+            <option value='samples/E-friday.mq4'>E-friday.mq4</option>
+            
+            <option value='samples/E-news-luckyw.mq4'>E-news-luckyw.mq4</option>
+            
+            <option value='samples/EA_E-mail.mq4'>EA_E-mail.mq4</option>
+            
+            <option value='samples/EA_Fibo_Avg_001a.mq4'>EA_Fibo_Avg_001a.mq4</option>
+            
+            <option value='samples/EA_MA_Email.mq4'>EA_MA_Email.mq4</option>
+            
+            <option value='samples/EA_PSar_002B_WHRoeder.mq4'>EA_PSar_002B_WHRoeder.mq4</option>
+            
+            <option value='samples/EA_PSar_002B_v1.mq4'>EA_PSar_002B_v1.mq4</option>
+            
+            <option value='samples/EA_PSar_004B.mq4'>EA_PSar_004B.mq4</option>
+            
+            <option value='samples/EA_RSI_MA_001a.mq4'>EA_RSI_MA_001a.mq4</option>
+            
+            <option value='samples/EES_Hedger.mq4'>EES_Hedger.mq4</option>
+            
+            <option value='samples/EMA_CROSS_2.mq4'>EMA_CROSS_2.mq4</option>
+            
+            <option value='samples/EMA_WMA.mq4'>EMA_WMA.mq4</option>
+            
+            <option value='samples/EMA_WMA_RSI.mq4'>EMA_WMA_RSI.mq4</option>
+            
+            <option value='samples/EMAplusWPR_V_2.mq4'>EMAplusWPR_V_2.mq4</option>
+            
+            <option value='samples/EM_VOL.mq4'>EM_VOL.mq4</option>
+            
+            <option value='samples/EURUSD.mq4'>EURUSD.mq4</option>
+            
+            <option value='samples/EXP_FIBO_ZZ_V1en.mq4'>EXP_FIBO_ZZ_V1en.mq4</option>
+            
+            <option value='samples/E_2_12_5min.mq4'>E_2_12_5min.mq4</option>
+            
+            <option value='samples/Easiest_RSI.mq4'>Easiest_RSI.mq4</option>
+            
+            <option value='samples/Easiest_ever.mq4'>Easiest_ever.mq4</option>
+            
+            <option value='samples/Elderv30aug05v.mq4'>Elderv30aug05v.mq4</option>
+            
+            <option value='samples/Elite_eFibo_Trader_v2_1.mq4'>Elite_eFibo_Trader_v2_1.mq4</option>
+            
+            <option value='samples/Elite_eFibo_Trader_v2_6.mq4'>Elite_eFibo_Trader_v2_6.mq4</option>
+            
+            <option value='samples/Elli.mq4'>Elli.mq4</option>
+            
+            <option value='samples/Elliott_Trader_Modify3_V1.mq4'>Elliott_Trader_Modify3_V1.mq4</option>
+            
+            <option value='samples/Ema_6_12.mq4'>Ema_6_12.mq4</option>
+            
+            <option value='samples/Ema_cross_contest_hedged.mq4'>Ema_cross_contest_hedged.mq4</option>
+            
+            <option value='samples/Emagic1_161.mq4'>Emagic1_161.mq4</option>
+            
+            <option value='samples/EnvelopeMA.mq4'>EnvelopeMA.mq4</option>
+            
+            <option value='samples/Eugene.mq4'>Eugene.mq4</option>
+            
+            <option value='samples/Expert.mq4'>Expert.mq4</option>
+            
+            <option value='samples/Expert610_eng.mq4'>Expert610_eng.mq4</option>
+            
+            <option value='samples/ExpertCLOR_2MAwampxStATR_v01.mq4'>ExpertCLOR_2MAwampxStATR_v01.mq4</option>
+            
+            <option value='samples/Expert_Master_EURUSD.mq4'>Expert_Master_EURUSD.mq4</option>
+            
+            <option value='samples/Experts10.mq4'>Experts10.mq4</option>
+            
+            <option value='samples/FT_0tk80i9uw4ep_Parabolic.mq4'>FT_0tk80i9uw4ep_Parabolic.mq4</option>
+            
+            <option value='samples/FT_BillWillams_AO.mq4'>FT_BillWillams_AO.mq4</option>
+            
+            <option value='samples/FT_BillWillams_Trader.mq4'>FT_BillWillams_Trader.mq4</option>
+            
+            <option value='samples/FT_TIME_BIGDOG.mq4'>FT_TIME_BIGDOG.mq4</option>
+            
+            <option value='samples/FT_TrendFollower.mq4'>FT_TrendFollower.mq4</option>
+            
+            <option value='samples/FX-AO.mq4'>FX-AO.mq4</option>
+            
+            <option value='samples/FX-Bay_MACD.mq4'>FX-Bay_MACD.mq4</option>
+            
+            <option value='samples/FX-CHAOS.mq4'>FX-CHAOS.mq4</option>
+            
+            <option value='samples/FX-CHAOS_SCALP.mq4'>FX-CHAOS_SCALP.mq4</option>
+            
+            <option value='samples/FXTticksCollector.mq4'>FXTticksCollector.mq4</option>
+            
+            <option value='samples/Firebird_v0_60_deaz1.mq4'>Firebird_v0_60_deaz1.mq4</option>
+            
+            <option value='samples/Fisher_Yur4ik_Alert.mq4'>Fisher_Yur4ik_Alert.mq4</option>
+            
+            <option value='samples/Fitful_13.mq4'>Fitful_13.mq4</option>
+            
+            <option value='samples/Flat_001a.mq4'>Flat_001a.mq4</option>
+            
+            <option value='samples/Flat_trend_v1_0.mq4'>Flat_trend_v1_0.mq4</option>
+            
+            <option value='samples/Follow_Your_Heart.mq4'>Follow_Your_Heart.mq4</option>
+            
+            <option value='samples/Forex_Profit_System.mq4'>Forex_Profit_System.mq4</option>
+            
+            <option value='samples/Forex_SKY.mq4'>Forex_SKY.mq4</option>
+            
+            <option value='samples/Fractal_ZigZag_Expert.mq4'>Fractal_ZigZag_Expert.mq4</option>
+            
+            <option value='samples/Fractured_fractals.mq4'>Fractured_fractals.mq4</option>
+            
+            <option value='samples/Frank_ud.mq4'>Frank_ud.mq4</option>
+            
+            <option value='samples/Franks_4hour_limit_orders.mq4'>Franks_4hour_limit_orders.mq4</option>
+            
+            <option value='samples/Frbestexp02_1_maloma_mod.mq4'>Frbestexp02_1_maloma_mod.mq4</option>
+            
+            <option value='samples/FullDamp.mq4'>FullDamp.mq4</option>
+            
+            <option value='samples/Fundamental_Trader_DailyFX_MQL4_v0_04.mq4'>Fundamental_Trader_DailyFX_MQL4_v0_04.mq4</option>
+            
+            <option value='samples/Fuzzy_logic.mq4'>Fuzzy_logic.mq4</option>
+            
+            <option value='samples/Fx10ea.mq4'>Fx10ea.mq4</option>
+            
+            <option value='samples/GLFX.mq4'>GLFX.mq4</option>
+            
+            <option value='samples/GTerminal_V5a.mq4'>GTerminal_V5a.mq4</option>
+            
+            <option value='samples/Gandalf_PRO.mq4'>Gandalf_PRO.mq4</option>
+            
+            <option value='samples/Gaps.mq4'>Gaps.mq4</option>
+            
+            <option value='samples/Gbp9am.mq4'>Gbp9am.mq4</option>
+            
+            <option value='samples/Geedo.mq4'>Geedo.mq4</option>
+            
+            <option value='samples/Get_rich_or_die_trying_any_gbp.mq4'>Get_rich_or_die_trying_any_gbp.mq4</option>
+            
+            <option value='samples/Get_trend.mq4'>Get_trend.mq4</option>
+            
+            <option value='samples/Glamtrader.mq4'>Glamtrader.mq4</option>
+            
+            <option value='samples/Godbot_v1_2_1.mq4'>Godbot_v1_2_1.mq4</option>
+            
+            <option value='samples/Goldwarrior02b.mq4'>Goldwarrior02b.mq4</option>
+            
+            <option value='samples/GoodGbbi.mq4'>GoodGbbi.mq4</option>
+            
+            <option value='samples/Graal-003u25.mq4'>Graal-003u25.mq4</option>
+            
+            <option value='samples/Gselector.mq4'>Gselector.mq4</option>
+            
+            <option value='samples/HA.mq4'>HA.mq4</option>
+            
+            <option value='samples/HASNEWJ.mq4'>HASNEWJ.mq4</option>
+            
+            <option value='samples/HBS_system.mq4'>HBS_system.mq4</option>
+            
+            <option value='samples/HTH.mq4'>HTH.mq4</option>
+            
+            <option value='samples/HarVesteR.mq4'>HarVesteR.mq4</option>
+            
+            <option value='samples/HardcoreFX.mq4'>HardcoreFX.mq4</option>
+            
+            <option value='samples/Hedger_Long_v1_2.mq4'>Hedger_Long_v1_2.mq4</option>
+            
+            <option value='samples/Hedger_Short_v1_2.mq4'>Hedger_Short_v1_2.mq4</option>
+            
+            <option value='samples/Heiken_Ashi_Smoothed.mq4'>Heiken_Ashi_Smoothed.mq4</option>
+            
+            <option value='samples/Hercules_v1_3_MAJORS.mq4'>Hercules_v1_3_MAJORS.mq4</option>
+            
+            <option value='samples/Huge_Income.mq4'>Huge_Income.mq4</option>
+            
+            <option value='samples/HybridEA.mq4'>HybridEA.mq4</option>
+            
+            <option value='samples/HybridEA01.mq4'>HybridEA01.mq4</option>
+            
+            <option value='samples/Ilan1_4.mq4'>Ilan1_4.mq4</option>
+            
+            <option value='samples/Inform.mq4'>Inform.mq4</option>
+            
+            <option value='samples/InputResizer.mq4'>InputResizer.mq4</option>
+            
+            <option value='samples/InputResizerEA.mq4'>InputResizerEA.mq4</option>
+            
+            <option value='samples/InputResizerEA_600.mq4'>InputResizerEA_600.mq4</option>
+            
+            <option value='samples/InputResizer_600.mq4'>InputResizer_600.mq4</option>
+            
+            <option value='samples/Intraday_beta.mq4'>Intraday_beta.mq4</option>
+            
+            <option value='samples/Intradayv2.mq4'>Intradayv2.mq4</option>
+            
+            <option value='samples/JK_BullP_AutoTrader2.mq4'>JK_BullP_AutoTrader2.mq4</option>
+            
+            <option value='samples/JK_sinkhro1.mq4'>JK_sinkhro1.mq4</option>
+            
+            <option value='samples/JimsCloseOrders.mq4'>JimsCloseOrders.mq4</option>
+            
+            <option value='samples/KSRobot_1_5_h1_v1.mq4'>KSRobot_1_5_h1_v1.mq4</option>
+            
+            <option value='samples/Kloss_.mq4'>Kloss_.mq4</option>
+            
+            <option value='samples/LBS_V12.mq4'>LBS_V12.mq4</option>
+            
+            <option value='samples/LCS-MACD-Trader.mq4'>LCS-MACD-Trader.mq4</option>
+            
+            <option value='samples/LWMA.mq4'>LWMA.mq4</option>
+            
+            <option value='samples/Laguerre_PlusDi.mq4'>Laguerre_PlusDi.mq4</option>
+            
+            <option value='samples/Laptrend_1.mq4'>Laptrend_1.mq4</option>
+            
+            <option value='samples/Lego_v3.mq4'>Lego_v3.mq4</option>
+            
+            <option value='samples/Lilith_goes_to_Hollyood.mq4'>Lilith_goes_to_Hollyood.mq4</option>
+            
+            <option value='samples/LiveAlligator.mq4'>LiveAlligator.mq4</option>
+            
+            <option value='samples/LiveRSI.mq4'>LiveRSI.mq4</option>
+            
+            <option value='samples/LiveSignals.mq4'>LiveSignals.mq4</option>
+            
+            <option value='samples/Logical.mq4'>Logical.mq4</option>
+            
+            <option value='samples/LotScalp.mq4'>LotScalp.mq4</option>
+            
+            <option value='samples/Lucky_acnl6p6j89zn91fa.mq4'>Lucky_acnl6p6j89zn91fa.mq4</option>
+            
+            <option value='samples/Lucky_code.mq4'>Lucky_code.mq4</option>
+            
+            <option value='samples/MA2CCI.mq4'>MA2CCI.mq4</option>
+            
+            <option value='samples/MACD_Alert.mq4'>MACD_Alert.mq4</option>
+            
+            <option value='samples/MACD_Not_So_Sample.mq4'>MACD_Not_So_Sample.mq4</option>
+            
+            <option value='samples/MACD_Sample.mq4'>MACD_Sample.mq4</option>
+            
+            <option value='samples/MACD_Sample_451.mq4'>MACD_Sample_451.mq4</option>
+            
+            <option value='samples/MACD_Sample_452.mq4'>MACD_Sample_452.mq4</option>
+            
+            <option value='samples/MACD_signal_mq4_.mq4'>MACD_signal_mq4_.mq4</option>
+            
+            <option value='samples/MACDcrossAUDD1.mq4'>MACDcrossAUDD1.mq4</option>
+            
+            <option value='samples/MACFibo_-EA_v1_1.mq4'>MACFibo_-EA_v1_1.mq4</option>
+            
+            <option value='samples/MADX-07.mq4'>MADX-07.mq4</option>
+            
+            <option value='samples/MAGNA_RAPAX_-_COPPER_EDITION_-_BETA.mq4'>MAGNA_RAPAX_-_COPPER_EDITION_-_BETA.mq4</option>
+            
+            <option value='samples/MAMACD_novlt.mq4'>MAMACD_novlt.mq4</option>
+            
+            <option value='samples/MAM_Crossover_Trader.mq4'>MAM_Crossover_Trader.mq4</option>
+            
+            <option value='samples/MARE5_1.mq4'>MARE5_1.mq4</option>
+            
+            <option value='samples/MA_MA_2-35_EA.mq4'>MA_MA_2-35_EA.mq4</option>
+            
+            <option value='samples/MA_MirrorEA.mq4'>MA_MirrorEA.mq4</option>
+            
+            <option value='samples/MA_Reverse.mq4'>MA_Reverse.mq4</option>
+            
+            <option value='samples/MA_S_R_Trading.mq4'>MA_S_R_Trading.mq4</option>
+            
+            <option value='samples/MA_S_R_Trading_02.mq4'>MA_S_R_Trading_02.mq4</option>
+            
+            <option value='samples/MA_cross_Method_PriceMode.mq4'>MA_cross_Method_PriceMode.mq4</option>
+            
+            <option value='samples/MLTrendE.mq4'>MLTrendE.mq4</option>
+            
+            <option value='samples/MLTrendE_V2.mq4'>MLTrendE_V2.mq4</option>
+            
+            <option value='samples/MMA_Breakout_strategy_Volume_I_-_coded_by_WhooDoo22.mq4'>MMA_Breakout_strategy_Volume_I_-_coded_by_WhooDoo22.mq4</option>
+            
+            <option value='samples/MSLea.mq4'>MSLea.mq4</option>
+            
+            <option value='samples/MTF_rsi_sar.mq4'>MTF_rsi_sar.mq4</option>
+            
+            <option value='samples/MTrainer.mq4'>MTrainer.mq4</option>
+            
+            <option value='samples/MTrendLine.mq4'>MTrendLine.mq4</option>
+            
+            <option value='samples/MacdPatternTraderAll.mq4'>MacdPatternTraderAll.mq4</option>
+            
+            <option value='samples/MacdPatternTraderAllv0_01.mq4'>MacdPatternTraderAllv0_01.mq4</option>
+            
+            <option value='samples/MacdPatternTraderv01.mq4'>MacdPatternTraderv01.mq4</option>
+            
+            <option value='samples/MacdPatternTraderv02.mq4'>MacdPatternTraderv02.mq4</option>
+            
+            <option value='samples/MacdPatternTraderv03.mq4'>MacdPatternTraderv03.mq4</option>
+            
+            <option value='samples/MacdPatternTraderv04cb.mq4'>MacdPatternTraderv04cb.mq4</option>
+            
+            <option value='samples/MacdPatternTraderv05cb.mq4'>MacdPatternTraderv05cb.mq4</option>
+            
+            <option value='samples/Manual_EA.mq4'>Manual_EA.mq4</option>
+            
+            <option value='samples/MarketNewsLib.mq4'>MarketNewsLib.mq4</option>
+            
+            <option value='samples/Marneni_Money_Tree.mq4'>Marneni_Money_Tree.mq4</option>
+            
+            <option value='samples/MartingailExpert_v1_0_Stochastic.mq4'>MartingailExpert_v1_0_Stochastic.mq4</option>
+            
+            <option value='samples/MoStAsHaR15_Pivot_Expertz30AUG05f.mq4'>MoStAsHaR15_Pivot_Expertz30AUG05f.mq4</option>
+            
+            <option value='samples/Momo_Trades_V3.mq4'>Momo_Trades_V3.mq4</option>
+            
+            <option value='samples/MoneyRain.mq4'>MoneyRain.mq4</option>
+            
+            <option value='samples/MonitorScreen.mq4'>MonitorScreen.mq4</option>
+            
+            <option value='samples/MovingAveragePositionSystem.mq4'>MovingAveragePositionSystem.mq4</option>
+            
+            <option value='samples/Moving_Average.mq4'>Moving_Average.mq4</option>
+            
+            <option value='samples/Moving_Average_Money.mq4'>Moving_Average_Money.mq4</option>
+            
+            <option value='samples/Moving_Averages2.mq4'>Moving_Averages2.mq4</option>
+            
+            <option value='samples/Multi-StrategyiFSF.mq4'>Multi-StrategyiFSF.mq4</option>
+            
+            <option value='samples/MultiHedg_1.mq4'>MultiHedg_1.mq4</option>
+            
+            <option value='samples/MultiIndicatorOptimizer.mq4'>MultiIndicatorOptimizer.mq4</option>
+            
+            <option value='samples/Multi_Lot_Scalper.mq4'>Multi_Lot_Scalper.mq4</option>
+            
+            <option value='samples/Multi_Time-Frame_Trader.mq4'>Multi_Time-Frame_Trader.mq4</option>
+            
+            <option value='samples/Multibreakout_v001k_1_www_forex-instruments_info.mq4'>Multibreakout_v001k_1_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/MyLineOrder.mq4'>MyLineOrder.mq4</option>
+            
+            <option value='samples/MyLineOrder_version_2_1.mq4'>MyLineOrder_version_2_1.mq4</option>
+            
+            <option value='samples/MySystem.mq4'>MySystem.mq4</option>
+            
+            <option value='samples/N7S_AO_772012.mq4'>N7S_AO_772012.mq4</option>
+            
+            <option value='samples/NTOqF_V1.mq4'>NTOqF_V1.mq4</option>
+            
+            <option value='samples/NTOqF_V2.mq4'>NTOqF_V2.mq4</option>
+            
+            <option value='samples/NTOqF_V3.mq4'>NTOqF_V3.mq4</option>
+            
+            <option value='samples/NatusekoProtrader4HStrategy.mq4'>NatusekoProtrader4HStrategy.mq4</option>
+            
+            <option value='samples/NeuroNirvaman.mq4'>NeuroNirvaman.mq4</option>
+            
+            <option value='samples/Neuro_5_MACD.mq4'>Neuro_5_MACD.mq4</option>
+            
+            <option value='samples/Nevalyashka_BreakdownLevel.mq4'>Nevalyashka_BreakdownLevel.mq4</option>
+            
+            <option value='samples/NewsTrader.mq4'>NewsTrader.mq4</option>
+            
+            <option value='samples/NewsTradingEA.mq4'>NewsTradingEA.mq4</option>
+            
+            <option value='samples/Nik_PSAR_2B.mq4'>Nik_PSAR_2B.mq4</option>
+            
+            <option value='samples/NirvamanImax.mq4'>NirvamanImax.mq4</option>
+            
+            <option value='samples/NirvamanImaxT.mq4'>NirvamanImaxT.mq4</option>
+            
+            <option value='samples/Noah10pips2006_www_forex-instruments_info.mq4'>Noah10pips2006_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Nrtr_revers_www_forex-instruments_info.mq4'>Nrtr_revers_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/OBJ_EDIT_Example.mq4'>OBJ_EDIT_Example.mq4</option>
+            
+            <option value='samples/OBJ_LABEL_Example.mq4'>OBJ_LABEL_Example.mq4</option>
+            
+            <option value='samples/OCO_EA.mq4'>OCO_EA.mq4</option>
+            
+            <option value='samples/OSF.mq4'>OSF.mq4</option>
+            
+            <option value='samples/OpenTiks.mq4'>OpenTiks.mq4</option>
+            
+            <option value='samples/OpenTime.mq4'>OpenTime.mq4</option>
+            
+            <option value='samples/OrderBalansEN_v3_4.mq4'>OrderBalansEN_v3_4.mq4</option>
+            
+            <option value='samples/OrderGuardian.mq4'>OrderGuardian.mq4</option>
+            
+            <option value='samples/OrderLib.mq4'>OrderLib.mq4</option>
+            
+            <option value='samples/OrderManager.mq4'>OrderManager.mq4</option>
+            
+            <option value='samples/OsMaSter_V0.mq4'>OsMaSter_V0.mq4</option>
+            
+            <option value='samples/Overhedgev2_www_forex-instruments_info.mq4'>Overhedgev2_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/OzFx.mq4'>OzFx.mq4</option>
+            
+            <option value='samples/OzFx1_02.mq4'>OzFx1_02.mq4</option>
+            
+            <option value='samples/PROphet.mq4'>PROphet.mq4</option>
+            
+            <option value='samples/PSAR_trader.mq4'>PSAR_trader.mq4</option>
+            
+            <option value='samples/PSAR_trader_v2.mq4'>PSAR_trader_v2.mq4</option>
+            
+            <option value='samples/PZ_ParabolicSar_EA.mq4'>PZ_ParabolicSar_EA.mq4</option>
+            
+            <option value='samples/PZ_ReversalTrendFollowingEA.mq4'>PZ_ReversalTrendFollowingEA.mq4</option>
+            
+            <option value='samples/Pedroxxmod_www_forex-instruments_info.mq4'>Pedroxxmod_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Pendulum_1_01.mq4'>Pendulum_1_01.mq4</option>
+            
+            <option value='samples/Pinball_machine.mq4'>Pinball_machine.mq4</option>
+            
+            <option value='samples/Pipsover.mq4'>Pipsover.mq4</option>
+            
+            <option value='samples/Pivotema3rlhv4_www_forex-instruments_info.mq4'>Pivotema3rlhv4_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Pivots.mq4'>Pivots.mq4</option>
+            
+            <option value='samples/Pivots_test.mq4'>Pivots_test.mq4</option>
+            
+            <option value='samples/Plan_x_www_forex-instruments_info.mq4'>Plan_x_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Polish_Layer_Expert_Advisor_System_Efficient_.mq4'>Polish_Layer_Expert_Advisor_System_Efficient_.mq4</option>
+            
+            <option value='samples/Post-zigzag.mq4'>Post-zigzag.mq4</option>
+            
+            <option value='samples/PracticeMod.mq4'>PracticeMod.mq4</option>
+            
+            <option value='samples/PriceAction.mq4'>PriceAction.mq4</option>
+            
+            <option value='samples/Price_Channel.mq4'>Price_Channel.mq4</option>
+            
+            <option value='samples/Price_Quotes_By_Email.mq4'>Price_Quotes_By_Email.mq4</option>
+            
+            <option value='samples/ProPan.mq4'>ProPan.mq4</option>
+            
+            <option value='samples/Profit_Hunter_HSI_with_fibonacci.mq4'>Profit_Hunter_HSI_with_fibonacci.mq4</option>
+            
+            <option value='samples/ProtoType-IX.mq4'>ProtoType-IX.mq4</option>
+            
+            <option value='samples/Pure_Martingale.mq4'>Pure_Martingale.mq4</option>
+            
+            <option value='samples/QFollow.mq4'>QFollow.mq4</option>
+            
+            <option value='samples/RAVIiAO.mq4'>RAVIiAO.mq4</option>
+            
+            <option value='samples/RGT_2.mq4'>RGT_2.mq4</option>
+            
+            <option value='samples/RSI_MA.mq4'>RSI_MA.mq4</option>
+            
+            <option value='samples/RSI_Test.mq4'>RSI_Test.mq4</option>
+            
+            <option value='samples/RSI_Value_EA.mq4'>RSI_Value_EA.mq4</option>
+            
+            <option value='samples/RSI_trader_v1.mq4'>RSI_trader_v1.mq4</option>
+            
+            <option value='samples/RSX.mq4'>RSX.mq4</option>
+            
+            <option value='samples/RUBBERBANDS_1_6.mq4'>RUBBERBANDS_1_6.mq4</option>
+            
+            <option value='samples/RUBBERBANDS_2.mq4'>RUBBERBANDS_2.mq4</option>
+            
+            <option value='samples/RUBBERBANDS_3.mq4'>RUBBERBANDS_3.mq4</option>
+            
+            <option value='samples/RabbitM2.mq4'>RabbitM2.mq4</option>
+            
+            <option value='samples/RabbitM3.mq4'>RabbitM3.mq4</option>
+            
+            <option value='samples/RandomT.mq4'>RandomT.mq4</option>
+            
+            <option value='samples/RangeBoundMA.mq4'>RangeBoundMA.mq4</option>
+            
+            <option value='samples/Ravi.mq4'>Ravi.mq4</option>
+            
+            <option value='samples/RelDownTrLen_forCodeBase_v01.mq4'>RelDownTrLen_forCodeBase_v01.mq4</option>
+            
+            <option value='samples/RelUpTrLen_forCodeBase_v01.mq4'>RelUpTrLen_forCodeBase_v01.mq4</option>
+            
+            <option value='samples/RenkoLiveChart_v3_2.mq4'>RenkoLiveChart_v3_2.mq4</option>
+            
+            <option value='samples/Renko_Scalper.mq4'>Renko_Scalper.mq4</option>
+            
+            <option value='samples/Reverse.mq4'>Reverse.mq4</option>
+            
+            <option value='samples/RideAlligator.mq4'>RideAlligator.mq4</option>
+            
+            <option value='samples/RndTrade.mq4'>RndTrade.mq4</option>
+            
+            <option value='samples/RobotPowerM5_meta4V12.mq4'>RobotPowerM5_meta4V12.mq4</option>
+            
+            <option value='samples/Robot_ADXs2MA.mq4'>Robot_ADXs2MA.mq4</option>
+            
+            <option value='samples/Robot_Danu.mq4'>Robot_Danu.mq4</option>
+            
+            <option value='samples/Robot_MACD_12_26_9.mq4'>Robot_MACD_12_26_9.mq4</option>
+            
+            <option value='samples/Rpm5_mt4v1_geaw_www_forex-instruments_info.mq4'>Rpm5_mt4v1_geaw_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Rsi_trader_v0_10_www_forex-instruments_info.mq4'>Rsi_trader_v0_10_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Russian20-hp1_www_forex-instruments_info.mq4'>Russian20-hp1_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/SHE_kanskigor.mq4'>SHE_kanskigor.mq4</option>
+            
+            <option value='samples/SL2BE.mq4'>SL2BE.mq4</option>
+            
+            <option value='samples/SL2BE_Jpy.mq4'>SL2BE_Jpy.mq4</option>
+            
+            <option value='samples/SLOPE_RSI_MTF_LBranjord.mq4'>SLOPE_RSI_MTF_LBranjord.mq4</option>
+            
+            <option value='samples/SMA_MultiHdege2.mq4'>SMA_MultiHdege2.mq4</option>
+            
+            <option value='samples/STO_m5xm15xm30.mq4'>STO_m5xm15xm30.mq4</option>
+            
+            <option value='samples/STO_m5xm15xm30_V2.mq4'>STO_m5xm15xm30_V2.mq4</option>
+            
+            <option value='samples/SVOS_EURJPY_D1.mq4'>SVOS_EURJPY_D1.mq4</option>
+            
+            <option value='samples/Scalpel.mq4'>Scalpel.mq4</option>
+            
+            <option value='samples/Scalping_EA.mq4'>Scalping_EA.mq4</option>
+            
+            <option value='samples/Sea_Dragon2_v1.mq4'>Sea_Dragon2_v1.mq4</option>
+            
+            <option value='samples/Second_Easiest.mq4'>Second_Easiest.mq4</option>
+            
+            <option value='samples/SendCloseOrder.mq4'>SendCloseOrder.mq4</option>
+            
+            <option value='samples/Session_breakout_v01_mbk_www_forex-instruments_info.mq4'>Session_breakout_v01_mbk_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Sidus_v1.mq4'>Sidus_v1.mq4</option>
+            
+            <option value='samples/SilverTrendV3.mq4'>SilverTrendV3.mq4</option>
+            
+            <option value='samples/Simple-macd-ea_www_forex-instruments_info.mq4'>Simple-macd-ea_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/SimpleTrade.mq4'>SimpleTrade.mq4</option>
+            
+            <option value='samples/Simplepivot_www_forex-instruments_info.mq4'>Simplepivot_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Simulator.mq4'>Simulator.mq4</option>
+            
+            <option value='samples/Slope_Direction_Line_Alert.mq4'>Slope_Direction_Line_Alert.mq4</option>
+            
+            <option value='samples/SmartAssTrade.mq4'>SmartAssTrade.mq4</option>
+            
+            <option value='samples/SmartAssTrade_update.mq4'>SmartAssTrade_update.mq4</option>
+            
+            <option value='samples/SmartAssTrade_update2.mq4'>SmartAssTrade_update2.mq4</option>
+            
+            <option value='samples/Smc_hilo_v11_1_www_forex-instruments_info.mq4'>Smc_hilo_v11_1_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Smc_trader_camel_cci_macd1_www_forex-instruments_info.mq4'>Smc_trader_camel_cci_macd1_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Sophia1_1.mq4'>Sophia1_1.mq4</option>
+            
+            <option value='samples/SourceCode.mq4'>SourceCode.mq4</option>
+            
+            <option value='samples/SourceCode2.mq4'>SourceCode2.mq4</option>
+            
+            <option value='samples/SourceCode2_testing.mq4'>SourceCode2_testing.mq4</option>
+            
+            <option value='samples/SpreadProbe.mq4'>SpreadProbe.mq4</option>
+            
+            <option value='samples/Stairs.mq4'>Stairs.mq4</option>
+            
+            <option value='samples/Starter_v6mod_e_www_forex-instruments_info.mq4'>Starter_v6mod_e_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/StatusMailandAlertOnOrderClose.mq4'>StatusMailandAlertOnOrderClose.mq4</option>
+            
+            <option value='samples/Stmple.mq4'>Stmple.mq4</option>
+            
+            <option value='samples/Stoch.mq4'>Stoch.mq4</option>
+            
+            <option value='samples/Stoch_TP_TS_V3103.mq4'>Stoch_TP_TS_V3103.mq4</option>
+            
+            <option value='samples/Stop_Hunter.mq4'>Stop_Hunter.mq4</option>
+            
+            <option value='samples/Stop_Loss_Mover.mq4'>Stop_Loss_Mover.mq4</option>
+            
+            <option value='samples/Straddle_Trail.mq4'>Straddle_Trail.mq4</option>
+            
+            <option value='samples/Strategy_of_Regularities_of_Exchange_Rates.mq4'>Strategy_of_Regularities_of_Exchange_Rates.mq4</option>
+            
+            <option value='samples/Strategytester1_www_forex-instruments_info.mq4'>Strategytester1_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Suffic369_www_forex-instruments_info.mq4'>Suffic369_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/SuperForexV2.mq4'>SuperForexV2.mq4</option>
+            
+            <option value='samples/SupportResistTrade.mq4'>SupportResistTrade.mq4</option>
+            
+            <option value='samples/Surefirething_www_forex-instruments_info.mq4'>Surefirething_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Sv2.mq4'>Sv2.mq4</option>
+            
+            <option value='samples/Sweet_spot_extreme_www_forex-instruments_info.mq4'>Sweet_spot_extreme_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Swetten.mq4'>Swetten.mq4</option>
+            
+            <option value='samples/SwingCyborg.mq4'>SwingCyborg.mq4</option>
+            
+            <option value='samples/T3MAlMTC9.mq4'>T3MAlMTC9.mq4</option>
+            
+            <option value='samples/TDSGlobal_4.mq4'>TDSGlobal_4.mq4</option>
+            
+            <option value='samples/TPSL-Insert.mq4'>TPSL-Insert.mq4</option>
+            
+            <option value='samples/TRAYLERv.mq4'>TRAYLERv.mq4</option>
+            
+            <option value='samples/TRIX.mq4'>TRIX.mq4</option>
+            
+            <option value='samples/TST.mq4'>TST.mq4</option>
+            
+            <option value='samples/Terminator_v2_0_www_forex-instruments_info.mq4'>Terminator_v2_0_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Tester_v0_14_.mq4'>Tester_v0_14_.mq4</option>
+            
+            <option value='samples/Tester_v0_15_.mq4'>Tester_v0_15_.mq4</option>
+            
+            <option value='samples/TheMasterMind.mq4'>TheMasterMind.mq4</option>
+            
+            <option value='samples/TheMasterMind2.mq4'>TheMasterMind2.mq4</option>
+            
+            <option value='samples/TheMasterMind3.mq4'>TheMasterMind3.mq4</option>
+            
+            <option value='samples/ThePuncher.mq4'>ThePuncher.mq4</option>
+            
+            <option value='samples/TickSave.mq4'>TickSave.mq4</option>
+            
+            <option value='samples/Ticks.mq4'>Ticks.mq4</option>
+            
+            <option value='samples/TicksInMySQL.mq4'>TicksInMySQL.mq4</option>
+            
+            <option value='samples/Trade-Arbitrage.mq4'>Trade-Arbitrage.mq4</option>
+            
+            <option value='samples/Trade.mq4'>Trade.mq4</option>
+            
+            <option value='samples/TradeChannel.mq4'>TradeChannel.mq4</option>
+            
+            <option value='samples/TrailingAll.mq4'>TrailingAll.mq4</option>
+            
+            <option value='samples/TrailingStopFrCn.mq4'>TrailingStopFrCn.mq4</option>
+            
+            <option value='samples/TrailingStopFrCnSARen_v4.mq4'>TrailingStopFrCnSARen_v4.mq4</option>
+            
+            <option value='samples/TrainYourself-V1_1-1.mq4'>TrainYourself-V1_1-1.mq4</option>
+            
+            <option value='samples/Training.mq4'>Training.mq4</option>
+            
+            <option value='samples/Training2.mq4'>Training2.mq4</option>
+            
+            <option value='samples/TrendCapture.mq4'>TrendCapture.mq4</option>
+            
+            <option value='samples/TrendFollowerRainbowMethodkyast773.mq4'>TrendFollowerRainbowMethodkyast773.mq4</option>
+            
+            <option value='samples/TrendMeLeaveMe.mq4'>TrendMeLeaveMe.mq4</option>
+            
+            <option value='samples/Trend_RDS.mq4'>Trend_RDS.mq4</option>
+            
+            <option value='samples/Trendcapture.mq4'>Trendcapture.mq4</option>
+            
+            <option value='samples/Trix_EA.mq4'>Trix_EA.mq4</option>
+            
+            <option value='samples/TrueScalperProfitLock.mq4'>TrueScalperProfitLock.mq4</option>
+            
+            <option value='samples/Tttttt_www_forex-instruments_info.mq4'>Tttttt_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Tunnelmethod_www_forex-instruments_info.mq4'>Tunnelmethod_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/TurtleTraderV1_0_1.mq4'>TurtleTraderV1_0_1.mq4</option>
+            
+            <option value='samples/Universal_EA.mq4'>Universal_EA.mq4</option>
+            
+            <option value='samples/Universal_Investor.mq4'>Universal_Investor.mq4</option>
+            
+            <option value='samples/Universalmacrossea_www_forex-instruments_info.mq4'>Universalmacrossea_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Universum_3_0.mq4'>Universum_3_0.mq4</option>
+            
+            <option value='samples/Unseasonalised_ATR_and_Forecast.mq4'>Unseasonalised_ATR_and_Forecast.mq4</option>
+            
+            <option value='samples/Unseasonalised_JPY_ATR_and_Forecast.mq4'>Unseasonalised_JPY_ATR_and_Forecast.mq4</option>
+            
+            <option value='samples/UsdChf_new.mq4'>UsdChf_new.mq4</option>
+            
+            <option value='samples/VBS_-_Very_Blondie_System.mq4'>VBS_-_Very_Blondie_System.mq4</option>
+            
+            <option value='samples/VHF.mq4'>VHF.mq4</option>
+            
+            <option value='samples/VLT_TRADER.mq4'>VLT_TRADER.mq4</option>
+            
+            <option value='samples/VQ.mq4'>VQ.mq4</option>
+            
+            <option value='samples/VQ_EA.mq4'>VQ_EA.mq4</option>
+            
+            <option value='samples/VR---MARS-EN.mq4'>VR---MARS-EN.mq4</option>
+            
+            <option value='samples/VR---Overturn.mq4'>VR---Overturn.mq4</option>
+            
+            <option value='samples/VR---SETKAa3hM.mq4'>VR---SETKAa3hM.mq4</option>
+            
+            <option value='samples/VR---SETKAp2.mq4'>VR---SETKAp2.mq4</option>
+            
+            <option value='samples/VR---STEALS-3-EN.mq4'>VR---STEALS-3-EN.mq4</option>
+            
+            <option value='samples/Vector.mq4'>Vector.mq4</option>
+            
+            <option value='samples/VisualTrader-BUYScript.mq4'>VisualTrader-BUYScript.mq4</option>
+            
+            <option value='samples/VisualTrader-SELLScript.mq4'>VisualTrader-SELLScript.mq4</option>
+            
+            <option value='samples/VisualTrader-SimulatorEdition.mq4'>VisualTrader-SimulatorEdition.mq4</option>
+            
+            <option value='samples/VivaLasVegas.mq4'>VivaLasVegas.mq4</option>
+            
+            <option value='samples/Vlado_www_forex-instruments_info.mq4'>Vlado_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Volume_EA_buy.mq4'>Volume_EA_buy.mq4</option>
+            
+            <option value='samples/Volume_EA_sell.mq4'>Volume_EA_sell.mq4</option>
+            
+            <option value='samples/Volume_trader_v2_www_forex-instruments_info.mq4'>Volume_trader_v2_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/Vortex_Indicator_System.mq4'>Vortex_Indicator_System.mq4</option>
+            
+            <option value='samples/Vortex_Oscillator_System.mq4'>Vortex_Oscillator_System.mq4</option>
+            
+            <option value='samples/Waddah_Attar_Win.mq4'>Waddah_Attar_Win.mq4</option>
+            
+            <option value='samples/Wave_Power_EA1.mq4'>Wave_Power_EA1.mq4</option>
+            
+            <option value='samples/Wipeout.mq4'>Wipeout.mq4</option>
+            
+            <option value='samples/X3MA_EA_V2_0.mq4'>X3MA_EA_V2_0.mq4</option>
+            
+            <option value='samples/X_alert_3.mq4'>X_alert_3.mq4</option>
+            
+            <option value='samples/X_bug.mq4'>X_bug.mq4</option>
+            
+            <option value='samples/X_trader.mq4'>X_trader.mq4</option>
+            
+            <option value='samples/X_trader_v2.mq4'>X_trader_v2.mq4</option>
+            
+            <option value='samples/X_trader_v3.mq4'>X_trader_v3.mq4</option>
+            
+            <option value='samples/X_trail.mq4'>X_trail.mq4</option>
+            
+            <option value='samples/X_trail_2.mq4'>X_trail_2.mq4</option>
+            
+            <option value='samples/YEA3.mq4'>YEA3.mq4</option>
+            
+            <option value='samples/ZIGZAG-FRACTALS.mq4'>ZIGZAG-FRACTALS.mq4</option>
+            
+            <option value='samples/ZMFX_Stolid_5a_EA.mq4'>ZMFX_Stolid_5a_EA.mq4</option>
+            
+            <option value='samples/ZeroLagEA-AIP_v0_0_4.mq4'>ZeroLagEA-AIP_v0_0_4.mq4</option>
+            
+            <option value='samples/ZeroLag_MACD.mq4'>ZeroLag_MACD.mq4</option>
+            
+            <option value='samples/ZigAndZag.mq4'>ZigAndZag.mq4</option>
+            
+            <option value='samples/ZigAndZag_trader.mq4'>ZigAndZag_trader.mq4</option>
+            
+            <option value='samples/ZigZagEvgeTrofi_1.mq4'>ZigZagEvgeTrofi_1.mq4</option>
+            
+            <option value='samples/Zig_dan_Zag_Danu_Ultimate_Investment_Long_Term.mq4'>Zig_dan_Zag_Danu_Ultimate_Investment_Long_Term.mq4</option>
+            
+            <option value='samples/_3_MA_Cross_w_Alert_v2.mq4'>_3_MA_Cross_w_Alert_v2.mq4</option>
+            
+            <option value='samples/_Fibo_Pivot_multiVal.mq4'>_Fibo_Pivot_multiVal.mq4</option>
+            
+            <option value='samples/_GrailExpertMAV1_0.mq4'>_GrailExpertMAV1_0.mq4</option>
+            
+            <option value='samples/_MACDvsSignal.mq4'>_MACDvsSignal.mq4</option>
+            
+            <option value='samples/a_informer.mq4'>a_informer.mq4</option>
+            
+            <option value='samples/aeron_jjn_ea.mq4'>aeron_jjn_ea.mq4</option>
+            
+            <option value='samples/alliheik.mq4'>alliheik.mq4</option>
+            
+            <option value='samples/analyzehistory.mq4'>analyzehistory.mq4</option>
+            
+            <option value='samples/angrybird_xscalpingn.mq4'>angrybird_xscalpingn.mq4</option>
+            
+            <option value='samples/auto_m5.mq4'>auto_m5.mq4</option>
+            
+            <option value='samples/autopendingbyrsi.mq4'>autopendingbyrsi.mq4</option>
+            
+            <option value='samples/autoslautotp.mq4'>autoslautotp.mq4</option>
+            
+            <option value='samples/autosltp.mq4'>autosltp.mq4</option>
+            
+            <option value='samples/autotstop.mq4'>autotstop.mq4</option>
+            
+            <option value='samples/autotstop__update_2.mq4'>autotstop__update_2.mq4</option>
+            
+            <option value='samples/autotstop__update_3.mq4'>autotstop__update_3.mq4</option>
+            
+            <option value='samples/autotstop_update_4.mq4'>autotstop_update_4.mq4</option>
+            
+            <option value='samples/autotstop_update_5.mq4'>autotstop_update_5.mq4</option>
+            
+            <option value='samples/bLinRegrBuf.mq4'>bLinRegrBuf.mq4</option>
+            
+            <option value='samples/basic_trailing_stop.mq4'>basic_trailing_stop.mq4</option>
+            
+            <option value='samples/bea0twoperbar_ron_mt4_vtest01.mq4'>bea0twoperbar_ron_mt4_vtest01.mq4</option>
+            
+            <option value='samples/bleris.mq4'>bleris.mq4</option>
+            
+            <option value='samples/blonde_trader.mq4'>blonde_trader.mq4</option>
+            
+            <option value='samples/bollinger_breakout.mq4'>bollinger_breakout.mq4</option>
+            
+            <option value='samples/breakpoint.mq4'>breakpoint.mq4</option>
+            
+            <option value='samples/close5profit.mq4'>close5profit.mq4</option>
+            
+            <option value='samples/close_by_equity_percent.mq4'>close_by_equity_percent.mq4</option>
+            
+            <option value='samples/close_cross_kijun_sen.mq4'>close_cross_kijun_sen.mq4</option>
+            
+            <option value='samples/close_cross_ma.mq4'>close_cross_ma.mq4</option>
+            
+            <option value='samples/close_positions_v1_0.mq4'>close_positions_v1_0.mq4</option>
+            
+            <option value='samples/closeallbysymbol.mq4'>closeallbysymbol.mq4</option>
+            
+            <option value='samples/cm_EA_News.mq4'>cm_EA_News.mq4</option>
+            
+            <option value='samples/cm_Martini.mq4'>cm_Martini.mq4</option>
+            
+            <option value='samples/count_pending.mq4'>count_pending.mq4</option>
+            
+            <option value='samples/cspa-1_43.mq4'>cspa-1_43.mq4</option>
+            
+            <option value='samples/cstv06.mq4'>cstv06.mq4</option>
+            
+            <option value='samples/csv_margin_tracker.mq4'>csv_margin_tracker.mq4</option>
+            
+            <option value='samples/dailyTrendReversal_D1.mq4'>dailyTrendReversal_D1.mq4</option>
+            
+            <option value='samples/disturbed.mq4'>disturbed.mq4</option>
+            
+            <option value='samples/e-CA-5.mq4'>e-CA-5.mq4</option>
+            
+            <option value='samples/e-PSI0ManagerTrailing.mq4'>e-PSI0ManagerTrailing.mq4</option>
+            
+            <option value='samples/e-PSIhPROC.mq4'>e-PSIhPROC.mq4</option>
+            
+            <option value='samples/e-PSIuMultiSETfEn8.mq4'>e-PSIuMultiSETfEn8.mq4</option>
+            
+            <option value='samples/e-Regr.mq4'>e-Regr.mq4</option>
+            
+            <option value='samples/e-TurboFx.mq4'>e-TurboFx.mq4</option>
+            
+            <option value='samples/e_OnMA_004.mq4'>e_OnMA_004.mq4</option>
+            
+            <option value='samples/e_RPoint_250.mq4'>e_RPoint_250.mq4</option>
+            
+            <option value='samples/ea_symr_newBar.mq4'>ea_symr_newBar.mq4</option>
+            
+            <option value='samples/earlyBird1.mq4'>earlyBird1.mq4</option>
+            
+            <option value='samples/earlyBird3.mq4'>earlyBird3.mq4</option>
+            
+            <option value='samples/earlyOpenTrend.mq4'>earlyOpenTrend.mq4</option>
+            
+            <option value='samples/earlyTopProrate_V1.mq4'>earlyTopProrate_V1.mq4</option>
+            
+            <option value='samples/eatemplate.mq4'>eatemplate.mq4</option>
+            
+            <option value='samples/eatemplate_v3.mq4'>eatemplate_v3.mq4</option>
+            
+            <option value='samples/eatemplateclean_v3.mq4'>eatemplateclean_v3.mq4</option>
+            
+            <option value='samples/eatemplateworking_v3.mq4'>eatemplateworking_v3.mq4</option>
+            
+            <option value='samples/ema_sticker.mq4'>ema_sticker.mq4</option>
+            
+            <option value='samples/emapluswpr_v_2.mq4'>emapluswpr_v_2.mq4</option>
+            
+            <option value='samples/equalvolumebars.mq4'>equalvolumebars.mq4</option>
+            
+            <option value='samples/errorEA.mq4'>errorEA.mq4</option>
+            
+            <option value='samples/escape.mq4'>escape.mq4</option>
+            
+            <option value='samples/et4_MTC_v1.mq4'>et4_MTC_v1.mq4</option>
+            
+            <option value='samples/eurusdv2_0.mq4'>eurusdv2_0.mq4</option>
+            
+            <option value='samples/exp_Amstell-SL.mq4'>exp_Amstell-SL.mq4</option>
+            
+            <option value='samples/exp_Amstell.mq4'>exp_Amstell.mq4</option>
+            
+            <option value='samples/exp_Lego_4_Beta.mq4'>exp_Lego_4_Beta.mq4</option>
+            
+            <option value='samples/expmartin_v2.mq4'>expmartin_v2.mq4</option>
+            
+            <option value='samples/fibostop.mq4'>fibostop.mq4</option>
+            
+            <option value='samples/firepips_.mq4'>firepips_.mq4</option>
+            
+            <option value='samples/fmoneea.mq4'>fmoneea.mq4</option>
+            
+            <option value='samples/for_max_v2.mq4'>for_max_v2.mq4</option>
+            
+            <option value='samples/fxscalper.mq4'>fxscalper.mq4</option>
+            
+            <option value='samples/gaps.mq4'>gaps.mq4</option>
+            
+            <option value='samples/gazonkos_expert.mq4'>gazonkos_expert.mq4</option>
+            
+            <option value='samples/genie.mq4'>genie.mq4</option>
+            
+            <option value='samples/genie_pivot.mq4'>genie_pivot.mq4</option>
+            
+            <option value='samples/genie_rsi.mq4'>genie_rsi.mq4</option>
+            
+            <option value='samples/genie_stoch_rsi.mq4'>genie_stoch_rsi.mq4</option>
+            
+            <option value='samples/gpfTCPivotLimit.mq4'>gpfTCPivotLimit.mq4</option>
+            
+            <option value='samples/gpfTCPivotStop.mq4'>gpfTCPivotStop.mq4</option>
+            
+            <option value='samples/hardprofit.mq4'>hardprofit.mq4</option>
+            
+            <option value='samples/hjueiisyx8lp2o379e_www_forex-instruments_info.mq4'>hjueiisyx8lp2o379e_www_forex-instruments_info.mq4</option>
+            
+            <option value='samples/hngl4i3gbnw5edyd.mq4'>hngl4i3gbnw5edyd.mq4</option>
+            
+            <option value='samples/hybrid_scalper.mq4'>hybrid_scalper.mq4</option>
+            
+            <option value='samples/i-Regr.mq4'>i-Regr.mq4</option>
+            
+            <option value='samples/iMAX3alert1.mq4'>iMAX3alert1.mq4</option>
+            
+            <option value='samples/ichimok2005.mq4'>ichimok2005.mq4</option>
+            
+            <option value='samples/ilan16.mq4'>ilan16.mq4</option>
+            
+            <option value='samples/ilan1_6dynamic.mq4'>ilan1_6dynamic.mq4</option>
+            
+            <option value='samples/instantexecution.mq4'>instantexecution.mq4</option>
+            
+            <option value='samples/jMasterRSXv1.mq4'>jMasterRSXv1.mq4</option>
+            
+            <option value='samples/jMasterRSXv1C.mq4'>jMasterRSXv1C.mq4</option>
+            
+            <option value='samples/knux_1_0.mq4'>knux_1_0.mq4</option>
+            
+            <option value='samples/knux_martingale.mq4'>knux_martingale.mq4</option>
+            
+            <option value='samples/labtrend1_v2_1.mq4'>labtrend1_v2_1.mq4</option>
+            
+            <option value='samples/lacuststopandbe_v2.mq4'>lacuststopandbe_v2.mq4</option>
+            
+            <option value='samples/lacuststopandbe_v3.1.mq4'>lacuststopandbe_v3.1.mq4</option>
+            
+            <option value='samples/liquidex_V1.mq4'>liquidex_V1.mq4</option>
+            
+            <option value='samples/macd_sample_1010.mq4'>macd_sample_1010.mq4</option>
+            
+            <option value='samples/masaradx.mq4'>masaradx.mq4</option>
+            
+            <option value='samples/maximus_vX_lite_EN.mq4'>maximus_vX_lite_EN.mq4</option>
+            
+            <option value='samples/mo_bidir_v0_1.mq4'>mo_bidir_v0_1.mq4</option>
+            
+            <option value='samples/move_cross.mq4'>move_cross.mq4</option>
+            
+            <option value='samples/mpm-1_8.mq4'>mpm-1_8.mq4</option>
+            
+            <option value='samples/mt4mailstatus.mq4'>mt4mailstatus.mq4</option>
+            
+            <option value='samples/murrey_ea.mq4'>murrey_ea.mq4</option>
+            
+            <option value='samples/new_fscea.mq4'>new_fscea.mq4</option>
+            
+            <option value='samples/newshourtrade.mq4'>newshourtrade.mq4</option>
+            
+            <option value='samples/nextbar.mq4'>nextbar.mq4</option>
+            
+            <option value='samples/open_close.mq4'>open_close.mq4</option>
+            
+            <option value='samples/open_close2ampnstochastic_strategy.mq4'>open_close2ampnstochastic_strategy.mq4</option>
+            
+            <option value='samples/ordermanager.mq4'>ordermanager.mq4</option>
+            
+            <option value='samples/pSAR_alert.mq4'>pSAR_alert.mq4</option>
+            
+            <option value='samples/pSAR_alert2.mq4'>pSAR_alert2.mq4</option>
+            
+            <option value='samples/pSAR_bug.mq4'>pSAR_bug.mq4</option>
+            
+            <option value='samples/pSAR_bug2.mq4'>pSAR_bug2.mq4</option>
+            
+            <option value='samples/pSAR_bug_3.mq4'>pSAR_bug_3.mq4</option>
+            
+            <option value='samples/pSAR_bug_4.mq4'>pSAR_bug_4.mq4</option>
+            
+            <option value='samples/pSAR_bug_5.mq4'>pSAR_bug_5.mq4</option>
+            
+            <option value='samples/parallel_strategies.mq4'>parallel_strategies.mq4</option>
+            
+            <option value='samples/personal_assistant.mq4'>personal_assistant.mq4</option>
+            
+            <option value='samples/profit_counter.mq4'>profit_counter.mq4</option>
+            
+            <option value='samples/profit_counter_2.mq4'>profit_counter_2.mq4</option>
+            
+            <option value='samples/profittrailing.mq4'>profittrailing.mq4</option>
+            
+            <option value='samples/psar_alert_3.mq4'>psar_alert_3.mq4</option>
+            
+            <option value='samples/psar_bug_6.mq4'>psar_bug_6.mq4</option>
+            
+            <option value='samples/psar_bug_7.mq4'>psar_bug_7.mq4</option>
+            
+            <option value='samples/q_indicate_orders.mq4'>q_indicate_orders.mq4</option>
+            
+            <option value='samples/qf1.mq4'>qf1.mq4</option>
+            
+            <option value='samples/qiut_symbol.mq4'>qiut_symbol.mq4</option>
+            
+            <option value='samples/rampokScalp.mq4'>rampokScalp.mq4</option>
+            
+            <option value='samples/rand002.mq4'>rand002.mq4</option>
+            
+            <option value='samples/rich.mq4'>rich.mq4</option>
+            
+            <option value='samples/risk.mq4'>risk.mq4</option>
+            
+            <option value='samples/robotiadxprofitwining.mq4'>robotiadxprofitwining.mq4</option>
+            
+            <option value='samples/robust_ea_template.mq4'>robust_ea_template.mq4</option>
+            
+            <option value='samples/ronz_auto_sl-ts-tp.mq4'>ronz_auto_sl-ts-tp.mq4</option>
+            
+            <option value='samples/ronz_auto_sl_n_tp.mq4'>ronz_auto_sl_n_tp.mq4</option>
+            
+            <option value='samples/ronz_rapid-fire_strategy.mq4'>ronz_rapid-fire_strategy.mq4</option>
+            
+            <option value='samples/rsi_ea.mq4'>rsi_ea.mq4</option>
+            
+            <option value='samples/sicker_EA.mq4'>sicker_EA.mq4</option>
+            
+            <option value='samples/simplefx2.mq4'>simplefx2.mq4</option>
+            
+            <option value='samples/sltp-currency.mq4'>sltp-currency.mq4</option>
+            
+            <option value='samples/smartasstrade-v2.mq4'>smartasstrade-v2.mq4</option>
+            
+            <option value='samples/smoothingaverage.mq4'>smoothingaverage.mq4</option>
+            
+            <option value='samples/snowiesoEA.mq4'>snowiesoEA.mq4</option>
+            
+            <option value='samples/spreadinfo.mq4'>spreadinfo.mq4</option>
+            
+            <option value='samples/starter.mq4'>starter.mq4</option>
+            
+            <option value='samples/stat.csv'>stat.csv</option>
+            
+            <option value='samples/stuficstoch.mq4'>stuficstoch.mq4</option>
+            
+            <option value='samples/syndicate_trader_v_1_04.mq4'>syndicate_trader_v_1_04.mq4</option>
+            
+            <option value='samples/tIsConnectedo.mq4'>tIsConnectedo.mq4</option>
+            
+            <option value='samples/t_ma.mq4'>t_ma.mq4</option>
+            
+            <option value='samples/take-profit.mq4'>take-profit.mq4</option>
+            
+            <option value='samples/tiger.mq4'>tiger.mq4</option>
+            
+            <option value='samples/time_trader.mq4'>time_trader.mq4</option>
+            
+            <option value='samples/time_trader_v1_1.mq4'>time_trader_v1_1.mq4</option>
+            
+            <option value='samples/trade_protector-1_0.mq4'>trade_protector-1_0.mq4</option>
+            
+            <option value='samples/trade_protector-1_1.mq4'>trade_protector-1_1.mq4</option>
+            
+            <option value='samples/trade_protector-1_2.mq4'>trade_protector-1_2.mq4</option>
+            
+            <option value='samples/trades_to_csv.mq4'>trades_to_csv.mq4</option>
+            
+            <option value='samples/trailing.mq4'>trailing.mq4</option>
+            
+            <option value='samples/trailingstop_ea.mq4'>trailingstop_ea.mq4</option>
+            
+            <option value='samples/trend_catcher.mq4'>trend_catcher.mq4</option>
+            
+            <option value='samples/trend_catcher_v2.mq4'>trend_catcher_v2.mq4</option>
+            
+            <option value='samples/trendcollector.mq4'>trendcollector.mq4</option>
+            
+            <option value='samples/trendlinealert.mq4'>trendlinealert.mq4</option>
+            
+            <option value='samples/up3x1.mq4'>up3x1.mq4</option>
+            
+            <option value='samples/up3x1_Investor.mq4'>up3x1_Investor.mq4</option>
+            
+            <option value='samples/up3x1_Krohabor_D.mq4'>up3x1_Krohabor_D.mq4</option>
+            
+            <option value='samples/up3x1_Premium_2vM.mq4'>up3x1_Premium_2vM.mq4</option>
+            
+            <option value='samples/vMATRIXDoubleZero.mq4'>vMATRIXDoubleZero.mq4</option>
+            
+            <option value='samples/wajdyss_MA_expert_v3.mq4'>wajdyss_MA_expert_v3.mq4</option>
+            
+            <option value='samples/x-liquidex.mq4'>x-liquidex.mq4</option>
+            
+            <option value='samples/xMTF_Trix.mq4'>xMTF_Trix.mq4</option>
+            
+            <option value='samples/xbug_free.mq4'>xbug_free.mq4</option>
+            
+            <option value='samples/xbug_free_v4.mq4'>xbug_free_v4.mq4</option>
+            
+            <option value='samples/xliquidex_v2_mod1.mq4'>xliquidex_v2_mod1.mq4</option>
+            
+            <option value='samples/ytg_2MA_4Level.mq4'>ytg_2MA_4Level.mq4</option>
+            
+            <option value='samples/ytg_Multi_Stoch.mq4'>ytg_Multi_Stoch.mq4</option>
+            
+            <option value='samples/ytg_Parabolic_exp.mq4'>ytg_Parabolic_exp.mq4</option>
+            
+            <option value='samples/ytg_Speed_MA_ea.mq4'>ytg_Speed_MA_ea.mq4</option>
+            
+            <option value='samples/zzf.mq4'>zzf.mq4</option>
+            
+        </optgroup>
+
+
+    </select>
+
+    <textarea id="source"></textarea>
+
+    <input type="checkbox" id="keep-types"/> Keep types in javascript<br>
+    <input type="checkbox" id="keep-original"/> Keep original code as comment<br>
+    <input type="checkbox" id="keep-comments" checked/> Keep comments (experimental)<br>
+    <button onclick="parseAndShow()">Convert</button>
+    <h3>AST</h3>
+
+    <textarea id="AST"></textarea>
+</div>
+
+<div class="row">
+    <h1>results</h1>
+
+    <h3>Javascript File</h3>
+    <pre><code id="js" class="language-javascript"></code></pre>
+
+    <h3>Execution</h3>
+
+    <h3>External parameters/Input</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>name</th>
+            <th>type</th>
+            <th>default value</th>
+        </tr>
+
+        </thead>
+        <tbody id="external_parameters">
+
+        </tbody>
+    </table>
+    <select id="functionToExecute"></select>
+    <button id="executeBtn">Execute generated javascript</button>
+    <h3>log</h3>
+    <pre><code id="log"></code></pre>
+
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+void test(){
+    AccountInfoDouble(ACCOUNT_BALANCE);
+    AccountInfoInteger(ACCOUNT_LOGIN);
+    AccountInfoString(ACCOUNT_COMPANY);
+    AccountBalance();
+    AccountCompany();
+    AccountCredit();
+    AccountCurrency();
+    AccountEquity();
+    AccountFreeMargin();
+    AccountFreeMarginCheck(Symbol(),OP_BUY,Lots);
+    AccountFreeMarginMode();
+    AccountInfoDouble();
+    AccountInfoInteger();
+    AccountInfoString();
+    AccountLeverage();
+    AccountMargin();
+    AccountName();
+    AccountNumber();
+    AccountProfit();
+    AccountServer();
+    AccountStopoutLevel();
+    AccountStopoutMode();
+}

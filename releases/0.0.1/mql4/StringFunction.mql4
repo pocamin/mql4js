@@ -1,0 +1,22 @@
+void test(){
+	StringAdd(a,b);
+	StringBufferLen(a);
+	StringCompare(s1,s2);
+	StringConcatenate("Account free margin is ", AccountFreeMargin());
+	StringFill(str,0);
+	StringFind("test","te",0);
+	StringGetCharacter("test", 2);
+	StringInit(str,200,0);
+	StringLen(str);
+	StringReplace(text,"quick","slow");
+	StringSetCharacter(str,size,'+');
+	StringSplit(to_split,u_sep,result);
+	StringSubstr("str", 1,2);
+	StringSubstr("str", 1);
+	StringToLower("TEST");
+	StringToUpper("test");
+	StringTrimLeft("  hello  ");
+	StringTrimRight("  hello  ");
+	StringGetChar("  hello  ",5);
+	StringSetChar(str,5, 'o');
+}
