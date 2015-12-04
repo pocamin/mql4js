@@ -1,7 +1,7 @@
 "use strict";
 var MovingAverageIndicator = function (barAdapter, method, periods, basedOn) {
   this._basedOn = basedOn || "close";
-  this._maxSize = 500;
+  this._maxSize = CACHE_MAX_SIZE;
   this._periods = periods;
   this._method = method;
   this.values = this._computeAll(barAdapter.bars);

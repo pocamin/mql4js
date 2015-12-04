@@ -1,13 +1,20 @@
 // TODO add tests
-var BackTestWithRandomEnv = function (symbol, interval, startDate, options) {
+var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, options) {
     var env = {
       symbol: symbol,
       interval: interval,
       startDate: startDate,
       _processToStart: [],
       _processToStop: [],
-      isRunning: false
+      isRunning: false,
+      onStopListeners: []
     };
+
+
+    env.onStop = function (callback) {
+      env.onStopListeners.push(callback);
+    };
+
     // Backtest part
     env.accountAdapter = new BacktestAccountAdapter();
     env.marketAdapter = new BacktestMarketAdapter(env.accountAdapter);
@@ -22,6 +29,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, options) {
           tickPeriodInMs: Math.round(moment.duration(getInterval(interval).periodicity, getInterval(interval).periodicityUnit).asMilliseconds() / options.nbTicksByPeriod),
           deltaByTick: options.deltaByTick,
           bidAskDelta: options.bidAskDelta,
+          batchSize: options.batchSize,
           maxVolumeByTick: options.maxVolumeByTick,
           arithmeticWalk: options.arithmeticWalk,
           speed: options.speed
@@ -57,6 +65,14 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, options) {
     env.mainBarAdapter = env.getBarAdapter(symbol, interval, env.mainTickAdapter, startDate);
 
 
+    env.mainTickAdapter.addListener({
+      onTick: function (tick) {
+        if (tick.date.getTime() > endDate.getTime()) {
+          env.stop();
+        }
+      }
+    });
+
     env.start = function (script) {
       script.init();
       env.mainTickAdapter.addListener(script);
@@ -67,8 +83,11 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, options) {
     };
 
     env.stop = function () {
-      env._processToStart.forEach(function (process) {
+      env._processToStop.forEach(function (process) {
         process.stop();
+      });
+      env.onStopListeners.forEach(function (callBack) {
+        callBack();
       });
       env.isRunning = false;
     };

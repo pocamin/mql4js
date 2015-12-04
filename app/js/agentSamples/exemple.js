@@ -5,7 +5,7 @@ var nbPeriod = 5;
 var amount = 1000;
 var init = function () {
   console.log("-------------------------------------------------");
-  console.log("buy " + amount + " if bid > sma10 for " + nbPeriod + " and sell if +-" + percent + "%");
+  console.log("buy " + amount + " if bid > sma10 for " + nbPeriod + " and sell if -" + percent * 2 + "% or +" + percent + " %");
   console.log("-------------------------------------------------");
   indicators["sma10"] = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
 };
@@ -35,9 +35,9 @@ var onTick = function (tick) {
 
     case ORDER_STATUS.OPENED :
       var openPrice = env.marketAdapter.getOrder(orderId).openPrice;
-      var currentPercent = 100 * Math.abs(openPrice - tick.bid) / openPrice;
-
-      if (currentPercent > percent) {
+      var currentPercent = 100 * (tick.bid - openPrice) / openPrice;
+      if (currentPercent > 0 && currentPercent > percent ||
+        currentPercent < 0 && currentPercent < -2 * percent) {
         env.marketAdapter.closeOrder(orderId, tick.bid, 1000, tick);
       }
   }

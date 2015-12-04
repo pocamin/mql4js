@@ -4,7 +4,7 @@ var BarAdapter = function (symbol, intervalName, currentDate) {
   this._interval = getInterval(intervalName);
   this._listeners = [];
   this.bars = [];
-  this._maxSize = 500;
+  this._maxSize = CACHE_MAX_SIZE;
   this._maxDate = this._interval.floor(currentDate);
 };
 

@@ -24,7 +24,8 @@ var RandomTickAdapter = function (symbol, currentDate, options) {
   this._tickPeriodInMs = options.tickPeriodInMs || 100;
   this._deltaByTick = options.deltaByTick || 0.001;
   this._bidAskDelta = options.bidAskDelta || 0.001;
-  this._speed = options.speed || 1;
+  this._speed = options.speed || 0;
+  this._batchSize = options.batchSize || 1;
   this._roundTo = Math.round(Math.pow(10, -Math.log(options.roundTo || 0.0001) / Math.log(10)));
   this._maxVolumeByTick = options.maxVolumeByTick || 10000;
   this._arithmeticWalk = !!options.arithmeticWalk
@@ -36,15 +37,24 @@ RandomTickAdapter.prototype.constructor = TickAdapter;
 RandomTickAdapter.prototype.start = function () {
   var that = this;
   this.intervalId = setInterval(function () {
-    that._createTick()
+    if (that._speed == 0) {
+      for (var i = 0; i < that._batchSize && !that._isStopped; i++) {
+        that._createTick();
+      }
+    } else {
+      that._createTick();
+    }
+
   }, this._speed);
 };
 
 RandomTickAdapter.prototype.stop = function () {
+  this._isStopped = true;
   clearInterval(this.intervalId);
 };
 
 RandomTickAdapter.prototype._createTick = function () {
+
   this._currentDate.add(this._tickPeriodInMs, "ms");
   this._last = (this._last || this._initialValue);
 

@@ -69,10 +69,20 @@
                     consoleBlock.append("<span class='error'>" + msg + "</span>\n");
                 }
             };
+
+            var speed = +$("select[name=speed]").val();
+            var batchSize = 1;
+            var refreshRate = +$("select[name=refreshRate]").val();
+            var nbTicksByPeriod = +$("input[name=nbTicksByPeriod]").val();
+            if (speed == 0) {
+                batchSize = refreshRate * nbTicksByPeriod;
+            }
+
             env = BackTestWithRandomEnv(
                     $("input[name=symbol]").val(),
                     $("select[name=interval]").val(),
-                    moment($("input[name=startDate]").val() + " " + $("input[name=startTime]"), "YYYY-MM-DD HH:mm").toDate(),
+                    moment($("input[name=startDate]").val() + " " + $("input[name=startTime]").val(), "YYYY-MM-DD HH:mm").toDate(),
+                    moment($("input[name=endDate]").val() + " " + $("input[name=endTime]").val(), "YYYY-MM-DD HH:mm").toDate(),
                     {
                         initialPrice: +$("input[name=initialPrice]").val(),
                         seed: +$("input[name=seed]").val(),
@@ -80,9 +90,10 @@
                         deltaByTick: +$("input[name=deltaByTick]").val(),
                         bidAskDelta: +$("input[name=bidAskDelta]").val(),
                         maxVolumeByTick: +$("input[name=maxVolumeByTick]").val(),
-                        nbTicksByPeriod: +$("input[name=nbTicksByPeriod]").val(),
+                        nbTicksByPeriod: nbTicksByPeriod,
                         arithmeticWalk: $("select[name=arithmeticWalk]").val() == "true",
-                        speed: +$("select[name=speed]").val()
+                        speed: speed,
+                        batchSize: batchSize
                     }
             );
 
@@ -118,53 +129,59 @@
                 }
             });
 
+
+            var refresh = function () {
+                chart.redraw(env.mainBarAdapter.bars, refreshRate);
+                $("#events").append(loggedEventsToFlush);
+                loggedEventsToFlush = [];
+                Object.keys(eventCounts).forEach(function (eventName) {
+                    $("#nbOrder ." + eventName).text(eventCounts[eventName]);
+                });
+
+
+                var $orders = $(".orders_table tbody").empty();
+                var orders = env.marketAdapter.getOrders();
+                for (var i = orders.length - 1; i >= 0; i--) {
+                    var pnl = "";
+                    if (orders[i].status == "CLOSED") {
+                        pnl = Math.round((orders[i].closePrice - orders[i].openPrice) * orders[i].initialAmount);
+                        if (orders[i].side == "sell") {
+                            pnl = -pnl;
+                        }
+                    }
+                    $orders.append(
+                            "<tr>" +
+                            "<td>" + orders[i].id + "</td>" +
+                            "<td>" + orders[i].symbol + "</td>" +
+                            "<td>" + orders[i].side + "</td>" +
+                            "<td>" + orders[i].amount + "</td>" +
+                            "<td>" + orders[i].status + "</td>" +
+                            "<td>" + (orders[i].limit || "") + "</td>" +
+                            "<td>" + (orders[i].openPrice || "") + "</td>" +
+                            "<td>" + (orders[i].closePrice || "") + "</td>" +
+                            '<td class="' + ((pnl && pnl > 0) ? 'positive' : 'negative') + '">' + pnl + "</td>" +
+                            "</tr>"
+                    );
+                }
+
+                var pl = Math.round(env.accountAdapter.getTotalPL());
+                $("#currentPL").find(".value")
+                        .removeClass("negative", "positive")
+                        .addClass(pl > 0 ? "positive" : "negative")
+                        .text(pl)
+            };
+
+            env.onStop(function () {
+                refresh();
+                $("input[name=stop]").hide();
+            });
+
+
             env.mainBarAdapter.addListener({
                 onBar: function () {
-                    var refreshRate = +$("select[name=refreshRate]").val();
                     if (barsIteration++ % refreshRate == 0) {
-                        chart.redraw(env.mainBarAdapter.bars, refreshRate);
-                        $("#events").append(loggedEventsToFlush);
-                        loggedEventsToFlush = [];
-                        Object.keys(eventCounts).forEach(function (eventName) {
-                            $("#nbOrder ." + eventName).text(eventCounts[eventName]);
-                        });
-
-
-                        var $orders = $(".orders_table tbody").empty();
-                        var orders = env.marketAdapter.getOrders();
-                        for (var i = orders.length - 1; i >= 0; i--) {
-                            var pnl = "";
-                            if (orders[i].status == "CLOSED") {
-                                pnl = Math.round((orders[i].closePrice - orders[i].openPrice) * orders[i].initialAmount);
-                                if (orders[i].side == "sell") {
-                                    pnl = -pnl;
-                                }
-                            }
-                            $orders.append(
-                                    "<tr>" +
-                                    "<td>" + orders[i].id + "</td>" +
-                                    "<td>" + orders[i].symbol + "</td>" +
-                                    "<td>" + orders[i].side + "</td>" +
-                                    "<td>" + orders[i].amount + "</td>" +
-                                    "<td>" + orders[i].status + "</td>" +
-                                    "<td>" + (orders[i].limit || "") + "</td>" +
-                                    "<td>" + (orders[i].openPrice || "") + "</td>" +
-                                    "<td>" + (orders[i].closePrice || "") + "</td>" +
-                                    '<td class="' + ((pnl && pnl > 0) ? 'positive' : 'negative') + '">' + pnl + "</td>" +
-                                    "</tr>"
-                            );
-                        }
-
-                        var pl = Math.round(env.accountAdapter.getTotalPL());
-                        $("#currentPL").find(".value")
-                                .removeClass("negative", "positive")
-                                .addClass(pl > 0 ? "positive" : "negative")
-                                .text(pl)
-
-
+                        refresh();
                     }
-
-
                 }
             });
 
@@ -208,7 +225,7 @@ var nbPeriod = 5;
 var amount = 1000;
 var init = function () {
   console.log("-------------------------------------------------");
-  console.log("buy " + amount + " if bid > sma10 for " + nbPeriod + " and sell if +-" + percent + "%");
+  console.log("buy " + amount + " if bid > sma10 for " + nbPeriod + " and sell if -" + percent * 2 + "% or +" + percent + " %");
   console.log("-------------------------------------------------");
   indicators["sma10"] = new MovingAverageIndicator(env.mainBarAdapter, MOVING_AVERAGE_METHOD.SMA, 10, "close");
 };
@@ -225,26 +242,19 @@ var onTick = function (tick) {
     case ORDER_STATUS.UNKNOWN :
     case ORDER_STATUS.CLOSED :
       if (nbTickSup >= nbPeriod) {
-        orderId = env.marketAdapter.sendOrder({
-            symbol: env.symbol,
-            amount: 1000,
-            type: "limit",
-            limit: tick.bid,
-            side: ORDER_SIDE.BUY
-          },
-          tick);
+        orderId = env.marketAdapter.sendOrder({symbol: env.symbol, amount: 1000, type: "limit", limit: tick.bid, side: ORDER_SIDE.BUY}, tick);
       }
       break;
 
     case ORDER_STATUS.OPENED :
       var openPrice = env.marketAdapter.getOrder(orderId).openPrice;
-      var currentPercent = 100 * Math.abs(openPrice - tick.bid) / openPrice;
-
-      if (currentPercent > percent) {
+      var currentPercent = 100 * (tick.bid - openPrice) / openPrice;
+      if (currentPercent > 0 && currentPercent > percent || currentPercent < 0 && currentPercent < -2 * percent) {
         env.marketAdapter.closeOrder(orderId, tick.bid, 1000, tick);
       }
   }
 };
+
 
 
     </textarea>
@@ -287,12 +297,16 @@ var onTick = function (tick) {
                     <option selected>D1</option>
                 </select>
             </label>
-            <label>
-                Starting date
-                <input name="startDate" type="date" value="2015-01-01">
+            <label class="clearfix">
+                Start date
+                <input name="startDate" type="date" value="2013-01-01">
                 <input name="startTime" type="time" value="00:00">
             </label>
-
+            <label class="clearfix">
+                End date
+                <input name="endDate" type="date" value="2015-11-01">
+                <input name="endTime" type="time" value="00:00">
+            </label>
         </div>
 
         <h1 class="clearfix">Random generators</h1>
@@ -357,12 +371,14 @@ var onTick = function (tick) {
             Display every
             <select name="refreshRate">
                 <option selected>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>5</option>
-                <option>8</option>
-                <option>13</option>
-                <option>21</option>
+                <option>10</option>
+                <option>30</option>
+                <option>50</option>
+                <option selected>100</option>
+                <option>500</option>
+                <option>1000</option>
+                <option>10000</option>
+                <option>100000</option>
             </select>
             bar(s)
         </div>

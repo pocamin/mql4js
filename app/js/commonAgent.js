@@ -1,3 +1,5 @@
+var CACHE_MAX_SIZE = 5000;
+
 var ORDER_STATUS = {
   SENT: "SENT", // not used in MT4 or backtest mode
   PENDING: "PENDING",
@@ -104,6 +106,6 @@ var getInterval = function (intervalName) {
 
 
 var random = function (seed, iteration) {
-  var x = Math.sin(seed + iteration) * 10000;
+  var x = Math.sin(seed * iteration) * 10000;
   return x - Math.floor(x);
 }

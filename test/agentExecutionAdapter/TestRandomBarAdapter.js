@@ -1,11 +1,11 @@
 describe('RandomBarAdapter', function () {
-   it("can create histo data for testing", function () {
+  it("can create histo data for testing", function () {
     var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1), {arithmeticWalk: true});
     rba._maxSize = 2;
     rba.init();
     expect(rba.bars).toEqual([
-      {open: 0.996, low: 0.994, high: 0.996, close: 0.995, volume: 43351, date: new Date(2009, 11, 30), symbol: "EUR_CHF"},
-      {open: 0.994, low: 0.994, high: 0.999, close: 0.999, volume: 68838, date: new Date(2009, 11, 31), symbol: "EUR_CHF"}
+      {open: 0.996, low: 0.995, high: 0.997, close: 0.995, volume: 46715, date: new Date(2009, 11, 30), symbol: "EUR_CHF"},
+      {open: 0.996, low: 0.995, high: 1.001, close: 1.001, volume: 60949, date: new Date(2009, 11, 31), symbol: "EUR_CHF"}
     ]);
   });
 
@@ -22,7 +22,7 @@ describe('RandomBarAdapter', function () {
     rba.onTick({bid: 0.994, ask: 0.996, volume: 500, date: new Date(2010, 0, 2, 8, 0), symbol: "EUR_CHF"});
     expect(rba.bars.length).toBe(2);
     expect(rba.bars).toEqual([
-        {open: 0.994, low: 0.994, high: 0.999, close: 0.999, volume: 68838, date: new Date(2009, 11, 31), symbol: "EUR_CHF"},
+        {open: 0.996, low: 0.995, high: 1.001, close: 1.001, volume: 60949, date: new Date(2009, 11, 31), symbol: "EUR_CHF"},
         {open: 0.993, low: 0.991, high: 1.001, close: 0.995, volume: 2500, date: new Date(2010, 0, 1), symbol: "EUR_CHF"}
       ]
     );
