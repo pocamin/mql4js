@@ -184,3 +184,7 @@ input[name=stop] {
 #events .NOT_CLOSED_ON_TICK {
     color: orange;
 }
+
+#orders tr.highlight {
+    background: #cc99cd;
+}

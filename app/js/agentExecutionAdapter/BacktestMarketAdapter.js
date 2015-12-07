@@ -21,9 +21,9 @@ BacktestMarketAdapter.prototype.addListener = function (listener) {
   this._listeners.push(listener);
 };
 
-BacktestMarketAdapter.prototype._emitOrderEvent = function (eventName, order) {
+BacktestMarketAdapter.prototype._emitOrderEvent = function (eventName, order, tick) {
   this._listeners.forEach(function (listener) {
-    listener.onOrderEvent(eventName, order);
+    listener.onOrderEvent(eventName, order, tick);
   });
 };
 
@@ -43,8 +43,8 @@ BacktestMarketAdapter.prototype.closeOrder = function (orderId, price, amount, t
   order.status = ORDER_STATUS.CLOSING;
   order.closingPrice = price;
   order.closingAmount = (order.closingAmount || 0) + amount;
-  this._emitOrderEvent(ORDER_EVENT.CLOSE_SENT, order);
-  this._emitOrderEvent(ORDER_EVENT.CLOSE_RECEIVED, order);
+  this._emitOrderEvent(ORDER_EVENT.CLOSE_SENT, order, tick);
+  this._emitOrderEvent(ORDER_EVENT.CLOSE_RECEIVED, order, tick);
   this._process(order, tick);
 };
 
@@ -55,7 +55,7 @@ BacktestMarketAdapter.prototype._process = function (order, tick) {
 
     order.status = ORDER_STATUS.OPENED;
     order.openPrice = this._openPrice(order, tick);
-    this._emitOrderEvent(ORDER_EVENT.OPENED, order);
+    this._emitOrderEvent(ORDER_EVENT.OPENED, order, tick);
   } else if (order.status == ORDER_STATUS.CLOSING && this._canClose(order, tick)) {
     order.amount -= order.closingAmount;
     this._accountAdapter.addPosition(order.symbol, (order.side == ORDER_SIDE.BUY) ? -order.closingAmount : order.closingAmount, tick);
@@ -66,10 +66,10 @@ BacktestMarketAdapter.prototype._process = function (order, tick) {
 
     if (order.amount == 0) {
       order.status = ORDER_STATUS.CLOSED;
-      this._emitOrderEvent(ORDER_EVENT.CLOSED, order);
+      this._emitOrderEvent(ORDER_EVENT.CLOSED, order, tick);
     } else {
       order.status = ORDER_STATUS.OPENED;
-      this._emitOrderEvent(ORDER_EVENT.PARTIALLY_CLOSED, order);
+      this._emitOrderEvent(ORDER_EVENT.PARTIALLY_CLOSED, order, tick);
 
     }
   }
@@ -114,7 +114,7 @@ BacktestMarketAdapter.prototype._canOpen = function (order, tick) {
     canOpen = (order.side == ORDER_SIDE.BUY) ? tick.ask <= order.limit : tick.bid >= order.limit;
   }
   if (!canOpen) {
-    this._emitOrderEvent(ORDER_EVENT.NOT_OPENED_ON_TICK, order);
+    this._emitOrderEvent(ORDER_EVENT.NOT_OPENED_ON_TICK, order,tick);
   }
 
   return canOpen;
@@ -124,7 +124,7 @@ BacktestMarketAdapter.prototype._canOpen = function (order, tick) {
 BacktestMarketAdapter.prototype._canClose = function (order, tick) {
   var canClose = (order.side == ORDER_SIDE.SELL) ? tick.ask <= order.closingPrice : tick.bid >= order.closingPrice;
   if (!canClose) {
-    this._emitOrderEvent(ORDER_EVENT.NOT_CLOSED_ON_TICK, order);
+    this._emitOrderEvent(ORDER_EVENT.NOT_CLOSED_ON_TICK, order,tick);
   }
   return canClose;
 };

@@ -14,7 +14,8 @@
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
     <script src="bower_components/d3/d3.min.js"></script>
-    <script src="bower_components/TechanJS/dist/techan.min.js"></script>
+    <!--<script src="bower_components/TechanJS/dist/techan.min.js"></script>-->
+    <script src="js/beta/techan.js"></script>
     <script src="js/commonAgent.js"></script>
     <script src="js/agentExecutionAdapter/TickAdapter.js"></script>
     <script src="js/agentExecutionAdapter/BarAdapter.js"></script>
@@ -104,6 +105,7 @@
             var chart = backtestChart(indicators);
             var loggedEventsToFlush = [];
             var eventCounts = {};
+            var orderEvents = [];
             Object.keys(ORDER_EVENT).forEach(function (eventName) {
                 eventCounts[eventName] = 0;
             });
@@ -123,7 +125,8 @@
 
 
             var refresh = function () {
-                chart.redraw(env.mainBarAdapter.bars, refreshRate);
+
+                chart.redraw(env.mainBarAdapter.bars, refreshRate, orderEvents);
                 $("#events").append(loggedEventsToFlush);
                 loggedEventsToFlush = [];
                 Object.keys(eventCounts).forEach(function (eventName) {
@@ -142,7 +145,7 @@
                         }
                     }
                     $orders.append(
-                            "<tr>" +
+                            "<tr data-order-id='" + orders[i].id + "'>" +
                             "<td>" + orders[i].id + "</td>" +
                             "<td>" + orders[i].symbol + "</td>" +
                             "<td>" + orders[i].side + "</td>" +
@@ -184,7 +187,7 @@
 
             env.marketAdapter.addListener(
                     {
-                        onOrderEvent: function (orderEvent, order) {
+                        onOrderEvent: function (orderEvent, order, tick) {
                             // update statistics
                             eventCounts[orderEvent] = (eventCounts[orderEvent] || 0) + 1;
 
@@ -193,6 +196,26 @@
                                 loggedEventsToFlush.push($("<div>").addClass("order " + orderEvent)
                                         .text(order.id + ":" + orderEvent + ":" + JSON.stringify(order)));
                             }
+
+
+                            if (orderEvent == ORDER_EVENT.OPENED) {
+                                orderEvents.push({
+                                            date: tick.date,
+                                            id: order.id,
+                                            type: order.side == 'sell' ? "open-sell" : "open-buy"
+                                        }
+                                );
+                            }
+                            if (orderEvent == ORDER_EVENT.CLOSED) {
+                                orderEvents.push({
+                                            date: tick.date,
+                                            id: order.id,
+                                            type: order.side == 'sell' ? "close-sell" : "close-buy"
+                                        }
+                                );
+                            }
+
+
                         }
                     }
             );

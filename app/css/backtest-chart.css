@@ -28,3 +28,30 @@ path.ohlc.down {
     stroke: #FF0000;
 
 }
+
+.tradearrow path.tradearrow {
+    stroke: none;
+}
+
+.tradearrow path.open-buy {
+    fill: #ecc8ff;
+}
+
+.tradearrow path.open-sell {
+    fill: #cde8ff;
+}
+
+.tradearrow path.close-buy {
+    fill: #ff55af;
+}
+
+.tradearrow path.close-sell {
+    fill: #8abdff;
+}
+
+.tradearrow path.highlight {
+    fill: none;
+    stroke-width: 2;
+    stroke: black;
+}
+

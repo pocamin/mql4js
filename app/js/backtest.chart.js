@@ -16,6 +16,19 @@ var backtestChart = function () {
     .xScale(x)
     .yScale(y);
 
+
+  var tradearrow = techan.plot.tradearrow()
+    .xScale(x)
+    .yScale(y)
+    .y(function (d) {
+      return height;
+    }).on('mouseenter', function (order) {
+      $("tr[data-order-id=" + order.id + "]").addClass("highlight");
+    }).on('mouseout', function (order) {
+      $("tr[data-order-id=" + order.id + "]").removeClass("highlight");
+    });
+
+
   var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom");
@@ -23,7 +36,6 @@ var backtestChart = function () {
   var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
-
 
   var svg = d3.select("#graph").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -94,10 +106,16 @@ var backtestChart = function () {
   };
 
 
-  var redraw = function (data, newTicksSinceLastTime) {
+  var redraw = function (data, newTicksSinceLastTime, trades) {
+
+
     var accessor = ohlc.accessor();
 
     data = data.slice(data.length > initialLinesToDisplay ? data.length - initialLinesToDisplay : 0);
+
+    //trades.push({date: new Date(), type: "open-buy"});
+
+
     initialLinesToDisplay += newTicksSinceLastTime;
     svg.select("g.candlestick").datum(data);
     x.domain(data.map(accessor.d));
@@ -121,6 +139,18 @@ var backtestChart = function () {
         indicatorData
       );
     });
+
+
+    if (trades.length > 0) {
+      svg.select("g.tradearrow").remove();
+      var arrows = svg.append("g")
+        .attr("class", "tradearrow")
+        .attr("clip-path", "url(#ohlcClip)")
+        .datum(trades)
+        .call(tradearrow);
+
+
+    }
 
 
   };
