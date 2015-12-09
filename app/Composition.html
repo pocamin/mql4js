@@ -1,258 +1,118 @@
 <head>
+    <!-- build:css composition.js -->
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
-    <style>
-        .sentence div {
-            display: inline;
-            padding: 5px;
-        }
-    </style>
+    <script src="js/composition.js"></script>
+    <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/handlebars/handlebars.min.js"></script>
+    <!-- endbuild -->
+
+    <!-- build:css composition.css -->
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/composition.css" rel="stylesheet">
+    <!-- endbuild -->
 
 </head>
+<!-- TODO textarea to avoid idea formating -->
+<textarea id="script-template" title="" style="width: 100%" rows="20">
+var orderid = -1;
+var init = function(){
+  {{#join allIndicators separator="\n  "}}{{/join}}
+};
+var onTick = function(tick){
+  switch (env.marketAdapter.orderStatus(orderId)) {
+    case ORDER_STATUS.UNKNOWN :
+    case ORDER_STATUS.CANCELLED :
+    case ORDER_STATUS.CLOSED :
+      openOrderIfNeeded(tick);
+    Case ORDER_STATUS.OPENED :
+      closeOrderIfNeeded(tick);
+      break;
+  }
+}
+
+var openOrderIfNeeded(tick){
+  {{#each openBlocks}}
+  if ({{#join expressions separator=" ||\n      "}}{{/join}}){
+    orderId = env.marketAdapter.sendOrder({symbol: env.symbol, amount: {{order.amount}}, type: "market", side: {{order.side}} }, tick);
+  }
+  {{/each}}
+}
+
+var closeOrderIfNeeded(tick){
+  var order = env.marketAdapter.getOrder(orderId);
+  {{#each closeBlocks}}
+  if ({{#join expressions separator=" ||\n      "}}{{/join}}){
+    env.marketAdapter.closeOrder(orderId, (order.side == 'buy')?tick.bid:tick.sell, order.amount, tick);
+  }
+  {{/each}}
+}
+</textarea>
 
 
 <script>
+    var composition = new Composition();
+    var scriptTemplate;
 
-
-    var sma = {template: 'SMA value with <input type="number" name="period"> periods'};
-    var ema = {template: 'EMA value with <input type="number" name="period"> periods'};
-    var swma = {template: 'SWMA value with <input type="number" name="period"> periods'};
-    var lwma = {template: 'LWMA value with <input type="number" name="period"> periods', display: "'Linear Weighted Moving Average"};
-    var bid = {template: "bid value"};
-    var ask = {template: "ask value"};
-    var gt = {template: "is greater than"};
-    var lt = {template: "is lower than"};
-    var pct_gt = {template: 'is <input type="number" name="percent" value="5"> % greater than'};
-    var pct_lt = {template: 'is <input type="number" name="percent" value="5"> % lower than'};
-    var forAnyTick = {template: 'for any tick'};
-
-
-    var forPeriod = {
-        template: '<input type="number" name="percent" value="90"> % of the time during the last \
-                   <input type="number" value="5"> \
-                   <select name="periodicity"> \
-                           <option value="second">second(s)</option>\
-                           <option value="minute">minute(s)</option>\
-                           <option value="hour">hour(s)</option>\
-                   </select>'
-    };
-    var indicators = {
-        sma: {generator: sma, display: "Simple Moving Average"},
-        ema: {generator: ema, display: "Exponential Moving Average"},
-        swma: {generator: swma, display: "Smoothed Moving Average"},
-        lwma: {generator: lwma, display: "'Linear Weighted Moving Average"}
-    };
-
-    var lastClose = {template: "last close"};
-    var lastOpen = {template: "last open"};
-    var lastHigh = {template: "last high"};
-    var lastLow = {template: "last low"};
-    var profit = {template: "Profits"};
-    var loss = {template: "Losses"};
-    var numberInput = {
-        template: '<input type="number" name="number">'
-    };
-
-    var percentInput = {
-        template: '<input type="number" name="number"> %'
-    };
-
-
-    var lastPrices = {
-        close: {generator: lastClose, display: "last close"},
-        open: {generator: lastOpen, display: "last open"},
-        high: {generator: lastHigh, display: "last high"},
-        low: {generator: lastLow, display: "last low"}
-    };
-
-    var percentOrValue = {
-        value: {generator: numberInput, value: "fixed value"},
-        percent: {generator: percentInput, value: "Percent"}
-    };
-
-
-    var options = {
-        open: {
-            left: {
-                bid: {generator: bid, qualifiers: ['bid']},
-                ask: {generator: ask, qualifiers: ['ask']},
-                lastPrice: {generator: lastPrices, display: "Last prices"},
-                indicator: {generator: indicators}
-            },
-            operator: {
-                gt: {generator: gt, display: "greater than"},
-                lt: {generator: lt, display: "lower than"},
-                pct_gt: {generator: pct_gt, display: "% lower than"},
-                pct_lt: {generator: pct_lt, display: "% lower than"}
-            },
-            right: {
-                lastPrice: {generator: lastPrices, display: "Last prices"},
-                bid: {generator: bid, exclusions: ["bid"]},
-                ask: {generator: ask, exclusions: ["ask"]},
-                indicator: {generator: indicators},
-                value: {generator: numberInput, display: "fixed price"}
-            },
-            condition: {
-                forAnyTick: {generator: forAnyTick},
-                forPeriod: {generator: forPeriod}
-            }
-        },
-        close: {
-            left: {
-                profit: {generator: profit, qualifiers: ['pnl']},
-                loss: {generator: loss, qualifiers: ['pnl']},
-                bid: {generator: bid, qualifiers: ['bid']},
-                ask: {generator: ask, qualifiers: ['ask']},
-                lastPrice: {generator: lastPrices, display: "Last prices"},
-                indicator: {generator: indicators}
-            },
-            operator: {
-                gt: {generator: gt, display: "greater than"},
-                lt: {generator: lt, display: "lower than"},
-                pct_gt: {generator: pct_gt, display: "% lower than", exclusions: ['pnl']},
-                pct_lt: {generator: pct_lt, display: "% lower than", exclusions: ['pnl']}
-            },
-            right: {
-                lastPrice: {generator: lastPrices, display: "Last prices", exclusions: ['pnl']},
-                bid: {generator: bid, exclusions: ["bid", 'pnl']},
-                ask: {generator: ask, exclusions: ["ask", 'pnl']},
-                indicator: {generator: indicators, exclusions: ['pnl']},
-                value: {generator: numberInput, display: "fixed price", exclusions: ['pnl']},
-                percentOrValue: {generator: percentOrValue, display: "percent or value", inclusions: ['pnl']}
-            },
-            condition: {
-                forAnyTick: {generator: forAnyTick, exclusions: ['pnl']},
-                forPeriod: {generator: forPeriod, exclusions: ['pnl']}
-            }
-        }
-
-
-    };
-
-
-</script>
-
-<script>
-    function createSelector(subOptions, $location, qualifiers, onSelected) {
-        var filteredOptions = Object.keys(subOptions)
-            // Filter exclusion
-                .filter(function (type) {
-                    if (!qualifiers || qualifiers.length == 0 || !subOptions[type].exclusions || subOptions[type].exclusions == 0) {
-                        return true;
-                    }
-
-                    return subOptions[type].exclusions.filter(function (qualifier) {
-                                return qualifiers.indexOf(qualifier) >= 0;
-                            }).length == 0
-                })
-            // Filter inclusion
-                .filter(function (type) {
-                    if (!subOptions[type].inclusions) {
-                        return true;
-                    }
-
-                    return subOptions[type].inclusions.filter(function (qualifier) {
-                                return qualifiers.indexOf(qualifier) >= 0;
-                            }).length != 0;
-
-
-                });
-
-        if (filteredOptions.length > 0) {
-            var $select = $("<select name='type'>").appendTo($location);
-            $("<option>").val('').html('select ...').appendTo($select);
-
-
-            filteredOptions.forEach(function (key) {
-                var display = subOptions[key].display || key;
-                $("<option>")
-                        .val(key)
-                        .html(display)
-                        .appendTo($select);
-            });
-
-
-            $select.on("click", function () {
-                var $selectedOption = $(this);
-                var $select = $(this);
-                var key = $selectedOption.val();
-                if (key != '') {
-                    $select.hide();
-                    var selectedOption = subOptions[key];
-                    if (selectedOption.qualifiers) {
-                        selectedOption.qualifiers.forEach(function (val) {
-                            qualifiers.push(val);
-                        });
-                    }
-
-                    var $template = $("<div>").addClass(key).appendTo($location);
-                    if (subOptions[key].generator.template) {
-                        $template.html(subOptions[key].generator.template);
-                        !onSelected || onSelected();
-                    } else {
-                        createSelector(subOptions[key].generator, $template, qualifiers, onSelected);
-                    }
-                }
-            });
-        } else {
-            !onSelected || onSelected();
-        }
-    }
-
-
-    var addCondition = function ($location) {
-        var qualifiers = [];
-        var conditionOption = options[$location.hasClass("open") ? "open" : "close"];
-        var $sentence = $("<div class='sentence'/>").appendTo($location);
-        var $left = $("<div class='left'/>").appendTo($sentence);
-        createSelector(conditionOption.left, $left, qualifiers, function () {
-            var $operator = $("<div class='operator'/>").appendTo($sentence);
-            createSelector(conditionOption.operator, $operator, qualifiers, function () {
-                var $right = $("<div class='right'/>").appendTo($sentence);
-                createSelector(conditionOption.right, $right, qualifiers, function () {
-                    var $condition = $("<div class='condition'/>").appendTo($sentence);
-                    createSelector(conditionOption.condition, $condition, qualifiers, function () {
-                        $("<input type='button' value='and'>")
-                                .appendTo($location)
-                                .click(
-                                function () {
-                                    $(this).hide();
-                                    $location.append("and");
-                                    addAndCondition($location, $location.hasClass("open"));
-                                }
-                        );
-
-
-                    });
-                });
-            });
-        });
-    };
-
-
-    var addAndCondition = function (location, isOpen) {
-        var $condition = $("<div>").addClass("condition").addClass(isOpen ? "open" : "close").appendTo($(location));
-        addCondition($condition);
-    };
-
-
-    $(function () {
-        addAndCondition('#openConditions', true);
-        addAndCondition('#closeConditions', false)
+    Handlebars.registerHelper('join', function (items, options) {
+        return items.map(function (item) {
+            return item;
+        }).join(options.hash.separator.replace("\\n", "\n") || ", ");
     });
 
 
+    $(function () {
+
+        composition.addOrCondition('#openConditions', true);
+        composition.addOrCondition('#closeConditions', false);
+
+
+        $("#agentComposition").on('click change keydown keypress keyup', "input, select", function () {
+            composition.refreshStatus(this);
+        });
+
+        scriptTemplate = Handlebars.compile($('#script-template').val());
+    });
 </script>
 
+<div class="component" id="agentComposition">
+    <h1>Agent composition</h1>
 
-<h1>Open if <input type="button" value="+" onclick="addAndCondition('#openConditions', true)"></h1>
-<div id="openConditions">
+    <h2>Open Position</h2>
 
+
+    <div class="component_content">
+        <div id="openConditions">
+
+        </div>
+        <button onclick="composition.addOrCondition('#openConditions', true)" class="new_condition">
+            Add new conditions to open a position
+        </button>
+    </div>
+
+
+    <h2>Close Position</h2>
+
+    <div class="component_content">
+        <div id="closeConditions">
+
+        </div>
+        <button onclick="composition.addOrCondition('#closeConditions', false)" class="new_condition">
+            Add new conditions to close a position
+        </button>
+    </div>
+
+
+    <h2>
+        <button type="button" class="generate_script"
+                onclick="/* TODO remove*/ scriptTemplate = Handlebars.compile($('#script-template').val()); composition.generateScript(scriptTemplate)">
+            Generate
+            Script
+        </button>
+    </h2>
 
 </div>
 
-<h1>Close if <input type="button" value="+" onclick="addAndCondition('#closeConditions', false)"></h1>
-<div id="closeConditions">
-
-</div>
-
-
+<pre>
+<code id="json"></code>
+<code id="script"></code>
+</pre>

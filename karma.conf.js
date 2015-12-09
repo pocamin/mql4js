@@ -13,6 +13,7 @@ module.exports = function (config) {
       'app/js/agentExecutionAdapter/*.js',
       'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
+      'app/js/composition.builder.js',
       'dist/js/mql4-to-js.js',
       'dist/bower_dep.js',
       'test/mql4js/convert.common.js',

@@ -1,23 +1,3 @@
-.component h1 {
-    color: #bf3668;
-    background-color: #CCCCCC;
-    margin: 0;
-    padding: 5px;
-}
-
-.component h2 {
-    color: #bf3668;
-    background-color: #DDDDDD;
-    margin: 0;
-    padding: 5px;
-    font-size: 12px;
-}
-
-.component .component_content {
-    padding: 5px;
-
-}
-
 #graph, #script, #eventBox {
     width: 1000px;
 }
@@ -42,14 +22,6 @@
     padding: 5px
 }
 
-label {
-    font-weight: bold;
-    display: block;
-    margin-right: 10px;
-    height: 30px;
-    float: left;
-
-}
 
 #left, #right {
     float: left;
@@ -64,14 +36,7 @@ label {
     width: calc(100% - 1200px);
 }
 
-.component {
 
-    padding: 0;
-    border: 1px solid #CCCCCC;
-    margin: 5px;
-    border-radius: 5px;
-    background: #f5F5F5;
-}
 
 #console pre {
     max-height: 295px;
@@ -84,32 +49,6 @@ label {
     overflow-y: scroll;
 }
 
-table {
-    border-collapse: collapse;
-    width: 100%
-}
-
-table td, table th {
-    padding: 2px;
-    border: 1px solid black;
-}
-
-thead {
-    background: black;
-    color: white;
-}
-
-.clearfix {
-    clear: both;
-}
-
-input[type=text] {
-    width: 70px;
-}
-
-input[type=number] {
-    width: 50px;
-}
 
 input[name=stop] {
     background: red;
