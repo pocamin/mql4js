@@ -1,3 +1,9 @@
+.component h1.collapse {
+    background-color: #bf3668;
+    color: #CCCCCC;
+    border-radius: 5px;
+}
+
 .component h1 {
     color: #bf3668;
     background-color: #CCCCCC;

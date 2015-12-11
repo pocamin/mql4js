@@ -1,7 +1,7 @@
 
 #code {
     width: 958px;
-    height: 500px;
+    max-width: 958px;
     padding: 10px;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;

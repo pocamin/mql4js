@@ -57,7 +57,16 @@
             });
             scriptTemplate = Handlebars.compile($('#script-template').val());
         });
+        $(function () {
+            function collapse(selector) {
+                $(selector).toggleClass("collapse").find("~").toggle();
+            }
 
+            $(".component").on("click", "h1:first", function () {
+                collapse(this);
+            });
+            collapse("#script h1");
+        });
 
         // TODO clean up put in separate js
         var loggedEvents = {};
