@@ -212,7 +212,7 @@ var BarAdapter = function (symbol, intervalName, currentDate) {
   this._listeners = [];
   this.bars = [];
   this._maxSize = CACHE_MAX_SIZE;
-  this._maxDate = this._interval.floor(currentDate);
+  this._maxTime = this._interval.floor(currentDate);
 };
 
 
@@ -252,7 +252,7 @@ RandomBarAdapter.prototype.constructor = BarAdapter;
 
 
 RandomBarAdapter.prototype.onTick = function (tick) {
-  var nextPeriodMaxDate = moment(this._maxDate).add(this._interval.periodicity, this._interval.periodicityUnit);
+  var nextPeriodMaxDate = moment(this._maxTime).add(this._interval.periodicity, this._interval.periodicityUnit);
 
 
   if (nextPeriodMaxDate.isBefore(tick.date)) {
@@ -263,9 +263,9 @@ RandomBarAdapter.prototype.onTick = function (tick) {
       return t.volume
     });
 
-    var bar = this._addBar(this._maxDate, prices, volumes);
+    var bar = this._addBar(this._maxTime, prices, volumes);
     this._pendingTicks = [tick];
-    this._maxDate = nextPeriodMaxDate;
+    this._maxTime = nextPeriodMaxDate;
     this._newBar(bar);
   } else {
     this._pendingTicks.push(tick);
@@ -305,7 +305,7 @@ RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverte
 
 
 RandomBarAdapter.prototype.init = function () {
-  var barDate = moment(this._maxDate);
+  var barDate = moment(this._maxTime);
   var value = this._initialValue;
 
   for (var i = 0; i < this._maxSize; i++) {
@@ -518,7 +518,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, opti
     var env = {
       symbol: symbol,
       interval: interval,
-      startDate: startDate,
+      startTime: startDate,
       _processToStart: [],
       _processToStop: [],
       isRunning: false,

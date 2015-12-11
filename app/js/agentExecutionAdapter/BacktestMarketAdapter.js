@@ -43,7 +43,7 @@ BacktestMarketAdapter.prototype.initOrder = function (order) {
   order.isBuy = order.side === ORDER_SIDE.BUY;
 
   order.pnlInPercent = function (tick) {
-    return 100 * (order.isBuy ? (tick.bid - order.openPrice) : (tick.ask - order.openPrice)) / order.openPrice;
+    return 100 * (order.isBuy ? (tick.bid - order.openPrice) : ( order.openPrice- tick.ask)) / order.openPrice;
   };
   order.lossInPercent = function (tick) {
     return Math.max(0, -order.pnlInPercent(tick));
