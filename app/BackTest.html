@@ -3,14 +3,17 @@
 <html lang="en">
 <head>
     <!-- build:css backtest.css -->
+    <link href="css/common.css" rel="stylesheet">
     <link href="css/backtest.css" rel="stylesheet">
     <link href="css/backtest-chart.css" rel="stylesheet">
     <link href="css/backtest-events.css" rel="stylesheet">
-    <link href="css/common.css" rel="stylesheet">
+    <link href="css/composition.css" rel="stylesheet">
     <!-- endbuild -->
 
 
     <!-- build:js js/backtest.js -->
+    <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/handlebars/handlebars.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
@@ -25,10 +28,38 @@
     <script src="js/agentExecutionAdapter/BackTestWithRandomEnv.js"></script>
     <script src="js/technicalIndicators/MovingAverage.js"></script>
     <script src="js/backtest.chart.js"></script>
+
+    <script src="js/composition.js"></script>
+    <script src="js/ComplexExpressionEvaluation.js"></script>
     <!-- endbuild -->
 
 
     <script>
+
+        var composition = new Composition();
+        var scriptTemplate;
+
+        Handlebars.registerHelper('join', function (items, options) {
+            return items.map(function (item) {
+                return item;
+            }).join(options.hash.separator.replace("\\n", "\n") || ", ");
+        });
+
+        Handlebars.registerHelper('condition', function (item, option) {
+            return JSON.stringify(item || {type: "forAnyTick"});
+        });
+
+        $(function () {
+            composition.addOrCondition('#openConditions', true);
+            composition.addOrCondition('#closeConditions', false);
+            $("#agentComposition").on('click change keydown keypress keyup', "input, select", function () {
+                composition.refreshStatus(this);
+            });
+            scriptTemplate = Handlebars.compile($('#script-template').val());
+        });
+
+
+        // TODO clean up put in separate js
         var loggedEvents = {};
         var updateLoggedEvents = function () {
             $(".loggedEvents input[type=checkbox]").each(function () {
@@ -229,6 +260,43 @@
 <body>
 <div id="left">
 
+    <div class="component" id="agentComposition">
+        <h1>Agent composition</h1>
+
+        <h2>Open Position</h2>
+
+
+        <div class="component_content">
+            <div id="openConditions">
+
+            </div>
+            <button onclick="composition.addOrCondition('#openConditions', true)" class="new_condition">
+                Add new conditions to open a position
+            </button>
+        </div>
+
+
+        <h2>Close Position</h2>
+
+        <div class="component_content">
+            <div id="closeConditions">
+
+            </div>
+            <button onclick="composition.addOrCondition('#closeConditions', false)" class="new_condition">
+                Add new conditions to close a position
+            </button>
+        </div>
+
+
+        <h2>
+            <button type="button" class="generate_script"
+                    onclick="/* TODO remove*/ scriptTemplate = Handlebars.compile($('#script-template').val()); composition.generateScript(scriptTemplate)">
+                Generate
+                Script
+            </button>
+        </h2>
+    </div>
+
     <div id="script" class="component">
         <h1>Agent code</h1>
 
@@ -304,24 +372,24 @@ var onTick = function (tick) {
             <label>
                 Interval
                 <select name="interval">
-                    <option>M1</option>
+                    <option selected>M1</option>
                     <option>M15</option>
                     <option>M30</option>
                     <option>H1</option>
                     <option>H4</option>
                     <option>M8</option>
-                    <option selected>D1</option>
+                    <option>D1</option>
                 </select>
             </label>
             <label class="clearfix">
                 Start date
-                <input name="startDate" type="date" value="2013-01-01">
-                <input name="startTime" type="time" value="00:00">
+                <input name="startDate" type="date" value="2015-12-10">
+                <input name="startTime" type="time" value="09:00">
             </label>
             <label class="clearfix">
                 End date
-                <input name="endDate" type="date" value="2015-11-01">
-                <input name="endTime" type="time" value="00:00">
+                <input name="endDate" type="date" value="2015-12-10">
+                <input name="endTime" type="time" value="11:00">
             </label>
         </div>
 
@@ -355,7 +423,7 @@ var onTick = function (tick) {
 
             <label>
                 Ticks by period
-                <input type="number" name="nbTicksByPeriod" value="4"/>
+                <input type="number" name="nbTicksByPeriod" value="600"/>
             </label>
 
 
@@ -390,7 +458,7 @@ var onTick = function (tick) {
                 <option>10</option>
                 <option>30</option>
                 <option>50</option>
-                <option selected>100</option>
+                <option>100</option>
                 <option>500</option>
                 <option>1000</option>
                 <option>10000</option>
@@ -510,6 +578,63 @@ var onTick = function (tick) {
         <pre><code></code></pre>
     </div>
 </div>
+
+
+<!-- textarea to avoid idea formating -->
+<textarea id="script-template" title="" style="width: 100%; display: none" rows="20">
+var expressionEvaluator = COMPLEX_EXPR_EVAL(4); // see ComplexExpressionEvaluation.js
+var orderId = -1;
+var init = function(){
+  {{join allIndicators separator="\n  "}}
+  {{#each openBlocks as |block blockId|}}
+    {{#each expressions as |expression expressionId|}}
+  expressionEvaluator.addExpressionCondition("open", {{blockId}}, {{expressionId}}, {{condition expression.condition}});
+    {{/each}}
+  {{/each}}
+  {{#each closeBlocks as |block blockId|}}
+    {{#each expressions as |expression expressionId|}}
+  expressionEvaluator.addExpressionCondition("close", {{blockId}}, {{expressionId}}, {{condition expression.condition}});
+    {{/each}}
+  {{/each}}
+};
+var onTick = function(tick){
+  switch (env.marketAdapter.orderStatus(orderId)) {
+    case ORDER_STATUS.UNKNOWN :
+    case ORDER_STATUS.CLOSED :
+      openOrderIfNeeded(tick);
+      break;
+    case ORDER_STATUS.OPENED :
+      closeOrderIfNeeded(tick);
+  }
+}
+
+var openOrderIfNeeded = function(tick){
+  {{#each openBlocks as |block blockId|}}
+    {{#each expressions as |expression expressionId|}}
+  expressionEvaluator.addToEvaluation("open", {{blockId}}, {{expressionId}}, tick.date, {{expression.value}});
+    {{/each}}
+  {{/each}}
+  {{#each openBlocks as |block blockId|}}
+  {{#unless @first}}else {{/unless}}if (expressionEvaluator.evaluateGroup("open", {{blockId}})){
+    orderId = env.marketAdapter.sendOrder({symbol: env.symbol, amount: {{block.order.amount}}, type: "market", side: "{{block.order.side}}"}, tick);
+  }
+  {{/each}}
+}
+
+var closeOrderIfNeeded = function(tick){
+  var order = env.marketAdapter.getOrder(orderId);
+  {{#each closeBlocks as |block blockId|}}
+    {{#each expressions as |expression expressionId|}}
+  expressionEvaluator.addToEvaluation("close", {{blockId}}, {{expressionId}}, tick.date, {{expression.value}});
+    {{/each}}
+  {{/each}}
+  {{#each closeBlocks as |block blockId|}}
+  {{#unless @first}}else {{/unless}}if (expressionEvaluator.evaluateGroup("close", {{blockId}})){
+    env.marketAdapter.closeOrder(orderId, (order.side == 'buy')?tick.bid:tick.sell, order.amount, tick);
+  }
+  {{/each}}
+}
+</textarea>
 
 
 </body>

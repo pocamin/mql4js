@@ -8,20 +8,41 @@ var Composition = function () {
   var ask = {template: "ask value"};
   var gt = {template: "is greater than"};
   var lt = {template: "is lower than"};
-  var pct_gt = {template: 'is <input type="number" name="percent" value="5"> % greater than'};
-  var pct_lt = {template: 'is <input type="number" name="percent" value="5"> % lower than'};
+  var pct_gt = {template: 'is <input type="number" name="percent"> % greater than'};
+  var pct_lt = {template: 'is <input type="number" name="percent"> % lower than'};
   var forAnyTick = {template: 'for any tick'};
 
 
-  var forPeriod = {
-    template: '<input type="number" name="percent" value="90"> % of the time during the last \
-                   <input type="number" value="5"> \
-                   <select name="periodicity"> \
+  var percentForPeriod = {
+    template: '<input type="number" name="percent" value="100"> % of the time during the last \
+                   <input name="amount" type="number" > \
+                   <select name="unit"> \
                            <option value="second">second(s)</option>\
                            <option value="minute">minute(s)</option>\
                            <option value="hour">hour(s)</option>\
                    </select>'
   };
+
+  var atLeastOnceForPeriod = {
+    template: 'at least once during the last \
+                   <input name="amount" type="number">  \
+                   <select name="unit"> \
+                           <option value="second">second(s)</option>\
+                           <option value="minute">minute(s)</option>\
+                           <option value="hour">hour(s)</option>\
+                   </select>'
+  };
+
+  var neverForPeriod = {
+    template: 'never during the last \
+                   <input name="amount" type="number" > \
+                   <select name="unit"> \
+                           <option value="second">second(s)</option>\
+                           <option value="minute">minute(s)</option>\
+                           <option value="hour">hour(s)</option>\
+                   </select>'
+  };
+
   var indicators = {
     sma: {generator: sma, display: "Simple Moving Average"},
     ema: {generator: ema, display: "Exponential Moving Average"},
@@ -84,8 +105,10 @@ var Composition = function () {
 
       },
       condition: {
-        forAnyTick: {generator: forAnyTick},
-        forPeriod: {generator: forPeriod}
+        forAnyTick: {generator: forAnyTick, display: "for any tick"},
+        percentForPeriod: {generator: percentForPeriod, display: "for % times in the last ..."},
+        atLeastOnceForPeriod: {generator: atLeastOnceForPeriod, display: "at least once in the last ..."},
+        neverForPeriod: {generator: neverForPeriod, display: "never in the last ..."}
       }
     },
     close: {
@@ -111,8 +134,10 @@ var Composition = function () {
         value: {generator: numberInput, display: "fixed value"}
       },
       condition: {
-        forAnyTick: {generator: forAnyTick, exclusions: ['pnl']},
-        forPeriod: {generator: forPeriod, exclusions: ['pnl']}
+        forAnyTick: {generator: forAnyTick, exclusions: ['pnl'], display: "for any tick"},
+        percentForPeriod: {generator: percentForPeriod, exclusions: ['pnl'], display: "for % times in the last ..."},
+        atLeastOnceForPeriod: {generator: atLeastOnceForPeriod, exclusions: ['pnl'], display: "at least once in the last ..."},
+        neverForPeriod: {generator: neverForPeriod, exclusions: ['pnl'], display: "never in the last ..."}
       }
     }
   };
@@ -186,7 +211,7 @@ var Composition = function () {
   var addCondition = function ($location, startWith) {
     var qualifiers = [];
     var conditionOption = options[$location.hasClass("open") ? "open" : "close"];
-    var $expressions = $location.find(".expressions");
+    var $expressions = $location.find(".expressionsEvaluation");
     var $expression = $("<div class='expression'/>").appendTo($expressions);
     $("<button>")
       .html("-")
@@ -227,7 +252,7 @@ var Composition = function () {
 
   var addOrCondition = function (location, isOpen) {
     var $orderBlock = $("<div>").addClass("orderBlock").addClass(isOpen ? "open" : "close").appendTo($(location));
-    var $conditions = $("<div class='expressions'>").appendTo($orderBlock);
+    var $conditions = $("<div class='expressionsEvaluation'>").appendTo($orderBlock);
     if (isOpen) {
       $('<div class="order">\
         Open a position at market type : <select><option value="buy">Buy</option><option value="buy">Sell</option></select>\
@@ -333,6 +358,22 @@ var Composition = function () {
 
     }
 
+    function getCondition($location) {
+      var selectedOption = $location.find("select").val();
+      var $selectedOption = $location.find("." + selectedOption);
+
+      var condition = {type: selectedOption};
+      switch (selectedOption) {
+        case "percentForPeriod":
+          condition.percent = $selectedOption.find("input[name=percent]").val();
+        case "atLeastOnceForPeriod":
+        case "neverForPeriod":
+          condition.timeUnit = $selectedOption.find("select[name=unit]").val();
+          condition.timeAmount = $selectedOption.find("input[name=amount]").val();
+      }
+      return condition;
+    }
+
     $(".orderBlock").each(function () {
       var $orderBlock = $(this);
       var block = {expressions: []};
@@ -347,10 +388,10 @@ var Composition = function () {
           var $right = $expression.find(".right");
           var $condition = $expression.find(".condition"); // TODO
 
-          block.expressions.push(
-            getExpression($left, scriptStructure.allIndicators) +
-            getOperatorValue($operator) +
-            getExpression($right, scriptStructure.allIndicators)
+          block.expressions.push({
+              value: getExpression($left, scriptStructure.allIndicators) + getOperatorValue($operator) + getExpression($right, scriptStructure.allIndicators),
+              condition: getCondition($condition)
+            }
           );
         }
       );
@@ -362,11 +403,8 @@ var Composition = function () {
 
 
     });
-    $("#json")
-      .html(JSON.stringify(scriptStructure, null, 2));
 
-    $("#script")
-      .html(template(scriptStructure));
+    $("#code").html(template(scriptStructure));
 
     return scriptStructure;
   };

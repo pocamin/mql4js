@@ -49,7 +49,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, opti
           seed: options.seed,
           initialValue: options.initialPrice,
           roundTo: options.precision,
-          nbInitialTicksByPeriod: options.nbTicksByPeriod,
+          nbInitialTicksByPeriod: 5,
           maxVolumeByTick: options.maxVolumeByTick,
           arithmeticWalk: options.arithmeticWalk
         });

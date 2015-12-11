@@ -26,8 +26,8 @@ BarAdapter.prototype.init = function () {
   });
 };
 
-BarAdapter.last = function () {
-  return this.bars[bars.length - 1];
+BarAdapter.prototype.last = function () {
+  return this.bars[this.bars.length - 1];
 };
 
 var RandomBarAdapter = function (symbol, period, currentDate, options) {

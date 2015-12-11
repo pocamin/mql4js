@@ -101,7 +101,7 @@
 
       // ## Character categories
 
-      // Big ugly regular expressions that match characters in the
+      // Big ugly regular expressionsEvaluation that match characters in the
       // whitespace, identifier, and identifier-start categories. These
       // are only applied when a character is found to actually have a
       // code point above 128.
@@ -685,7 +685,7 @@
         }
 
         function handle_end_expr() {
-            // statements inside expressions are not valid syntax, but...
+            // statements inside expressionsEvaluation are not valid syntax, but...
             // statements must all be closed when their container closes
             while (flags.mode === MODE.Statement) {
                 restore_mode();

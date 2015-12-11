@@ -1,9 +1,6 @@
-#graph, #script, #eventBox {
-    width: 1000px;
-}
 
 #code {
-    width: 968px;
+    width: 958px;
     height: 500px;
     padding: 10px;
     border-bottom-left-radius: 5px;
@@ -22,7 +19,6 @@
     padding: 5px
 }
 
-
 #left, #right {
     float: left;
     margin: 5px;
@@ -36,8 +32,6 @@
     width: calc(100% - 1200px);
 }
 
-
-
 #console pre {
     max-height: 295px;
     overflow-y: scroll;
@@ -48,7 +42,6 @@
     max-height: 457px;
     overflow-y: scroll;
 }
-
 
 input[name=stop] {
     background: red;
