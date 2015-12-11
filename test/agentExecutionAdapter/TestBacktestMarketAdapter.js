@@ -15,7 +15,6 @@ describe('Backtest Market Adapter', function () {
     accountAdapter.onTick(tick);
   };
 
-
   it("Market buy order are instantly executed at bid price", function () {
     var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
       {bid: 0.5, ask: 0.6, symbol: "EUR_JPY"});
@@ -31,6 +30,35 @@ describe('Backtest Market Adapter', function () {
     expect(marketAdapter.getOrder(orderId)).toEqual(
       {amount: 1000, symbol: 'EUR_USD', type: 'market', side: 'sell', id: 1, status: 'OPENED', initialAmount: 1000, openPrice: 0.5}
     )
+  });
+
+  fit("populate orders with pnl function", function () {
+    var orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'sell'},
+      {bid: 1, ask: 1.1, symbol: "EUR_JPY"});
+    var order = marketAdapter.getOrder(orderId);
+    expect(order.isBuy).toBeFalsy();
+    expect(Math.round(order.lossInAmount({bid: 1, ask: 1.1, symbol: "EUR_JPY"}))).toEqual(100);
+    expect(Math.round(order.lossInPercent({bid: 1, ask: 1.1, symbol: "EUR_JPY"}))).toEqual(10);
+    expect(Math.round(order.profitInAmount({bid: 1, ask: 1.1, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.profitInPercent({bid: 1, ask: 1.1, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.lossInAmount({bid: 0.4, ask: 0.5, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.lossInPercent({bid: 0.4, ask: 0.5, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.profitInAmount({bid: 0.4, ask: 0.5, symbol: "EUR_JPY"}))).toEqual(500);
+    expect(Math.round(order.profitInPercent({bid: 0.4, ask: 0.5, symbol: "EUR_JPY"}))).toEqual(50);
+
+
+    orderId = marketAdapter.sendOrder({amount: 1000, symbol: "EUR_USD", type: "market", side: 'buy'},
+      {bid: 0.9, ask: 1, symbol: "EUR_JPY"});
+    order = marketAdapter.getOrder(orderId);
+    expect(order.isBuy).toBeTruthy();
+    expect(Math.round(order.lossInAmount({bid: 0.9, ask: 1, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.lossInPercent({bid: 0.9, ask: 1, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.profitInAmount({bid: 0.9, ask: 1, symbol: "EUR_JPY"}))).toEqual(100);
+    expect(Math.round(order.profitInPercent({bid: 0.9, ask: 1, symbol: "EUR_JPY"}))).toEqual(10);
+    expect(Math.round(order.lossInAmount({bid: 2, ask: 2.1, symbol: "EUR_JPY"}))).toEqual(1000);
+    expect(Math.round(order.lossInPercent({bid: 2, ask: 2.1, symbol: "EUR_JPY"}))).toEqual(100);
+    expect(Math.round(order.profitInAmount({bid: 2, ask: 2.1, symbol: "EUR_JPY"}))).toEqual(0);
+    expect(Math.round(order.profitInPercent({bid: 2, ask: 2.1, symbol: "EUR_JPY"}))).toEqual(0);
   });
 
 

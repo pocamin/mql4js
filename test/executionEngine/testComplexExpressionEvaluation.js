@@ -8,7 +8,7 @@ describe('COMPLEX_EXPR_EVAL', function () {
     expect(expressionEvaluator.evaluateGroup("open", 0)).toBeTruthy();
   });
 
-  fit('need no gaps in data', function () {
+  it('need no gaps in data', function () {
     var expressionEvaluator = new COMPLEX_EXPR_EVAL();
     expressionEvaluator.addExpressionCondition("open", 0, 0, {type: "percentForPeriod", percent: 50, timeUnit: 'minute', timeAmount: 3.5});
     expressionEvaluator.addToEvaluation("open", 0, 0, new Date(2010, 1, 1, 10, 1), true);

@@ -1,6 +1,6 @@
-var TickAdapter = function (symbol, currentDate) {
+var TickAdapter = function (symbol, currentTime) {
   this._symbol = symbol;
-  this._currentDate = moment(currentDate || new Date());
+  this._currentTime = currentTime || new Date().getTime();
   this._listeners = [];
 };
 
@@ -8,15 +8,15 @@ TickAdapter.prototype.addListener = function (listener) {
   this._listeners.push(listener);
 };
 
-TickAdapter.prototype.newTick = function (ask, bid, volume, date) {
+TickAdapter.prototype.newTick = function (ask, bid, volume, time) {
   var that = this;
   this._listeners.forEach(function (listener) {
-    listener.onTick({ask: ask, bid: bid, volume: volume, date: date, symbol: that._symbol});
+    listener.onTick({ask: ask, bid: bid, volume: volume, date: new Date(time), symbol: that._symbol});
   });
 };
 
-var RandomTickAdapter = function (symbol, currentDate, options) {
-  TickAdapter.call(this, symbol, currentDate);
+var RandomTickAdapter = function (symbol, currentTime, options) {
+  TickAdapter.call(this, symbol, currentTime);
   options = options || {};
   this._seed = options.seed || 1;
   this._ticknumber = 0;
@@ -55,7 +55,7 @@ RandomTickAdapter.prototype.stop = function () {
 
 RandomTickAdapter.prototype._createTick = function () {
 
-  this._currentDate.add(this._tickPeriodInMs, "ms");
+  this._currentTime += this._tickPeriodInMs;
   this._last = (this._last || this._initialValue);
 
 
@@ -68,5 +68,5 @@ RandomTickAdapter.prototype._createTick = function () {
 
   var bid = Math.round((this._last - this._bidAskDelta * random(this._seed, this._ticknumber) / 2) * this._roundTo) / this._roundTo;
   var ask = Math.round((this._last + this._bidAskDelta * random(this._seed, this._ticknumber + 0.5) / 2) * this._roundTo) / this._roundTo;
-  this.newTick(ask, bid, Math.round(this._maxVolumeByTick * random(this._seed, this._ticknumber)), moment(this._currentDate).toDate());
+  this.newTick(ask, bid, Math.round(this._maxVolumeByTick * random(this._seed, this._ticknumber)), this._currentTime);
 };

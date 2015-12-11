@@ -362,7 +362,7 @@ var Composition = function () {
       var selectedOption = $location.find("select").val();
       var $selectedOption = $location.find("." + selectedOption);
 
-      var condition = {type: selectedOption};
+      var condition = {type: selectedOption || "forAnyTick"};
       switch (selectedOption) {
         case "percentForPeriod":
           condition.percent = $selectedOption.find("input[name=percent]").val();
@@ -386,7 +386,7 @@ var Composition = function () {
           var $left = $expression.find(".left");
           var $operator = $expression.find(".operator");
           var $right = $expression.find(".right");
-          var $condition = $expression.find(".condition"); // TODO
+          var $condition = $expression.find(".condition");
 
           block.expressions.push({
               value: getExpression($left, scriptStructure.allIndicators) + getOperatorValue($operator) + getExpression($right, scriptStructure.allIndicators),

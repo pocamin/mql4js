@@ -1,11 +1,10 @@
-var BarAdapter = function (symbol, intervalName, currentDate) {
+var BarAdapter = function (symbol, intervalName, currentTime) {
   this._symbol = symbol;
-  this._intervalName = intervalName;
   this._interval = getInterval(intervalName);
   this._listeners = [];
   this.bars = [];
   this._maxSize = CACHE_MAX_SIZE;
-  this._maxDate = this._interval.floor(currentDate);
+  this._maxTime = currentTime;
 };
 
 
@@ -30,8 +29,8 @@ BarAdapter.prototype.last = function () {
   return this.bars[this.bars.length - 1];
 };
 
-var RandomBarAdapter = function (symbol, period, currentDate, options) {
-  BarAdapter.call(this, symbol, period, currentDate);
+var RandomBarAdapter = function (symbol, period, currentTime, options) {
+  BarAdapter.call(this, symbol, period, currentTime);
   options = options || {};
   this._seed = options.seed || 1;
   this._nbInitialTicksByPeriod = options.nbInitialTicksByPeriod || 10;
@@ -48,10 +47,10 @@ RandomBarAdapter.prototype.constructor = BarAdapter;
 
 
 RandomBarAdapter.prototype.onTick = function (tick) {
-  var nextPeriodMaxDate = moment(this._maxDate).add(this._interval.periodicity, this._interval.periodicityUnit);
+  var nextPeriodMaxTime = this._maxTime + this._interval.inMillis();
 
 
-  if (nextPeriodMaxDate.isBefore(tick.date)) {
+  if (nextPeriodMaxTime < tick.date.getTime()) {
     var prices = this._pendingTicks.map(function (t) {
       return (t.bid + t.ask) / 2
     });
@@ -59,16 +58,16 @@ RandomBarAdapter.prototype.onTick = function (tick) {
       return t.volume
     });
 
-    var bar = this._addBar(this._maxDate, prices, volumes);
+    var bar = this._addBar(this._maxTime, prices, volumes);
     this._pendingTicks = [tick];
-    this._maxDate = nextPeriodMaxDate;
+    this._maxTime = nextPeriodMaxTime;
     this._newBar(bar);
   } else {
     this._pendingTicks.push(tick);
   }
 };
 
-RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverted) {
+RandomBarAdapter.prototype._addBar = function (barTime, prices, volumes, inverted) {
   var close = prices[prices.length - 1],
     open = prices[0],
     low = prices[0],
@@ -86,7 +85,7 @@ RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverte
   }
 
 
-  var bar = {open: open, low: low, high: high, close: close, volume: volume, date: moment(barDate).toDate(), symbol: this._symbol};
+  var bar = {open: open, low: low, high: high, close: close, volume: volume, date: new Date(barTime), symbol: this._symbol};
   if (inverted) {
     this.bars.splice(0, 0, bar);
   } else {
@@ -101,11 +100,11 @@ RandomBarAdapter.prototype._addBar = function (barDate, prices, volumes, inverte
 
 
 RandomBarAdapter.prototype.init = function () {
-  var barDate = moment(this._maxDate);
+  var barTime = this._maxTime;
   var value = this._initialValue;
 
   for (var i = 0; i < this._maxSize; i++) {
-    barDate.subtract(this._interval.periodicity, this._interval.periodicityUnit);
+    barTime -= this._interval.inMillis();
 
     var values = [];
     var volumes = [];
@@ -125,7 +124,7 @@ RandomBarAdapter.prototype.init = function () {
     }
 
 
-    this._addBar(barDate, values, volumes, true);
+    this._addBar(barTime, values, volumes, true);
   }
 
   var that = this;

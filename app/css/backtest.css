@@ -109,14 +109,6 @@ input[name=stop] {
     color: darkred;
 }
 
-#events .NOT_OPENED_ON_TICK {
-    color: orange;
-}
-
-#events .NOT_CLOSED_ON_TICK {
-    color: orange;
-}
-
 #orders tr.highlight {
     background: #cc99cd;
 }

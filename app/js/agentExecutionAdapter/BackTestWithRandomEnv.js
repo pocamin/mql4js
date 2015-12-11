@@ -1,9 +1,9 @@
 // TODO add tests
-var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, options) {
+var BackTestWithRandomEnv = function (symbol, interval, startTime, endTime, options) {
     var env = {
       symbol: symbol,
       interval: interval,
-      startDate: startDate,
+      startTime: startTime,
       _processToStart: [],
       _processToStop: [],
       isRunning: false,
@@ -19,6 +19,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, opti
     env.accountAdapter = new BacktestAccountAdapter();
     env.marketAdapter = new BacktestMarketAdapter(env.accountAdapter);
 
+
     // Random part
     env.getTickAdapter = function (currency, startDate) {
       var tickAdapter = new RandomTickAdapter(currency, startDate,
@@ -26,7 +27,7 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, opti
           seed: options.seed,
           initialValue: options.initialPrice,
           roundTo: options.precision,
-          tickPeriodInMs: Math.round(moment.duration(getInterval(interval).periodicity, getInterval(interval).periodicityUnit).asMilliseconds() / options.nbTicksByPeriod),
+          tickPeriodInMs: Math.round(getInterval(interval).inMillis() / options.nbTicksByPeriod),
           deltaByTick: options.deltaByTick,
           bidAskDelta: options.bidAskDelta,
           batchSize: options.batchSize,
@@ -61,13 +62,13 @@ var BackTestWithRandomEnv = function (symbol, interval, startDate, endDate, opti
 
 
     // Main prices feeds
-    env.mainTickAdapter = env.getTickAdapter(symbol, startDate);
-    env.mainBarAdapter = env.getBarAdapter(symbol, interval, env.mainTickAdapter, startDate);
+    env.mainTickAdapter = env.getTickAdapter(symbol, startTime);
+    env.mainBarAdapter = env.getBarAdapter(symbol, interval, env.mainTickAdapter, startTime);
 
 
     env.mainTickAdapter.addListener({
       onTick: function (tick) {
-        if (tick.date.getTime() > endDate.getTime()) {
+        if (tick.date.getTime() > endTime) {
           env.stop();
         }
       }

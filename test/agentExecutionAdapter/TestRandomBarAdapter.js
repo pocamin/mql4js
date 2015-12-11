@@ -1,6 +1,6 @@
 describe('RandomBarAdapter', function () {
   it("can create histo data for testing", function () {
-    var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1), {arithmeticWalk: true});
+    var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1).getTime(), {arithmeticWalk: true});
     rba._maxSize = 2;
     rba.init();
     expect(rba.bars).toEqual([
@@ -10,7 +10,7 @@ describe('RandomBarAdapter', function () {
   });
 
   it("can update on tick", function () {
-    var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1), {arithmeticWalk: true});
+    var rba = new RandomBarAdapter("EUR_CHF", "D1", new Date(2010, 0, 1).getTime(), {arithmeticWalk: true});
     rba._maxSize = 2;
     rba.init();
     expect(rba.bars.length).toBe(2); // @see can create histo data for testing

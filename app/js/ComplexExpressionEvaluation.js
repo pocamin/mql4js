@@ -7,6 +7,7 @@ var COMPLEX_EXPR_EVAL = function (evaluationFrequency) {
     return type + "_" + groupIndex;
   };
 
+
   var _hasGapsInEvaluations = function (evaluations, periodLengthInMillis) {
     var periodFiled = [];
     var minTime = evaluations[evaluations.length - 1].time - periodLengthInMillis;
@@ -29,8 +30,11 @@ var COMPLEX_EXPR_EVAL = function (evaluationFrequency) {
     } else {
       var minTime = time - MILLIS_BY_PERIOD[condition.timeUnit] * condition.timeAmount;
       var indexToRemoveFrom = 0;
-      var expressionEvaluation = groupEvaluations[expressionIndex];
-      while (expressionEvaluation[indexToRemoveFrom].time < minTime) {
+      var expressionEvaluations = groupEvaluations[expressionIndex];
+      while (expressionEvaluations[indexToRemoveFrom].time < minTime) {
+        if (expressionEvaluations[indexToRemoveFrom].result) {
+          expressionEvaluations.positiveCount--;
+        }
         indexToRemoveFrom++;
       }
       if (indexToRemoveFrom > 0) {
@@ -50,9 +54,7 @@ var COMPLEX_EXPR_EVAL = function (evaluationFrequency) {
       return false;
     }
 
-    var percent = 100 * evaluations.filter(function (evaluation) {
-        return evaluation.result
-      }).length / evaluations.length;
+    var percent = 100 * evaluations.positiveCount / evaluations.length;
     if (condition.type == "percentForPeriod") {
       return percent >= condition.percent;
     }
@@ -85,10 +87,14 @@ var COMPLEX_EXPR_EVAL = function (evaluationFrequency) {
     var expressionEvaluation = groupEvaluations[expressionIndex];
     if (!expressionEvaluation) {
       expressionEvaluation = [];
+      expressionEvaluation.positiveCount = 0;
       groupEvaluations[expressionIndex] = expressionEvaluation;
     }
 
     expressionEvaluation.push({time: date.getTime(), result: evaluationResult});
+    if (evaluationResult) {
+      expressionEvaluation.positiveCount++;
+    }
     _cleanEvaluations(groupId, expressionIndex, date.getTime());
   };
 

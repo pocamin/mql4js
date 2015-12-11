@@ -11,7 +11,6 @@ module.exports = function (config) {
       'app/js/commonAgent.js',
       'app/js/technicalIndicators/*.js',
       'app/js/agentExecutionAdapter/*.js',
-      'app/js/agentExecutionEngine.js',
       'app/js/mql4.js',
       'app/js/ComplexExpressionEvaluation.js',
       'dist/js/mql4-to-js.js',

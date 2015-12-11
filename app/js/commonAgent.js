@@ -21,10 +21,7 @@ var ORDER_EVENT = {
   PARTIALLY_CLOSED: "PARTIALLY_CLOSED",
   CLOSED: "CLOSED",
   CANCEL_SENT: "CANCEL_SENT",
-  CANCELLED: "CANCELLED",
-  NOT_OPENED_ON_TICK: "NOT_OPENED_ON_TICK",
-  NOT_CLOSED_ON_TICK: "NOT_CLOSED_ON_TICK"
-
+  CANCELLED: "CANCELLED"
 };
 
 var ORDER_SIDE = {
@@ -84,23 +81,10 @@ APPLIED_PRICE[APPLIED_PRICE.PRICE_WEIGHTED] = function (data) {
 var getInterval = function (intervalName) {
   return {
     periodicity: parseInt(intervalName.substring(1)),
-    periodicityUnit: {M: 'minute', H: 'hour', D: 'day'}[intervalName.charAt(0)],
-    floor: function (date) {
-      var dateFloor = moment(date).startOf(this.periodicityUnit);
-      while (dateFloor.get(this.periodicityUnit) % this.periodicity !== 0) {
-        dateFloor.subtract(1, this.periodicityUnit);
-      }
-      return dateFloor;
-    },
-    ceil: function (date) {
-      var dateCeil = moment(date).startOf(this.periodicityUnit);
-      dateCeil = dateCeil.isSame(date) ? dateCeil : dateCeil.add(1, this.periodicityUnit);
-      while (dateCeil.get(this.periodicityUnit) % this.periodicity !== 0) {
-        dateCeil.add(1, this.periodicityUnit);
-      }
-      return dateCeil;
+    periodicityUnit: {S: 1000, M: 60000, H: 3600000, D: 86400000}[intervalName.charAt(0)],
+    inMillis: function () {
+      return this.periodicity * this.periodicityUnit
     }
-
   };
 };
 
@@ -108,4 +92,4 @@ var getInterval = function (intervalName) {
 var random = function (seed, iteration) {
   var x = Math.sin(seed * iteration) * 10000;
   return x - Math.floor(x);
-}
+};

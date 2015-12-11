@@ -111,12 +111,9 @@ var backtestChart = function () {
 
     var accessor = ohlc.accessor();
 
+    initialLinesToDisplay += newTicksSinceLastTime;
     data = data.slice(data.length > initialLinesToDisplay ? data.length - initialLinesToDisplay : 0);
 
-    //trades.push({date: new Date(), type: "open-buy"});
-
-
-    initialLinesToDisplay += newTicksSinceLastTime;
     svg.select("g.candlestick").datum(data);
     x.domain(data.map(accessor.d));
     y.domain(techan.scale.plot.ohlc(data).domain());

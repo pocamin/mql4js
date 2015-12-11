@@ -28,15 +28,39 @@ BacktestMarketAdapter.prototype._emitOrderEvent = function (eventName, order, ti
 };
 
 BacktestMarketAdapter.prototype.sendOrder = function (order, tick) {
+  this.initOrder(order);
   order.id = ++this.orderIdSequence;
-  order.status = ORDER_STATUS.PENDING;
-  order.initialAmount = order.amount;
   this._orders[order.id] = order;
   this._emitOrderEvent(ORDER_EVENT.SENT, order);
   this._emitOrderEvent(ORDER_EVENT.RECEIVED, order);
   this._process(order, tick);
   return order.id;
 };
+
+BacktestMarketAdapter.prototype.initOrder = function (order) {
+  order.initialAmount = order.amount;
+  order.status = ORDER_STATUS.PENDING;
+  order.isBuy = order.side === ORDER_SIDE.BUY;
+
+  order.pnlInPercent = function (tick) {
+    return 100 * (order.isBuy ? (tick.bid - order.openPrice) : (tick.ask - order.openPrice)) / order.openPrice;
+  };
+  order.lossInPercent = function (tick) {
+    return Math.max(0, -order.pnlInPercent(tick));
+  };
+  order.profitInPercent = function (tick) {
+    return Math.max(0, order.pnlInPercent(tick));
+  };
+  order.profitInAmount = function (tick) {
+    return order.profitInPercent(tick) * order.amount / 100;
+  };
+  order.lossInAmount = function (tick) {
+    return order.lossInPercent(tick) * order.amount / 100;
+
+  };
+
+};
+
 
 BacktestMarketAdapter.prototype.closeOrder = function (orderId, price, amount, tick) {
   var order = this._orders[orderId];
@@ -51,14 +75,14 @@ BacktestMarketAdapter.prototype.closeOrder = function (orderId, price, amount, t
 
 BacktestMarketAdapter.prototype._process = function (order, tick) {
   if (order.status == ORDER_STATUS.PENDING && this._canOpen(order, tick)) {
-    this._accountAdapter.addPosition(order.symbol, (order.side == ORDER_SIDE.BUY) ? order.amount : -order.amount, tick);
+    this._accountAdapter.addPosition(order.symbol, (order.isBuy) ? order.amount : -order.amount, tick);
 
     order.status = ORDER_STATUS.OPENED;
     order.openPrice = this._openPrice(order, tick);
     this._emitOrderEvent(ORDER_EVENT.OPENED, order, tick);
   } else if (order.status == ORDER_STATUS.CLOSING && this._canClose(order, tick)) {
     order.amount -= order.closingAmount;
-    this._accountAdapter.addPosition(order.symbol, (order.side == ORDER_SIDE.BUY) ? -order.closingAmount : order.closingAmount, tick);
+    this._accountAdapter.addPosition(order.symbol, (order.isBuy) ? -order.closingAmount : order.closingAmount, tick);
 
 
     // TODO can be wrong on partial close
@@ -107,26 +131,15 @@ BacktestMarketAdapter.prototype._closePrice = function (order, tick) {
 
 
 BacktestMarketAdapter.prototype._canOpen = function (order, tick) {
-  var canOpen = false;
-  if (order.type == "market") {
-    canOpen = true;
-  } else if (order.type == "limit") {
-    canOpen = (order.side == ORDER_SIDE.BUY) ? tick.ask <= order.limit : tick.bid >= order.limit;
+  if (order.type == "limit") {
+    return (order.isBuy) ? tick.ask <= order.limit : tick.bid >= order.limit;
   }
-  if (!canOpen) {
-    this._emitOrderEvent(ORDER_EVENT.NOT_OPENED_ON_TICK, order,tick);
-  }
-
-  return canOpen;
+  return true;
 };
 
 
 BacktestMarketAdapter.prototype._canClose = function (order, tick) {
-  var canClose = (order.side == ORDER_SIDE.SELL) ? tick.ask <= order.closingPrice : tick.bid >= order.closingPrice;
-  if (!canClose) {
-    this._emitOrderEvent(ORDER_EVENT.NOT_CLOSED_ON_TICK, order,tick);
-  }
-  return canClose;
+  return (order.isBuy) ? tick.bid >= order.closingPrice : tick.ask <= order.closingPrice;
 };
 
 
