@@ -35,6 +35,17 @@
 
 
     <script>
+        function collapse(selector, state) {
+            if (state) {
+                if (state === 'show') {
+                    $(selector).removeClass("collapse").find("~").show();
+                } else {
+                    $(selector).addClass("collapse").find("~").hide();
+                }
+            } else {
+                $(selector).toggleClass("collapse").find("~").toggle();
+            }
+        }
 
         var composition = new Composition();
         var scriptTemplate;
@@ -50,17 +61,13 @@
         });
 
         $(function () {
-            composition.addOrCondition('#openConditions', true);
-            composition.addOrCondition('#closeConditions', false);
             $("#agentComposition").on('click change keydown keypress keyup', "input, select", function () {
                 composition.refreshStatus(this);
             });
             scriptTemplate = Handlebars.compile($('#script-template').val());
         });
         $(function () {
-            function collapse(selector) {
-                $(selector).toggleClass("collapse").find("~").toggle();
-            }
+
 
             $(".component").on("click", "h1:first", function () {
                 collapse(this);
@@ -300,7 +307,7 @@
 
         <h2>
             <button type="button" class="generate_script"
-                    onclick="/* TODO remove*/ scriptTemplate = Handlebars.compile($('#script-template').val()); composition.generateScript(scriptTemplate)">
+                    onclick="/* TODO remove*/ scriptTemplate = Handlebars.compile($('#script-template').val()); if ( composition.generateScript(scriptTemplate)){collapse('#agentComposition h1','hide'); collapse('#script h1','show');}">
                 Generate
                 Script
             </button>
