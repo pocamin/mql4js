@@ -1,60 +1,120 @@
-h1, h2, h3, h4, h5, h6 {
-    color: #7070A0;
+
+
+pre[class*="language-"] {
+    border-width:0;
+    border-radius:0;
+    margin:0;
 }
 
-span.error {
-    color: red;
+#content {
+  margin: 10px;
 }
 
-span.log {
-    color: white;
+/*
+** Backtest
+*/
+
+.tab-pane {
+  border:1px solid #ddd;
+  border-top-width:0;
+  padding:10px;
 }
 
-pre {
-    background: black;
-    height: 500px;
-    overflow: scroll;
-    width: 100%;
-    display: block;
+.display-on-backtest {
+    display: none;
 }
 
-textarea {
-    display: block;
-    width: 100%;
-    min-height: 300px;
-
+.positive {
+    color: green !important;
 }
 
-table {
-    width: 100%;
-
+.negative {
+    color: red !important;
 }
 
-td, th {
-    padding: 5px;
+#console pre {
+    max-height: 295px;
+    overflow:auto;
+    border-width:0;
+    margin:0;
 }
 
-td {
-    background-color: #fafafc;
+#orders tr.highlight {
+    background: #cc99cd;
 }
 
-th {
-    background-color: #e6e6fa;
-    text-align: left;
-
+#currentPL {
+  font-size:1.4em;
 }
 
-div.row {
-    float: left;
-    width: 700px;
-    margin-left: 50px;
+#nbOrder .value {
+    color: #003500;
+    float:right;
 }
 
-.warning {
-    border: 1px solid #d8bfd8;;
-    background-color: #f8dff8;
-    border-radius: 5px;
-    padding: 3px 15px;
-    margin: 15px 0;
-    color: darkred;
+/*
+** Events
+*/
+
+#events {
+    min-height:50px;
+    max-height: 500px;
+    overflow-y: scroll;
+    padding: 5px
+}
+
+#events .SENT           { color: greenyellow }
+#events .RECEIVED       { color: greenyellow }
+#events .OPENED         { color: green }
+#events .CLOSE_RECEIVED,
+#events .CLOSE_SENT     { color: cornflowerblue }
+#events .CLOSED         { color: blue }
+#events .CANCEL_SENT    { color: red }
+#events .CANCELLED      { color: darkred }
+#events .PARTIALLY_CLOSED {
+    color: blue;
+    text-decoration: underline;
+}
+
+/*
+** Backtest composition
+*/
+
+#agentComposition .expression {
+    padding-bottom: 5px;
+}
+
+#agentComposition .expression div {
+    display: inline;
+    padding-right: 5px;
+}
+
+#agentComposition .orderBlock {
+    background: transparent url("../img/if.png") 3px 3px no-repeat;
+}
+
+#agentComposition .order {
+  clear:both;
+    background: #ddd url("../img/then.png") 3px 3px no-repeat;
+    padding:5px 10px;
+}
+
+#agentComposition select.error,
+#agentComposition input.error {
+    background: #ffe4e3;
+}
+
+#agentComposition select.ok,
+#agentComposition input.ok {
+    background: #cbffdc;
+}
+
+#agentComposition .removeCondition {
+    float:right;
+}
+
+#agentComposition .typeSelector {
+   margin:0;
+   width:auto;
+   display: inline-block;
 }

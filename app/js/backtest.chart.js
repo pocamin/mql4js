@@ -1,7 +1,11 @@
 var backtestChart = function () {
+
+  var container = "#graph";
+  var $container = $(container);
+
   var initialLinesToDisplay = 0;
   var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
+    width = $container.width() - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
   var parseDate = d3.time.format("%d-%b-%y").parse;
@@ -164,8 +168,3 @@ var backtestChart = function () {
 
   return {redraw: redraw, addToIndicators: addToIndicators}
 };
-
-
-
-
-

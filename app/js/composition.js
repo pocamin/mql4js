@@ -167,8 +167,8 @@ var Composition = function () {
       });
 
     if (filteredOptions.length > 0) {
-      var $select = $("<select name='type'>").appendTo($location);
-      $("<option>").val('').html('select ...').appendTo($select);
+      var $select = $("<select name='type'>").addClass('form-control typeSelector').appendTo($location);
+      $("<option>").val('').html('Select ...').appendTo($select);
 
 
       filteredOptions.forEach(function (key) {
@@ -210,11 +210,12 @@ var Composition = function () {
 
   var addCondition = function ($location, startWith) {
     var qualifiers = [];
-    var conditionOption = options[$location.hasClass("open") ? "open" : "close"];
+    var conditionOption = options[$location.hasClass("willOpen") ? "open" : "close"];
     var $expressions = $location.find(".expressionsEvaluation");
     var $expression = $("<div class='expression'/>").appendTo($expressions);
     $("<button>")
-      .html("-")
+      .addClass("removeCondition close")
+      .html("&times;")
       .appendTo($expression)
       .click(function () {
         $expression.remove();
@@ -251,12 +252,12 @@ var Composition = function () {
 
 
   var addOrCondition = function (location, isOpen) {
-    var $orderBlock = $("<div>").addClass("orderBlock").addClass(isOpen ? "open" : "close").appendTo($(location));
+    var $orderBlock = $("<li>").addClass("orderBlock list-group-item").addClass(isOpen ? "willOpen" : "willClose").appendTo($(location));
     var $conditions = $("<div class='expressionsEvaluation'>").appendTo($orderBlock);
     if (isOpen) {
-      $('<div class="order">\
-        Open a position at market type : <select><option value="buy">Buy</option><option value="buy">Sell</option></select>\
-        amount : <input type="number" value="1000">\
+      $('<div class="order form-inline">\
+        Open a position at market type : <select class="form-control"><option value="buy">Buy</option><option value="buy">Sell</option></select>\
+        amount : <input type="number" value="1000" class="form-control">\
       </div>').appendTo($orderBlock);
     } else {
       $('<div class="order">Close the position at market price</div>').appendTo($orderBlock);
@@ -404,7 +405,9 @@ var Composition = function () {
 
     });
 
-    $("#code").html(template(scriptStructure));
+
+    $("#code, #code2").html(template(scriptStructure));
+    Prism.highlightAll();
 
     return scriptStructure;
   };

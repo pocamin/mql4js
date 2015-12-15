@@ -3,13 +3,11 @@
 <html lang="en">
 <head>
     <!-- build:css backtest.css -->
-    <link href="css/common.css" rel="stylesheet">
-    <link href="css/backtest.css" rel="stylesheet">
-    <link href="css/backtest-chart.css" rel="stylesheet">
-    <link href="css/backtest-events.css" rel="stylesheet">
-    <link href="css/composition.css" rel="stylesheet">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <link rel="stylesheet" href="css/backtest-chart.css">
+    <link rel="stylesheet" href="css/mql4js.css">
     <!-- endbuild -->
-
 
     <!-- build:js js/backtest.js -->
     <script src="bower_components/lodash/lodash.min.js"></script>
@@ -31,22 +29,12 @@
 
     <script src="js/composition.js"></script>
     <script src="js/ComplexExpressionEvaluation.js"></script>
+    <script src="bower_components/prism/prism.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- endbuild -->
 
 
     <script>
-        function collapse(selector, state) {
-            if (state) {
-                if (state === 'show') {
-                    $(selector).removeClass("collapse").find("~").show();
-                } else {
-                    $(selector).addClass("collapse").find("~").hide();
-                }
-            } else {
-                $(selector).toggleClass("collapse").find("~").toggle();
-            }
-        }
-
         var composition = new Composition();
         var scriptTemplate;
 
@@ -61,18 +49,16 @@
         });
 
         $(function () {
+            $("#generateScript").click(function() {
+              scriptTemplate = Handlebars.compile($('#script-template').val());
+              if ( composition.generateScript(scriptTemplate)){
+                  // Do something on success
+              }
+            })
             $("#agentComposition").on('click change keydown keypress keyup', "input, select", function () {
                 composition.refreshStatus(this);
             });
             scriptTemplate = Handlebars.compile($('#script-template').val());
-        });
-        $(function () {
-
-
-            $(".component").on("click", "h1:first", function () {
-                collapse(this);
-            });
-            collapse("#script h1");
         });
 
         // TODO clean up put in separate js
@@ -159,7 +145,6 @@
             });
             eventCounts["ticks"] = 0;
 
-
             Object.keys(indicators).forEach(function (indicatorName, idx) {
                 chart.addToIndicators(indicatorName, INDICATOR_COLORS[idx % INDICATOR_COLORS.length], indicators[indicatorName]);
             });
@@ -170,7 +155,6 @@
                     eventCounts["ticks"]++;
                 }
             });
-
 
             var refresh = function (newBarsCount) {
 
@@ -275,284 +259,301 @@
     </script>
 </head>
 <body>
-<div id="left">
 
-    <div class="component" id="agentComposition">
-        <h1>Agent composition</h1>
+  <nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">MQL4 to JS</a>
+      </div>
 
-        <h2>Open Position</h2>
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li><a href="/">Convert</a></li>
+          <li class="active"><a href="/BackTest.html">Backtest</a></li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
 
+<div id="content">
 
-        <div class="component_content">
-            <div id="openConditions">
+<h2>Agent composition</h2>
 
-            </div>
-            <button onclick="composition.addOrCondition('#openConditions', true)" class="new_condition">
-                Add new conditions to open a position
-            </button>
-        </div>
+<div class="panel panel-default" id="agentComposition">
+  <div class="panel-heading">Open Position</div>
+  <ul id="openConditions" class=list-group></ul>
+  <div class="panel-body">
+    <button onclick="composition.addOrCondition('#openConditions', true)" class="new_condition btn btn-xs btn-success">
+        Add new conditions to open a position
+    </button>
+  </div>
+  <div class="panel-heading">Open Position</div>
+  <ul id="closeConditions" class=list-group></ul>
+  <div class="panel-body">
+    <button onclick="composition.addOrCondition('#closeConditions', false)" class="new_condition btn btn-xs btn-success">
+        Add new conditions to close a position
+    </button>
+  </div>
+  <div class="panel-footer">
+    <button type="button" class="generate_script btn btn-primary" id="generateScript">
+        Generate Script
+    </button>
+  </div>
+</div>
 
+<div class="panel panel-default">
+  <div class="panel-heading" id="headingCode" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseCode" aria-expanded="false" aria-controls="collapseCode">
+      Agent code
+  </div>
+  <div id="collapseCode" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingCode">
+      <pre><code id="code2" class="language-javascript"></code></pre>
+  </div>
+</div>
 
-        <h2>Close Position</h2>
-
-        <div class="component_content">
-            <div id="closeConditions">
-
-            </div>
-            <button onclick="composition.addOrCondition('#closeConditions', false)" class="new_condition">
-                Add new conditions to close a position
-            </button>
-        </div>
-
-
-        <h2>
-            <button type="button" class="generate_script"
-                    onclick="/* TODO remove*/ scriptTemplate = Handlebars.compile($('#script-template').val()); if ( composition.generateScript(scriptTemplate)){collapse('#agentComposition h1','hide'); collapse('#script h1','show');}">
-                Generate
-                Script
-            </button>
-        </h2>
-    </div>
-
-    <div id="script" class="component">
-        <h1>Agent code</h1>
-
-        <div class="component_content">
-    <textarea id="code">
+<!-- kept for compatibility -->
+<textarea id="code" style="display:none;">
 var init = function () {
 };
 
 var onTick = function (tick) {
 };
-    </textarea>
+</textarea>
 
+
+<h2>Options</h2>
+<div>
+
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#tabExecParam" aria-controls="home" role="tab" data-toggle="tab">Agent execution parameters</a></li>
+    <li role="presentation"><a href="#tabRandomGenerator" aria-controls="profile" role="tab" data-toggle="tab">Random Generators</a></li>
+    <li role="presentation"><a href="#tabLogging" aria-controls="messages" role="tab" data-toggle="tab">Logging</a></li>
+    <li role="presentation"><a href="#shownEvents" aria-controls="settings" role="tab" data-toggle="tab">Shown Events</a></li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="tabExecParam">
+      <div class=row>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Symbol</label>
+            <input type="text" name="symbol" value="EUD_USD" class=form-control />
         </div>
-    </div>
-
-
-    <div id="graph" class="component display-on-backtest">
-
-    </div>
-
-    <div id="eventBox" class="component display-on-backtest">
-        <h1>Events</h1>
-
-        <div id="events">
-        </div>
-
-    </div>
-</div>
-<div id="right">
-    <div id="parameters" class="component">
-        <h1>Agent execution parameters</h1>
-
-        <div class="component_content">
-            <label>
-                symbol
-                <input type="text" name="symbol" value="EUD_USD"/>
-
-            </label>
-            <label>
-                Interval
-                <select name="interval">
-                    <option selected>M1</option>
-                    <option>M15</option>
-                    <option>M30</option>
-                    <option>H1</option>
-                    <option>H4</option>
-                    <option>M8</option>
-                    <option>D1</option>
-                </select>
-            </label>
-            <label class="clearfix">
-                Start date
-                <input name="startDate" type="date" value="2015-12-10">
-                <input name="startTime" type="time" value="09:00">
-            </label>
-            <label class="clearfix">
-                End date
-                <input name="endDate" type="date" value="2015-12-10">
-                <input name="endTime" type="time" value="17:00">
-            </label>
-        </div>
-
-        <h1 class="clearfix">Random generators</h1>
-
-        <div class="component_content">
-            <label>
-                Initial Price
-                <input type="number" name="initialPrice" value="10">
-            </label>
-            <label>
-                Seed
-                <input type="number" name="seed" value="1"/>
-            </label>
-            <label>
-                Precision
-                <input type="text" name="precision" value="0.0001"/>
-            </label>
-            <label>
-                Delta by tick
-                <input type="text" name="deltaByTick" value="0.001"/>
-            </label>
-            <label>
-                Average spread
-                <input type="text" name="bidAskDelta" value="0.001"/>
-            </label>
-            <label>
-                Max volume by tick
-                <input type="number" name="maxVolumeByTick" value="1000"/>
-            </label>
-
-            <label>
-                Ticks by period
-                <input type="number" name="nbTicksByPeriod" value="600"/>
-            </label>
-
-
-            <label>
-                Type of walk
-                <select name="arithmeticWalk">
-                    <option value="true">arithmetic</option>
-                    <option value="false" selected>geometric</option>
-                </select>
-            </label>
-
-
-            <label>
-                Speed
-                <select name="speed">
-                    <option value="0">Unlimited (backtest)</option>
-                    <option value="100">on tick by 100ms</option>
-                    <option value="1000">on tick by second</option>
-                    <option value="10000">on tick by 10s</option>
-                    <option value="60000">on tick by minute</option>
-                </select>
-            </label>
-        </div>
-
-
-        <h1 class="clearfix">Logging</h1>
-
-        <div class="component_content">
-            Display every
-            <select name="refreshRate">
-                <option>1</option>
-                <option selected>10</option>
-                <option>30</option>
-                <option>50</option>
-                <option>100</option>
-                <option>500</option>
-                <option>1000</option>
-                <option>10000</option>
-                <option>100000</option>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Interval</label>
+            <select name="interval" class=form-control>
+                <option selected>M1</option>
+                <option>M15</option>
+                <option>M30</option>
+                <option>H1</option>
+                <option>H4</option>
+                <option>M8</option>
+                <option>D1</option>
             </select>
-            bar(s)
         </div>
-        <h2>Shown events</h2>
-
-        <div class="component_content loggedEvents">
-            <label>
-                <input type="checkbox" name="SENT" checked onclick="updateLoggedEvents()"/>
-                order sent
-            </label>
-            <label>
-                <input type="checkbox" name="OPENED" checked onclick="updateLoggedEvents()"/>
-                position opened
-            </label>
-            <label>
-                <input type="checkbox" name="CLOSE_SENT" checked onclick="updateLoggedEvents()"/>
-                close sent
-            </label>
-            <label>
-                <input type="checkbox" name="PARTIALLY_CLOSED" checked onclick="updateLoggedEvents()"/>
-                Position partially closed
-            </label>
-            <label>
-                <input type="checkbox" name="CLOSED" checked onclick="updateLoggedEvents()"/>
-                Position closed
-            </label>
-
-            <label>
-                <input type="checkbox" name="CANCEL_SENT" checked onclick="updateLoggedEvents()"/>
-                Cancel sent
-            </label>
-
-            <div class="clearfix"> Not relevant for backtest</div>
-
-            <label>
-                <input type="checkbox" name="CANCELLED" onclick="updateLoggedEvents()"/>
-                order cancelled
-            </label>
-
-            <label>
-                <input type="checkbox" name="RECEIVED" onclick="updateLoggedEvents()"/>
-                order received
-            </label>
-            <label>
-                <input type="checkbox" name="CLOSE_RECEIVED" onclick="updateLoggedEvents()"/>
-                close received
-            </label>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Start date</label><br />
+            <input name="startDate" type="date" value="2015-12-10" class=form-control style="width:79%; float:left;">
+            <input name="startTime" type="text" value="09:00" class=form-control style="width:19%; float:right;">
         </div>
-
-        <h1 class="clearfix">Execute</h1>
-
-        <div class="component_content">
-            <input type="button" value="execute" onclick="runScript()">
-            <input type="button" name="stop" value="stop" onclick="stopScript()" class="display-on-backtest">
+        <div class="form-group col-sm-6 col-md-3">
+            <label>End date</label><br />
+            <input name="endDate" type="date" value="2015-12-10" class=form-control style="width:79%; float:left;">
+            <input name="endTime" type="text" value="17:00" class=form-control style="width:19%; float:right;">
         </div>
+      </div>
+    </div>
+    <div role="tabpanel" class="tab-pane" id="tabRandomGenerator">
+      <div class=row>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Initial Price</label>
+            <input type="number" name="initialPrice" class=form-control value="10">
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Seed</label>
+            <input type="number" name="seed" value="1" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Precision</label>
+            <input type="text" name="precision" value="0.0001" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Delta by tick</label>
+            <input type="text" name="deltaByTick" value="0.001" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Average spread</label>
+            <input type="text" name="bidAskDelta" value="0.001" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Max volume by tick</label>
+            <input type="number" name="maxVolumeByTick" value="1000" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Ticks by period</label>
+            <input type="number" name="nbTicksByPeriod" value="600" class=form-control />
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Type of walk</label>
+            <select name="arithmeticWalk" class=form-control>
+                <option value="true">arithmetic</option>
+                <option value="false" selected>geometric</option>
+            </select>
+        </div>
+        <div class="form-group col-sm-6 col-md-3">
+            <label>Speed</label>
+            <select name="speed" class=form-control>
+                <option value="0">Unlimited (backtest)</option>
+                <option value="100">on tick by 100ms</option>
+                <option value="1000">on tick by second</option>
+                <option value="10000">on tick by 10s</option>
+                <option value="60000">on tick by minute</option>
+            </select>
+        </div>
+      </div>
     </div>
 
-
-    <div id="orders" class="component  display-on-backtest">
-        <h1>Orders</h1>
-
-        <div class="component_content">
-            <table class="orders_table">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>symbol</th>
-                    <th>side</th>
-                    <th>amount</th>
-                    <th>status</th>
-                    <th>limit</th>
-                    <th>open price</th>
-                    <th>close price</th>
-                    <th>PNL</th>
-                </tr>
-                </thead>
-                <tbody>
-
-
-                </tbody>
-            </table>
+    <div role="tabpanel" class="tab-pane" id="tabLogging">
+      <form class="form-inline">
+        <div class="form-group">
+          <label>Display every</label>
+          <select name="refreshRate" class="form-control">
+              <option>1</option>
+              <option selected>10</option>
+              <option>30</option>
+              <option>50</option>
+              <option>100</option>
+              <option>500</option>
+              <option>1000</option>
+              <option>10000</option>
+              <option>100000</option>
+          </select>
+          <label>bar(s)</label>
         </div>
+      </form>
     </div>
 
+    <div role="tabpanel" class="tab-pane loggedEvents" id="shownEvents">
 
-    <div id="statistics" class="component  display-on-backtest">
-        <h1>Backtest stats</h1>
+          <label>
+              <input type="checkbox" name="SENT" checked onclick="updateLoggedEvents()"/>
+              order sent
+          </label>
+          <label>
+              <input type="checkbox" name="OPENED" checked onclick="updateLoggedEvents()"/>
+              position opened
+          </label>
+          <label>
+              <input type="checkbox" name="CLOSE_SENT" checked onclick="updateLoggedEvents()"/>
+              close sent
+          </label>
+          <label>
+              <input type="checkbox" name="PARTIALLY_CLOSED" checked onclick="updateLoggedEvents()"/>
+              Position partially closed
+          </label>
+          <label>
+              <input type="checkbox" name="CLOSED" checked onclick="updateLoggedEvents()"/>
+              Position closed
+          </label>
 
-        <div id="currentPL">
-            Current PL :
-            <span class="value"></span>
-        </div>
-        <div id="nbOrder">
-            Ticks proceed : <span class="ticks value"></span><br>
-            Orders sent : <span class="SENT value"></span><br>
-            Orders opened : <span class="OPENED value"></span><br>
-            Orders closed : <span class="CLOSED value"></span><br>
-            Orders cancelled : <span class="CANCELLED value"></span><br>
-        </div>
+          <label>
+              <input type="checkbox" name="CANCEL_SENT" checked onclick="updateLoggedEvents()"/>
+              Cancel sent
+          </label>
+
+          <div class="clearfix"> Not relevant for backtest</div>
+
+          <label>
+              <input type="checkbox" name="CANCELLED" onclick="updateLoggedEvents()"/>
+              order cancelled
+          </label>
+
+          <label>
+              <input type="checkbox" name="RECEIVED" onclick="updateLoggedEvents()"/>
+              order received
+          </label>
+          <label>
+              <input type="checkbox" name="CLOSE_RECEIVED" onclick="updateLoggedEvents()"/>
+              close received
+          </label>
+      </div>
+    </div>
+  </div>
+
+<br />
+
+<input type="button" value="Execute" onclick="runScript()" class="btn btn-primary">
+<input type="button" name="stop" value="stop" onclick="stopScript()" class="display-on-backtest btn btn-danger">
+
+
+<h2 class="display-on-backtest">Backtest</h2>
+
+<div class=row>
+  <div class="col-sm-7">
+    <div class="panel panel-default display-on-backtest">
+      <div id="graph">
+      </div>
     </div>
 
-    <div id="console" class="component  display-on-backtest">
-        <h1>Console</h1>
-        <pre><code></code></pre>
+    <div class="panel panel-default display-on-backtest">
+      <div class="panel-heading">Events</div>
+      <div id="events">
+      </div>
     </div>
 </div>
+<div class="col-sm-5">
+  <div class="panel panel-default display-on-backtest" id="orders">
+    <div class="panel-heading">Orders</div>
+    <table class="orders_table table table-compact table-striped">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>symbol</th>
+            <th>side</th>
+            <th>amount</th>
+            <th>status</th>
+            <th>limit</th>
+            <th>open price</th>
+            <th>close price</th>
+            <th>PNL</th>
+        </tr>
+        </thead>
+        <tbody>
 
+
+        </tbody>
+    </table>
+  </div>
+  <div class="panel panel-default display-on-backtest">
+    <div class="panel-heading">Backtest stats</div>
+
+    <ul class="list-group" id="nbOrder">
+      <li class="list-group-item" id="currentPL">Current PL <span class="value"></span></li>
+      <li class="list-group-item">Ticks proceed <span class="ticks value"></span></li>
+      <li class="list-group-item">Orders sent <span class="SENT value"></span></li>
+      <li class="list-group-item">Orders opened <span class="OPENED value"></span></li>
+      <li class="list-group-item">Orders closed <span class="CLOSED value"></span></li>
+      <li class="list-group-item">Orders cancelled <span class="CANCELLED value"></span></li>
+    </ul>
+  </div>
+
+  <div id=console class="panel panel-default display-on-backtest">
+    <div class="panel-heading">Console</div>
+    <pre><code></code></pre>
+  </div>
+
+
+</div>
+</div>
+</div>
 
 <!-- textarea to avoid idea formating -->
 <textarea id="script-template" title="" style="width: 100%; display: none" rows="20">
@@ -612,4 +613,3 @@ var closeOrderIfNeeded = function(tick){
 
 
 </body>
-

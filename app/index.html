@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <title>MQL4 to Javascript</title>
     <!-- build:css css/combined.css -->
-    <link rel="stylesheet" href="css/mql4js.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/prism.css">
+    <link rel="stylesheet" href="css/mql4js.css">
     <!-- endbuild -->
 
     <!-- build:js js/require.js -->
@@ -25,6 +26,7 @@
     <script language="JavaScript" src="bower_components/prism/prism.js"></script>
     <script language="JavaScript" src="bower_components/sprintf/dist/sprintf.min.js"></script>
     <script language="JavaScript" src="bower_components/moment/min/moment.min.js"></script>
+    <script language="JavaScript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- endbuild -->
 
 
@@ -101,7 +103,7 @@
                     });
 
 
-            $("#AST").val(result.tree.toStringTree(null, result.parser));
+            $("#AST").text(result.tree.toStringTree(null, result.parser));
             $("#external_parameters").empty();
             $.each(result.mql4ToJs.externalParameters, function (index, value) {
                 $("#external_parameters").append(
@@ -137,35 +139,66 @@
         }();
 
 
-        $(function () {
-            readMql4();
-        });
-
-
+        $(readMql4);
     </script>
 
 
 </head>
 <body>
-<div class="row">
-    <h1>Source file</h1>
 
-    <div class="warning">
-        <p>
-            Your source file must be a valid MQL4 script.
-            Providing invalid mql4 script may results to generate invalid JS file without any warning
-        </p>
+  <nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">MQL4 to JS</a>
+      </div>
 
-        Limitations :
-        <ul>
-            <li>Classes are not supported</li>
-            <li>Direct memory operations are not supported (sizeof)</li>
-            <li>Pointers are not supported</li>
-            <li>Preprocessor are not supported</li>
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="/">Convert</a></li>
+          <li><a href="/BackTest.html">Backtest</a></li>
         </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
 
-    </div>
-    <select id="sourceFile" onchange="readMql4()">
+<div id="content">
+  <h1>Convert and execute</h1>
+
+  <h2>Convert</h2>
+
+  <div class=row>
+    <div class=col-sm-6>
+
+      <div class="alert alert-warning alert-dismissible fade in" style="font-size:.9em">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+          <p>
+              Your source file must be a valid MQL4 script.<br />
+              Providing an invalid MQL4 script may generate an invalid JS file without any warning.
+          </p>
+
+          <p>Limitations :
+            <ul>
+                <li>Classes are not supported</li>
+                <li>Direct memory operations are not supported (sizeof)</li>
+                <li>Pointers are not supported</li>
+                <li>Preprocessor are not supported</li>
+            </ul>
+          </p>
+      </div>
+
+      <div class="form-group">
+        <label for=sourceFile>Examples</label>
+    <select id="sourceFile" onchange="readMql4()" class=form-control>
         <optgroup label="personal tests">
             <option value="test.mql4" selected>test.mql4</option>
         </optgroup>
@@ -208,51 +241,69 @@
             <option value='samples/<%- sample %>'><%- sample %></option>
             <% }); %>
         </optgroup>
-
-
     </select>
+  </div>
 
-    <textarea id="source"></textarea>
+  <div class="form-group">
+    <label for=source>Source</label>
+    <textarea id="source" class=form-control rows="20"></textarea>
+  </div>
 
     <input type="checkbox" id="keep-types"/> Keep types in javascript<br>
     <input type="checkbox" id="keep-original"/> Keep original code as comment<br>
     <input type="checkbox" id="keep-comments" checked/> Keep comments (experimental)<br>
-    <button onclick="parseAndShow()">Convert</button>
-    <h3>AST</h3>
+    <button onclick="parseAndShow()" class="btn btn-primary">Convert</button>
+  </div>
+  <div class=col-sm-6>
+    <div class="panel panel-default">
+      <div class="panel-heading">Generated JavaScript</div>
 
-    <textarea id="AST"></textarea>
+      <pre><code id="js" class="language-javascript">// Nothing generated yet
+// 1. Choose a file to convert or write your own code
+// 2. Click on "Convert"</code></pre>
+
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingAST" data-toggle="collapse" href="#collapseAST" aria-expanded="false" aria-controls="collapseAST">
+              Generated AST
+        </div>
+        <div id="collapseAST" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingAST">
+          <div class="panel-body">
+            <div id="AST" style="font-family: Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace;"></div>
+          </div>
+        </div>
+      </div>
+  </div>
 </div>
 
-<div class="row">
-    <h1>results</h1>
-
-    <h3>Javascript File</h3>
-    <pre><code id="js" class="language-javascript"></code></pre>
-
-    <h3>Execution</h3>
-
+<h2>Execution</h2>
+<div class=row>
+  <div class=col-sm-6>
     <h3>External parameters/Input</h3>
-    <table>
+    <table class="table table-striped">
         <thead>
         <tr>
-            <th>name</th>
-            <th>type</th>
-            <th>default value</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Default value</th>
         </tr>
-
         </thead>
         <tbody id="external_parameters">
 
         </tbody>
     </table>
+
     <select id="functionToExecute"></select>
-    <button id="executeBtn">Execute generated javascript</button>
-    <h3>log</h3>
+    <button id="executeBtn" class="btn btn-primary">Execute generated javascript</button>
+
+  </div>
+  <div class=col-sm-6>
+    <h3>Execution log</h3>
     <pre><code id="log"></code></pre>
-
-
+  </div>
 </div>
-
+</div>
 
 </body>
 </html>

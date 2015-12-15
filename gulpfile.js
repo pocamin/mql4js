@@ -11,7 +11,8 @@ var gulp = require('gulp'),
   seq = require('gulp-sequence'),
   KarmaServer = require('karma').Server,
   fs = require('fs'),
-  replace = require('gulp-replace');
+  replace = require('gulp-replace'),
+  gutil = require('gulp-util');
 
 gulp.task('default', seq('clean', 'build', 'serve'));
 gulp.task('build', seq(['html', 'copy-gen-resources', 'copy-resources', 'copy-mql4']));
@@ -27,7 +28,7 @@ gulp.task('test', function (done) {
 
 // ANTLR4 tasks
 gulp.task('antlr4', function () {
-  console.log("Now generating andlr4 from grammar files");
+  gutil.log("Now generating antlr4 from grammar files");
   return gulp.src('./grammar/*.g4')
     .pipe(shell([
       'echo processing : <%= file.path %>',
@@ -94,6 +95,10 @@ gulp.task('html', ['bower'], function () {
 
 gulp.task('clean', function () {
   return del(['dist/*', 'app/bower_components', 'app/generated']).then(function (paths) {
-    console.log('Deleted files/folders:\n', paths.join('\n'));
+    for (var i in paths) {
+      if (paths.hasOwnProperty(i)) {
+        gutil.log("Deleted", paths[i]);
+      }
+    }
   });
 });
