@@ -193,7 +193,7 @@ var Composition = function () {
             });
           }
 
-          var $template = $("<div>").addClass(key).appendTo($location);
+          var $template = $("<div>").addClass("selected-" + key).appendTo($location);
           if (subOptions[key].generator.template) {
             $template.html(subOptions[key].generator.template);
             !onSelected || onSelected();
@@ -295,7 +295,7 @@ var Composition = function () {
 
     function getIndicatorExpression($location, allIndicators) {
       var selectedOption = $location.find("select").val();
-      var $selectedOption = $location.find("." + selectedOption);
+      var $selectedOption = $location.find(".selected-" + selectedOption);
       var indicatorName;
       var indicatorConstructor;
       var indicatorExpression;
@@ -324,7 +324,7 @@ var Composition = function () {
 
     function getOperatorValue($location) {
       var selectedOption = $location.find("select").val();
-      var $selectedOption = $location.find("." + selectedOption);
+      var $selectedOption = $location.find(".selected-" + selectedOption);
       switch (selectedOption) {
         case "gt":
           return ">";
@@ -339,7 +339,7 @@ var Composition = function () {
 
     function getExpression($location, allIndicators) {
       var selectedOption = $location.find("select").val();
-      var $selectedOption = $location.find("." + selectedOption);
+      var $selectedOption = $location.find(".selected-" + selectedOption);
       switch (selectedOption) {
         case "lastPrice":
           return "env.mainBarAdapter.last()." + $selectedOption.find("select").val();
@@ -361,7 +361,7 @@ var Composition = function () {
 
     function getCondition($location) {
       var selectedOption = $location.find("select").val();
-      var $selectedOption = $location.find("." + selectedOption);
+      var $selectedOption = $location.find(".selected-" + selectedOption);
 
       var condition = {type: selectedOption || "forAnyTick"};
       switch (selectedOption) {
@@ -378,7 +378,7 @@ var Composition = function () {
     $(".orderBlock").each(function () {
       var $orderBlock = $(this);
       var block = {expressions: []};
-      var isOpen = $orderBlock.hasClass("open");
+      var isOpen = $orderBlock.hasClass("willOpen");
 
       // Conditions
       (isOpen ? scriptStructure.openBlocks : scriptStructure.closeBlocks).push(block);
@@ -405,11 +405,7 @@ var Composition = function () {
 
     });
 
-
-    $("#code, #code2").html(template(scriptStructure));
-    Prism.highlightAll();
-
-    return scriptStructure;
+    return template(scriptStructure);
   };
 
 
