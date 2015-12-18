@@ -16,6 +16,9 @@
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
     <script src="bower_components/d3/d3.min.js"></script>
+    <script src="bower_components/d3/d3.min.js"></script>
+
+
     <!--<script src="bower_components/TechanJS/dist/techan.min.js"></script>-->
     <script src="js/beta/techan.js"></script>
     <script src="js/commonAgent.js"></script>
@@ -34,7 +37,8 @@
     <!-- endbuild -->
 
 
-    <script>
+    <script async>
+
         var composition = new Composition();
         var scriptTemplate;
 
@@ -48,36 +52,21 @@
             return JSON.stringify(item);
         });
 
-        function showCode(formatted) {
-            if (formatted) {
-                $('#code').hide();
-                $('.formatted-code').css("display", "");
-            } else {
-                $('#code').css("display", "").focus();
-                $('.formatted-code').hide();
-            }
-        }
         $(function () {
             $("#generateScript").click(function () {
                 scriptTemplate = Handlebars.compile($('#script-template').val());
                 var generatedScript = composition.generateScript(scriptTemplate);
                 if (generatedScript) {
-                    $("#code").html(generatedScript);
-                    updateFormattedVersion();
+                    editor.setValue($("<textarea>").html(generatedScript).val()); // TODO : houhou
+                    editor.selection.clearSelection();
                 }
             });
             $("#agentComposition").on('click change keydown keypress keyup', "input, select", function () {
                 composition.refreshStatus(this);
             });
             scriptTemplate = Handlebars.compile($('#script-template').val());
-            updateFormattedVersion();
         });
 
-        var updateFormattedVersion = function () {
-            $("#code2").html($("#code").val());
-            Prism.highlightAll();
-            showCode(true);
-        };
 
         // TODO clean up put in separate js
         var loggedEvents = {};
@@ -146,7 +135,7 @@
             // Running
             var indicators = {};
             var scriptAsText = "(function(env,indicators, console){\n" +
-                    $("#code").val() + "\n" +
+                    editor.getValue() + "\n" +
                     "return {init:init, onTick:onTick};\n" +
                     "})(env, indicators, newConsole)";
             var script = eval(scriptAsText);
@@ -277,7 +266,6 @@
     </script>
 </head>
 <body>
-
 <nav class="navbar navbar-default navbar-static-top">
     <div class="container-fluid">
         <!-- Brand and toggle get grouped for better mobile display -->
@@ -336,17 +324,7 @@
             Agent code
         </div>
         <div class="collapseCode panel-collapse collapse in" role="tabpanel" aria-labelledby="headingCode">
-            <div class="formatted-code">
-                <pre><code id="code2" class="language-javascript"></code></pre>
-            </div>
-
-            <textarea id="code" onblur="updateFormattedVersion()" style="width: 100%; min-height: 200px; display:none">var init = function () {
-};
-var onTick = function (tick) {
-};</textarea>
-        </div>
-        <div class="collapseCode panel-footer formatted-code panel-collapse collapse in">
-            <button type="button" class="generate_script btn btn-primary" onclick="showCode(false)">Edit</button>
+            <div id="code" class="formatted-code" style="margin-top: 0; width: 100%; height: 216px; margin-left: 0;"></div>
         </div>
     </div>
 
@@ -582,6 +560,7 @@ var onTick = function (tick) {
     </div>
 </div>
 
+
 <!-- textarea to avoid idea formating -->
 <textarea id="script-template" title="" style="width: 100%; display: none" rows="20">
 var expressionEvaluator = COMPLEX_EXPR_EVAL(4); // see ComplexExpressionEvaluation.js
@@ -637,6 +616,48 @@ var closeOrderIfNeeded = function(tick){
   {{/each}}
 }
 </textarea>
+
+
+<!-- build:js js/ace.js -->
+<script src="bower_components/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="bower_components/ace-builds/src-noconflict/ext-language_tools.js"></script>
+<script src="bower_components/ace-builds/src-noconflict/theme-monokai.js"></script>
+<script src="bower_components/ace-builds/src-noconflict/mode-javascript.js"></script>
+<script src="bower_components/ace-builds/src-noconflict/mode-text.js"></script>
+<script src="bower_components/ace-builds/src-min-noconflict/snippets/javascript.js"></script>
+<!-- endbuild -->
+<!-- build:js js/worker-javascript.js -->
+<script src="bower_components/ace-builds/src-min-noconflict/worker-javascript.js"></script>
+<!-- endbuild -->
+
+
+<script>
+    ace.require("ace/ext/language_tools");
+    var editor = ace.edit("code");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: false,
+        tabSize: 2,
+        useSoftTabs: true,
+        showPrintMargin: false
+    });
+
+
+    var editorDiv = document.getElementById("code");
+    var doc = editor.getSession().getDocument();
+
+    editor.on("change", function () {
+        var lineHeight = 13;                 // assuming a 16px line height
+        editorDiv.style.height = Math.min(800, lineHeight * doc.getLength()) + "px";
+        editor.resize();
+    });
+
+    editor.setValue("var init = function () {\n};\nvar onTick = function (tick) {\n};");
+    editor.selection.clearSelection()
+</script>
 
 
 </body>

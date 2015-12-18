@@ -32,6 +32,7 @@
     "sprintf": "~1.0.3",
     "moment": "~2.10.6",
     "TechanJS": "techan#~0.5.0",
-    "handlebars": "~4.0.5"
+    "handlebars": "~4.0.5",
+    "ace-builds": "~1.2.2"
   }
 }

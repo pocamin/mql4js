@@ -1,13 +1,12 @@
 
-
 pre[class*="language-"] {
-    border-width:0;
-    border-radius:0;
-    margin:0;
+    border-width: 0;
+    border-radius: 0;
+    margin: 0;
 }
 
 #content {
-  margin: 10px;
+    margin: 10px;
 }
 
 /*
@@ -15,9 +14,9 @@ pre[class*="language-"] {
 */
 
 .tab-pane {
-  border:1px solid #ddd;
-  border-top-width:0;
-  padding:10px;
+    border: 1px solid #ddd;
+    border-top-width: 0;
+    padding: 10px;
 }
 
 .display-on-backtest {
@@ -34,9 +33,9 @@ pre[class*="language-"] {
 
 #console pre {
     max-height: 295px;
-    overflow:auto;
-    border-width:0;
-    margin:0;
+    overflow: auto;
+    border-width: 0;
+    margin: 0;
 }
 
 #orders tr.highlight {
@@ -44,12 +43,12 @@ pre[class*="language-"] {
 }
 
 #currentPL {
-  font-size:1.4em;
+    font-size: 1.4em;
 }
 
 #nbOrder .value {
     color: #003500;
-    float:right;
+    float: right;
 }
 
 /*
@@ -57,20 +56,41 @@ pre[class*="language-"] {
 */
 
 #events {
-    min-height:50px;
+    min-height: 50px;
     max-height: 500px;
     overflow-y: scroll;
     padding: 5px
 }
 
-#events .SENT           { color: greenyellow }
-#events .RECEIVED       { color: greenyellow }
-#events .OPENED         { color: green }
+#events .SENT {
+    color: greenyellow
+}
+
+#events .RECEIVED {
+    color: greenyellow
+}
+
+#events .OPENED {
+    color: green
+}
+
 #events .CLOSE_RECEIVED,
-#events .CLOSE_SENT     { color: cornflowerblue }
-#events .CLOSED         { color: blue }
-#events .CANCEL_SENT    { color: red }
-#events .CANCELLED      { color: darkred }
+#events .CLOSE_SENT {
+    color: cornflowerblue
+}
+
+#events .CLOSED {
+    color: blue
+}
+
+#events .CANCEL_SENT {
+    color: red
+}
+
+#events .CANCELLED {
+    color: darkred
+}
+
 #events .PARTIALLY_CLOSED {
     color: blue;
     text-decoration: underline;
@@ -89,14 +109,10 @@ pre[class*="language-"] {
     padding-right: 5px;
 }
 
-#agentComposition .orderBlock {
-    background: transparent url("../img/if.png") 3px 3px no-repeat;
-}
-
 #agentComposition .order {
-  clear:both;
-    background: #ddd url("../img/then.png") 3px 3px no-repeat;
-    padding:5px 10px;
+    clear: both;
+    background: #ddd 3px 3px no-repeat;
+    padding: 5px 10px;
 }
 
 #agentComposition select.error,
@@ -110,11 +126,11 @@ pre[class*="language-"] {
 }
 
 #agentComposition .removeCondition {
-    float:right;
+    float: right;
 }
 
 #agentComposition .typeSelector {
-   margin:0;
-   width:auto;
-   display: inline-block;
+    margin: 0;
+    width: auto;
+    display: inline-block;
 }

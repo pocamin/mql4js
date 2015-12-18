@@ -256,7 +256,7 @@ var Composition = function () {
     var $conditions = $("<div class='expressionsEvaluation'>").appendTo($orderBlock);
     if (isOpen) {
       $('<div class="order form-inline">\
-        Open a position at market type : <select class="form-control"><option value="buy">Buy</option><option value="buy">Sell</option></select>\
+        Open a position at market type : <select class="form-control"><option value="buy">Buy</option><option value="sell">Sell</option></select>\
         amount : <input type="number" value="1000" class="form-control">\
       </div>').appendTo($orderBlock);
     } else {
